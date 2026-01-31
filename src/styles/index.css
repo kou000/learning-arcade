@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sheet-font: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+}
+
+@media print {
+  body { background: white !important; }
+  .print\:hidden { display: none !important; }
+}
