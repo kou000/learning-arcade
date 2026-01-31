@@ -4,9 +4,18 @@ import type { MulSpec } from "../specs/types";
 
 export function generateMul(spec: MulSpec): Problem[] {
   const out: Problem[] = [];
+
   for (let i = 0; i < spec.count; i++) {
-    const aDigits = randInt(1, Math.max(1, spec.digitsSum - 1));
-    const bDigits = Math.max(1, spec.digitsSum - aDigits);
+    let aDigits: number;
+    let bDigits: number;
+    if (spec.digitsPairs && spec.digitsPairs.length > 0) {
+      const [a, b] = spec.digitsPairs[randInt(0, spec.digitsPairs.length - 1)];
+      aDigits = a;
+      bDigits = b;
+    } else {
+      aDigits = randInt(1, Math.max(1, spec.digitsSum - 1));
+      bDigits = Math.max(1, spec.digitsSum - aDigits);
+    }
 
     const aMin = aDigits === 1 ? 0 : 10 ** (aDigits - 1);
     const aMax = 10 ** aDigits - 1;
@@ -16,7 +25,12 @@ export function generateMul(spec: MulSpec): Problem[] {
     const a = randInt(aMin, aMax);
     const b = randInt(bMin, bMax);
 
-    out.push({ kind: "inline", question: `${a} × ${b}`, answer: String(a * b) });
+    out.push({
+      kind: "inline",
+      question: `${a} × ${b}`,
+      answer: String(a * b),
+    });
   }
+
   return out;
 }
