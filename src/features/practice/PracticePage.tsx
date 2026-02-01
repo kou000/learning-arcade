@@ -61,73 +61,79 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-10 pt-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="ghost" onClick={onBack}>← アーケードへ</Button>
-        <h2 className="text-2xl font-extrabold">{title}</h2>
-        <div className="ml-auto text-sm text-slate-600">本番想定：{minutes}分（目安）</div>
-      </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10">
+      <div className="mx-auto max-w-5xl">
+        <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white/80 p-6 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.55)] backdrop-blur">
+          <div className="absolute -top-16 -right-20 h-56 w-56 rounded-full bg-amber-200/40 blur-2xl" />
+          <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-sky-200/50 blur-2xl" />
 
-      <div className="mt-4 grid gap-4">
-        <ControlBar
-          grade={grade}
-          subject={subject}
-          mode={mode}
-          examBody={examBody}
-          sets={sets}
-          showAnswers={showAnswers}
-          onChangeGrade={onChangeGrade}
-          onChangeSubject={setSubject}
-          onChangeExamBody={onChangeExamBody}
-          onChangeMode={onChangeMode}
-          onChangeSets={setSets}
-          onToggleAnswers={setShowAnswers}
-          onGenerate={onGenerate}
-        />
-
-        {mode === "test" ? (
-          <TimerBar
-            secondsLeft={timer.secondsLeft}
-            isRunning={timer.isRunning}
-            onStart={timer.start}
-            onPause={timer.pause}
-            onReset={timer.reset}
-          />
-        ) : null}
-
-        {mode === "test" ? (
-          <div className="grid gap-8">
-            {bundles.map((problems, i) => (
-              <section key={i} className="grid gap-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold">セット {i + 1}</h3>
-                  <span className="text-sm text-slate-600">（{problems.length}題）</span>
-                  <div className="ml-auto">
-                    <button
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 print:hidden"
-                      onClick={() => window.print()}
-                    >
-                      印刷
-                    </button>
-                  </div>
-                </div>
-
-                <ProblemSheet
-                  problems={problems}
-                  grade={grade}
-                  subject={subject}
-                  setNumber={i + 1}
-                  minutes={minutes}
-                />
-                {showAnswers ? <AnswerSheet problems={problems} /> : null}
-              </section>
-            ))}
+          <div className="relative flex flex-wrap items-center gap-3">
+            <Button variant="ghost" onClick={onBack}>← アーケードへ</Button>
+            <h2 className="text-3xl font-black text-slate-800 font-[var(--pop-font)]">{title}</h2>
+            <div className="ml-auto text-sm text-slate-600">本番想定：{minutes}分（目安）</div>
           </div>
-        ) : (
-          <OneByOnePractice problems={bundles[0] ?? []} onRegenerate={onGenerate} />
-        )}
-      </div>
 
+          <div className="relative mt-5 grid gap-4">
+            <ControlBar
+              grade={grade}
+              subject={subject}
+              mode={mode}
+              examBody={examBody}
+              sets={sets}
+              showAnswers={showAnswers}
+              onChangeGrade={onChangeGrade}
+              onChangeSubject={setSubject}
+              onChangeExamBody={onChangeExamBody}
+              onChangeMode={onChangeMode}
+              onChangeSets={setSets}
+              onToggleAnswers={setShowAnswers}
+              onGenerate={onGenerate}
+            />
+
+            {mode === "test" ? (
+              <TimerBar
+                secondsLeft={timer.secondsLeft}
+                isRunning={timer.isRunning}
+                onStart={timer.start}
+                onPause={timer.pause}
+                onReset={timer.reset}
+              />
+            ) : null}
+
+            {mode === "test" ? (
+              <div className="grid gap-8">
+                {bundles.map((problems, i) => (
+                  <section key={i} className="grid gap-4">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold">セット {i + 1}</h3>
+                      <span className="text-sm text-slate-600">（{problems.length}題）</span>
+                      <div className="ml-auto">
+                        <button
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 print:hidden"
+                          onClick={() => window.print()}
+                        >
+                          印刷
+                        </button>
+                      </div>
+                    </div>
+
+                    <ProblemSheet
+                      problems={problems}
+                      grade={grade}
+                      subject={subject}
+                      setNumber={i + 1}
+                      minutes={minutes}
+                    />
+                    {showAnswers ? <AnswerSheet problems={problems} /> : null}
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <OneByOnePractice problems={bundles[0] ?? []} onRegenerate={onGenerate} />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
