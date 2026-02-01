@@ -1,6 +1,7 @@
 import { randInt } from "./rng";
 import type { Problem } from "./types";
 import type { DivSpec } from "../specs/types";
+import { formatNumber } from "./format";
 
 export function generateDiv(spec: DivSpec): Problem[] {
   const out: Problem[] = [];
@@ -28,7 +29,7 @@ export function generateDiv(spec: DivSpec): Problem[] {
 
     out.push({
       kind: "inline",
-      question: `${dividend} ÷ ${divisor}`,
+      question: `${formatNumber(dividend)} ÷ ${formatNumber(divisor)}`,
       answer: String(quotient),
     });
   }

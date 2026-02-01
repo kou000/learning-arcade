@@ -17,27 +17,27 @@ export const KENTEI_SPEC_ZENSHUGAKUREN: Partial<Record<Grade, GradeSpec>> = {
   4: {
     mul: { digitsSum: 8, count: 20, minutes: 10, digitsPairs: [[5,3],[3,5],[6,2]] },
     div: { digitsSum: 7, count: 20, minutes: 10, digitsPairs: [[3,3],[2,4],[5,2],[3,4]] },
-    mitori: { digitsMin: 3, digitsMax: 6, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 11 },
+    mitori: { digitsMin: 3, digitsMax: 6, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 2 },
   },
   5: {
     mul: { digitsSum: 6, count: 20, minutes: 10, digitsPairs: [[2,4],[3,3],[4,2]] },
     div: { digitsSum: 5, count: 20, minutes: 10, digitsPairs: [[2,3],[3,2]] },
-    mitori: { digitsMin: 3, digitsMax: 6, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 11 },
+    mitori: { digitsMin: 3, digitsMax: 6, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 2 },
   },
   6: {
     mul: { digitsSum: 5, count: 20, minutes: 10, digitsPairs: [[2,3],[3,2]] },
     div: { digitsSum: 5, count: 20, minutes: 10, digitsPairs: [[2,2],[2,3]] },
-    mitori: { digitsMin: 2, digitsMax: 4, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 11 },
+    mitori: { digitsMin: 2, digitsMax: 4, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 2 },
   },
   7: {
     mul: { digitsSum: 4, count: 20, minutes: 10, digitsPairs: [[2,2]] },
     div: { digitsSum: 4, count: 20, minutes: 10, digitsPairs: [[1,3]] },
-    mitori: { digitsMin: 2, digitsMax: 3, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 11 },
+    mitori: { digitsMin: 2, digitsMax: 3, count: 10, minutes: 8, terms: 10, allowNegativeFromTerm: 2 },
   },
   8: {
     mul: { digitsSum: 4, count: 20, minutes: 10, digitsPairs: [[3,1]] },
     div: { digitsSum: 4, count: 20, minutes: 10, digitsPairs: [[1,2],[1,3]] },
-    mitori: { digitsMin: 2, digitsMax: 3, count: 10, minutes: 8, terms: 7, allowNegativeFromTerm: 8 },
+    mitori: { digitsMin: 2, digitsMax: 3, count: 10, minutes: 8, terms: 7, allowNegativeFromTerm: 2 },
   },
 };
 

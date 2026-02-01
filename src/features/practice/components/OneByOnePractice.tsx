@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import arkSuccess from "../../../assets/ark_success.png";
 import arfBad from "../../../assets/arf_bad.png";
 import type { Problem } from "../../../domain/generator/types";
@@ -130,7 +131,7 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="relative rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
         <div className="text-sm text-slate-600">進行 {index + 1} / {problems.length}</div>
         <div className="ml-auto text-sm text-slate-600">正解 {correctCount}</div>
@@ -175,26 +176,29 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
 
         <button
           className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
-          onClick={() => onNext(true)}
+          onClick={() => onNext(false)}
         >
           {isLast ? "おわり" : "つぎへ"}
         </button>
       </div>
 
-      {flashVisible ? (
-        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
-          <div className={`flex items-center gap-8 transition-all duration-300 ${flashVisible ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${isCorrect ? "flash-good" : "flash-bad"}`}>
-            <img
-              src={isCorrect ? arkSuccess : arfBad}
-              alt={isCorrect ? "せいかい" : "ふせいかい"}
-              className="h-56 w-56 rounded-full bg-white object-cover shadow-sm"
-            />
-            <span className={`text-7xl font-black tracking-wide drop-shadow-sm font-[var(--pop-font)] ${isCorrect ? "text-emerald-600" : "text-rose-600"}`}>
-              {isCorrect ? "せいかい" : "ふせいかい"}
-            </span>
-          </div>
-        </div>
-      ) : null}
+      {flashVisible && typeof document !== "undefined"
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
+              <div className={`flex items-center gap-8 transition-all duration-300 ${flashVisible ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${isCorrect ? "flash-good" : "flash-bad"}`}>
+                <img
+                  src={isCorrect ? arkSuccess : arfBad}
+                  alt={isCorrect ? "せいかい" : "ふせいかい"}
+                  className="h-56 w-56 rounded-full bg-white object-cover shadow-sm"
+                />
+                <span className={`text-7xl font-black tracking-wide drop-shadow-sm font-[var(--pop-font)] ${isCorrect ? "text-emerald-600" : "text-rose-600"}`}>
+                  {isCorrect ? "せいかい" : "ふせいかい"}
+                </span>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
 
       <div className="mt-3">
         <button

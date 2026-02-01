@@ -1,6 +1,7 @@
 import { randInt } from "./rng";
 import type { Problem } from "./types";
 import type { MulSpec } from "../specs/types";
+import { formatNumber } from "./format";
 
 export function generateMul(spec: MulSpec): Problem[] {
   const out: Problem[] = [];
@@ -27,7 +28,7 @@ export function generateMul(spec: MulSpec): Problem[] {
 
     out.push({
       kind: "inline",
-      question: `${a} × ${b}`,
+      question: `${formatNumber(a)} × ${formatNumber(b)}`,
       answer: String(a * b),
     });
   }

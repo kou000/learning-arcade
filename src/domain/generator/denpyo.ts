@@ -1,10 +1,7 @@
 import { randInt } from "./rng";
 import type { Problem } from "./types";
 import type { DenpyoSpec } from "../specs/types";
-
-function padLeft(s: string, len: number): string {
-  return s.length >= len ? s : " ".repeat(len - s.length) + s;
-}
+import { formatNumber, padLeft, widthForDigits } from "./format";
 
 export function generateDenpyo(spec: DenpyoSpec): Problem[] {
   const out: Problem[] = [];
@@ -12,6 +9,7 @@ export function generateDenpyo(spec: DenpyoSpec): Problem[] {
     const d = randInt(spec.digitsMin, spec.digitsMax);
     const min = d === 1 ? 0 : 10 ** (d - 1);
     const max = 10 ** d - 1;
+    const width = widthForDigits(d);
 
     const nums: number[] = [];
     let total = 0;
@@ -21,9 +19,9 @@ export function generateDenpyo(spec: DenpyoSpec): Problem[] {
       total += n;
     }
 
-    const lines = nums.map((n, idx) => {
-      const sign = idx === 0 ? " " : "+";
-      return `${sign} ${padLeft(String(n), d)}`;
+    const lines = nums.map((n) => {
+      const sign = " ";
+      return `${sign} ${padLeft(formatNumber(n), width)}`;
     });
 
     out.push({ kind: "vertical", question: lines.join("\n"), answer: String(total) });

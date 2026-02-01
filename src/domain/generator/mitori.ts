@@ -1,14 +1,12 @@
 import { randInt } from "./rng";
 import type { Problem } from "./types";
 import type { MitoriSpec } from "../specs/types";
-
-function padLeft(s: string, len: number): string {
-  return s.length >= len ? s : " ".repeat(len - s.length) + s;
-}
+import { formatNumber, padLeft, widthForDigits } from "./format";
 
 export function generateMitori(spec: MitoriSpec): Problem[] {
   const out: Problem[] = [];
   const allowFrom = spec.allowNegativeFromTerm ?? Math.floor(spec.terms / 3) + 1;
+  const width = widthForDigits(spec.digitsMax);
 
   for (let i = 0; i < spec.count; i++) {
     const nums: number[] = [];
@@ -27,9 +25,9 @@ export function generateMitori(spec: MitoriSpec): Problem[] {
       total += sign * n;
     }
 
-    const lines = nums.map((x, idx) => {
-      const sign = x < 0 ? "-" : idx === 0 ? " " : "+";
-      return `${sign} ${padLeft(String(Math.abs(x)), spec.digitsMax)}`;
+    const lines = nums.map((x) => {
+      const sign = x < 0 ? "-" : " ";
+      return `${sign} ${padLeft(formatNumber(Math.abs(x)), width)}`;
     });
 
     out.push({ kind: "vertical", question: lines.join("\n"), answer: String(total) });
