@@ -1,5 +1,5 @@
-import type { Grade, Subject } from "../specs/types";
-import { KENTEI_SPEC } from "../specs/kenteiSpec";
+import type { ExamBody, Grade, Subject } from "../specs/types";
+import { getGradeSpec } from "../specs/kenteiSpec";
 import type { Problem } from "./types";
 import { generateMul } from "./mul";
 import { generateDiv } from "./div";
@@ -15,8 +15,9 @@ export function subjectLabel(subject: Subject): string {
   }
 }
 
-export function generateProblems(grade: Grade, subject: Subject): Problem[] {
-  const spec = KENTEI_SPEC[grade];
+export function generateProblems(grade: Grade, subject: Subject, examBody: ExamBody): Problem[] {
+  const spec = getGradeSpec(examBody, grade);
+  if (!spec) return [];
   if (subject === "mul") return generateMul(spec.mul);
   if (subject === "div") return generateDiv(spec.div);
   if (subject === "mitori") return generateMitori(spec.mitori);
@@ -24,8 +25,9 @@ export function generateProblems(grade: Grade, subject: Subject): Problem[] {
   return [];
 }
 
-export function subjectMinutes(grade: Grade, subject: Subject): number {
-  const spec = KENTEI_SPEC[grade];
+export function subjectMinutes(grade: Grade, subject: Subject, examBody: ExamBody): number {
+  const spec = getGradeSpec(examBody, grade);
+  if (!spec) return 0;
   if (subject === "mul") return spec.mul.minutes;
   if (subject === "div") return spec.div.minutes;
   if (subject === "mitori") return spec.mitori.minutes;

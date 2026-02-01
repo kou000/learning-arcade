@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import type { Grade, Subject } from "../../domain/specs/types";
+import type { ExamBody, Grade, Subject } from "../../domain/specs/types";
 import { generateProblems, subjectLabel, subjectMinutes } from "../../domain/generator";
 import type { Problem } from "../../domain/generator/types";
 import { ControlBar } from "./components/ControlBar";
@@ -10,32 +10,46 @@ import { AnswerSheet } from "./components/AnswerSheet";
 import { OneByOnePractice } from "./components/OneByOnePractice";
 import { Button } from "../../ui/components/Button";
 import type { PracticeMode } from "./types";
+import { EXAM_BODY_LABELS, getAvailableGrades, getGradeSpec } from "../../domain/specs/kenteiSpec";
 
 export function PracticePage({ onBack }: { onBack: () => void }) {
   const [grade, setGrade] = useState<Grade>(7);
   const [subject, setSubject] = useState<Subject>("mitori");
   const [mode, setMode] = useState<PracticeMode>("test");
+  const [examBody, setExamBody] = useState<ExamBody>("zenshugakuren");
   const [sets, setSets] = useState<number>(1);
   const [showAnswers, setShowAnswers] = useState<boolean>(false);
 
-  const [bundles, setBundles] = useState<Problem[][]>(() => [generateProblems(7, "mitori")]);
+  const [bundles, setBundles] = useState<Problem[][]>(() => [generateProblems(7, "mitori", "zenshugakuren")]);
 
-  const minutes = subjectMinutes(grade, subject);
+  const minutes = subjectMinutes(grade, subject, examBody);
   const timer = useTimer(minutes * 60);
 
-  const title = useMemo(() => `${grade}級 / ${subjectLabel(subject)}`, [grade, subject]);
+  const title = useMemo(() => `${EXAM_BODY_LABELS[examBody]} / ${grade}級 / ${subjectLabel(subject)}`, [examBody, grade, subject]);
 
   const onGenerate = () => {
     const next: Problem[][] = [];
     const loops = mode === "test" ? sets : 1;
-    for (let i = 0; i < loops; i++) next.push(generateProblems(grade, subject));
+    for (let i = 0; i < loops; i++) next.push(generateProblems(grade, subject, examBody));
     setBundles(next);
     timer.reset();
   };
 
   const onChangeGrade = (g: Grade) => {
     setGrade(g);
-    setSubject((prev) => (prev === "denpyo" && g >= 4 ? "mitori" : prev));
+    const spec = getGradeSpec(examBody, g);
+    setSubject((prev) => (prev === "denpyo" && !spec?.denpyo ? "mitori" : prev));
+  };
+
+  const onChangeExamBody = (b: ExamBody) => {
+    setExamBody(b);
+    const available = getAvailableGrades(b);
+    if (!available.includes(grade)) {
+      const nextGrade = available[0] ?? grade;
+      setGrade(nextGrade);
+      const spec = getGradeSpec(b, nextGrade);
+      setSubject((prev) => (prev === "denpyo" && !spec?.denpyo ? "mitori" : prev));
+    }
   };
 
   const onChangeMode = (m: PracticeMode) => {
@@ -59,10 +73,12 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
           grade={grade}
           subject={subject}
           mode={mode}
+          examBody={examBody}
           sets={sets}
           showAnswers={showAnswers}
           onChangeGrade={onChangeGrade}
           onChangeSubject={setSubject}
+          onChangeExamBody={onChangeExamBody}
           onChangeMode={onChangeMode}
           onChangeSets={setSets}
           onToggleAnswers={setShowAnswers}
