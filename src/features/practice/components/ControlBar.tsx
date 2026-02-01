@@ -58,7 +58,7 @@ export function ControlBar({
           </div>
         </>
       ) : null}
-      <Button onClick={onGenerate} className="w-full">問題を再作成</Button>
+      <Button onClick={onGenerate} className="w-full">つくりなおす</Button>
     </div>
   );
 }

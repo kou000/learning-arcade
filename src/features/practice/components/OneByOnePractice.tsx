@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import arkSuccess from "../../../assets/ark_success.png";
 import arfBad from "../../../assets/arf_bad.png";
+import arkHandsUp from "../../../assets/ark_hands_up.png";
 import type { Problem } from "../../../domain/generator/types";
 
 type Props = {
@@ -11,42 +12,62 @@ type Props = {
 
 export function OneByOnePractice({ problems, onRegenerate }: Props) {
   const [index, setIndex] = useState(0);
-  const [input, setInput] = useState("");
   const [checked, setChecked] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
-  const [countedCorrect, setCountedCorrect] = useState(false);
   const [flashVisible, setFlashVisible] = useState(false);
   const [lastResult, setLastResult] = useState<"correct" | "wrong" | null>(null);
   const autoNextTimer = useRef<number | null>(null);
   const flashTimer = useRef<number | null>(null);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [results, setResults] = useState<Array<"correct" | "wrong" | null>>([]);
 
   const current = problems[index];
   const isLast = index >= problems.length - 1;
 
   const normalizedAnswer = useMemo(() => current?.answer?.replace(/\s+/g, "") ?? "", [current]);
+  const input = answers[index] ?? "";
   const normalizedInput = useMemo(() => input.replace(/\s+/g, ""), [input]);
   const isCorrect = lastResult === "correct";
+  const correctCount = useMemo(() => results.filter((r) => r === "correct").length, [results]);
 
   const appendDigit = (digit: string) => {
-    setInput((prev) => (prev === "0" ? digit : `${prev}${digit}`));
+    setAnswers((prev) => {
+      const next = [...prev];
+      const currentValue = next[index] ?? "";
+      next[index] = currentValue === "0" ? digit : `${currentValue}${digit}`;
+      return next;
+    });
     setChecked(false);
   };
 
   const backspace = () => {
-    setInput((prev) => prev.slice(0, -1));
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[index] = (next[index] ?? "").slice(0, -1);
+      return next;
+    });
     setChecked(false);
   };
 
   const clearInput = () => {
-    setInput("");
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
     setChecked(false);
   };
 
   const toggleSign = () => {
-    setInput((prev) => {
-      if (!prev) return "-";
-      return prev.startsWith("-") ? prev.slice(1) : `-${prev}`;
+    setAnswers((prev) => {
+      const next = [...prev];
+      const currentValue = next[index] ?? "";
+      if (!currentValue) {
+        next[index] = "-";
+      } else {
+        next[index] = currentValue.startsWith("-") ? currentValue.slice(1) : `-${currentValue}`;
+      }
+      return next;
     });
     setChecked(false);
   };
@@ -54,20 +75,24 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
   const onCheck = () => {
     if (!current) return;
     const isNowCorrect = normalizedInput === normalizedAnswer && normalizedInput.length > 0;
+    const prevResult = results[index];
     if (flashTimer.current) window.clearTimeout(flashTimer.current);
     setLastResult(isNowCorrect ? "correct" : "wrong");
     setFlashVisible(true);
     flashTimer.current = window.setTimeout(() => {
       setFlashVisible(false);
     }, 2000);
-    if (isNowCorrect && !countedCorrect) {
-      setCorrectCount((v) => v + 1);
-      setCountedCorrect(true);
+    if (isNowCorrect && prevResult !== "correct") {
       if (autoNextTimer.current) window.clearTimeout(autoNextTimer.current);
       autoNextTimer.current = window.setTimeout(() => {
-        onNext(false);
+        onNext({ forceCheck: false, markWrong: false });
       }, 2000);
     }
+    setResults((prev) => {
+      const next = [...prev];
+      next[index] = isNowCorrect ? "correct" : "wrong";
+      return next;
+    });
     setChecked(true);
   };
 
@@ -76,7 +101,7 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
     setRevealAnswer(true);
   };
 
-  const onNext = (forceCheck: boolean) => {
+  const onNext = ({ forceCheck, markWrong }: { forceCheck: boolean; markWrong: boolean }) => {
     if (!current) return;
     if (autoNextTimer.current) {
       window.clearTimeout(autoNextTimer.current);
@@ -88,12 +113,18 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
       setFlashVisible(false);
     }
     if (forceCheck && !checked) onCheck();
+    if (markWrong && results[index] == null) {
+      setResults((prev) => {
+        const next = [...prev];
+        next[index] = "wrong";
+        return next;
+      });
+      setLastResult("wrong");
+    }
     if (!isLast) {
       setIndex((v) => v + 1);
-      setInput("");
       setChecked(false);
       setRevealAnswer(false);
-      setCountedCorrect(false);
       setLastResult(null);
     }
   };
@@ -104,11 +135,10 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
 
   useEffect(() => {
     setIndex(0);
-    setInput("");
     setChecked(false);
     setRevealAnswer(false);
-    setCountedCorrect(false);
-    setCorrectCount(0);
+    setAnswers(Array.from({ length: problems.length }, () => ""));
+    setResults(Array.from({ length: problems.length }, () => null));
     setLastResult(null);
     if (autoNextTimer.current) window.clearTimeout(autoNextTimer.current);
     if (flashTimer.current) window.clearTimeout(flashTimer.current);
@@ -137,27 +167,66 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
         <div className="ml-auto text-sm text-slate-600">正解 {correctCount}</div>
       </div>
 
-      <div className="mt-6">
-        {current.kind === "vertical" ? (
-          <div className="border border-slate-800 bg-white">
-            <div className="border-b border-slate-800 py-1 text-center text-xs">
-              {index + 1}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {problems.map((_, i) => {
+          const r = results[i];
+          const isActive = i === index;
+          const color =
+            r === "correct"
+              ? "border-emerald-400 bg-emerald-200 text-emerald-900"
+              : r === "wrong"
+                ? "border-rose-300 bg-rose-50 text-rose-700"
+                : "border-slate-200 bg-white text-slate-600";
+          return (
+            <button
+              key={i}
+              className={`h-8 w-8 rounded-full border text-xs font-semibold ${color} ${isActive ? "ring-2 ring-sky-300" : ""}`}
+              onClick={() => {
+                setIndex(i);
+                setChecked(false);
+                setRevealAnswer(false);
+                setLastResult(null);
+              }}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="relative mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-center">
+        <div className={`md:w-1/2 md:mx-auto ${current.kind === "inline" ? "py-8" : ""}`}>
+          {current.kind === "vertical" ? (
+            <div className="border border-slate-800 bg-white">
+              <div className="border-b border-slate-800 py-1 text-center text-xs">
+                {index + 1}
+              </div>
+              <pre className="whitespace-pre-wrap px-4 py-2 text-right text-sm leading-6 font-[var(--sheet-font)]">
+                {current.question}
+              </pre>
+              <div className="h-8 border-t border-slate-800" />
             </div>
-            <pre className="whitespace-pre-wrap px-4 py-2 text-right text-sm leading-6 font-[var(--sheet-font)]">
-              {current.question}
-            </pre>
-            <div className="h-8 border-t border-slate-800" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-[42px_1fr] border border-slate-800 bg-white">
-            <div className="flex items-center justify-center border-r border-slate-800 text-xs">
-              {index + 1}
+          ) : (
+            <div className="grid grid-cols-[42px_1fr] border border-slate-800 bg-white">
+              <div className="flex items-center justify-center border-r border-slate-800 text-xs">
+                {index + 1}
+              </div>
+              <div className="px-4 py-2 text-base font-[var(--sheet-font)]">
+                {current.question} ＝
+              </div>
             </div>
-            <div className="px-4 py-2 text-base font-[var(--sheet-font)]">
-              {current.question} ＝
-            </div>
-          </div>
-        )}
+          )}
+        </div>
+        <div className="flex justify-center md:absolute md:right-0 md:bottom-0">
+          <img
+            src={arkHandsUp}
+            alt="アーク"
+            width={140}
+            height={140}
+            draggable={false}
+            className="select-none drop-shadow"
+          />
+        </div>
       </div>
 
       <div className="mt-6 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
@@ -167,12 +236,16 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
             className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
             value={input}
             onChange={(e) => {
-              setInput(e.target.value);
+              setAnswers((prev) => {
+                const next = [...prev];
+                next[index] = e.target.value;
+                return next;
+              });
               setChecked(false);
               setLastResult(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") onNext(true);
+              if (e.key === "Enter") onNext({ forceCheck: true, markWrong: false });
             }}
             placeholder="数字を入力"
           />
@@ -187,9 +260,9 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
 
         <button
           className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 md:mt-6"
-          onClick={() => onNext(false)}
+          onClick={() => onNext({ forceCheck: false, markWrong: true })}
         >
-          {isLast ? "おわり" : "つぎへ"}
+          {isLast ? "おわり" : "わからない"}
         </button>
       </div>
 

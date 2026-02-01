@@ -87,13 +87,13 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
               className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition ${mode === "test" ? "bg-sky-600 text-white" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"}`}
               onClick={() => onChangeMode("test")}
             >
-              テスト形式
+              テストモード
             </button>
             <button
               className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition ${mode === "one-by-one" ? "bg-sky-600 text-white" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"}`}
               onClick={() => onChangeMode("one-by-one")}
             >
-              1問1答
+              れんしゅうモード
             </button>
           </div>
           <ControlBar

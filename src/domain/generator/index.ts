@@ -8,10 +8,10 @@ import { generateDenpyo } from "./denpyo";
 
 export function subjectLabel(subject: Subject): string {
   switch (subject) {
-    case "mul": return "乗算";
-    case "div": return "除算";
-    case "mitori": return "見取算";
-    case "denpyo": return "伝票算";
+    case "mul": return "じょうざん";
+    case "div": return "じょざん";
+    case "mitori": return "みとりざん";
+    case "denpyo": return "でんぴょうざん";
   }
 }
 
