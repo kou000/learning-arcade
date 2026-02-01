@@ -4,9 +4,29 @@
 
 :root {
   --sheet-font: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+  --pop-font: "Varela Round", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", "Arial Rounded MT Bold", system-ui, sans-serif;
 }
 
 @media print {
   body { background: white !important; }
   .print\:hidden { display: none !important; }
+}
+
+@keyframes badDropIn {
+  from { opacity: 0; transform: translateY(-32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.flash-bad {
+  animation: badDropIn 0.45s ease-out both;
+}
+
+@keyframes goodPopIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.flash-good {
+  animation: goodPopIn 0.5s ease-out both;
 }

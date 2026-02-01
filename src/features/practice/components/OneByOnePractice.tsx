@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import arkSuccess from "../../../assets/ark_success.png";
+import arfBad from "../../../assets/arf_bad.png";
 import type { Problem } from "../../../domain/generator/types";
 
 type Props = {
@@ -11,6 +13,11 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
   const [input, setInput] = useState("");
   const [checked, setChecked] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
+  const [countedCorrect, setCountedCorrect] = useState(false);
+  const [flashVisible, setFlashVisible] = useState(false);
+  const [lastResult, setLastResult] = useState<"correct" | "wrong" | null>(null);
+  const autoNextTimer = useRef<number | null>(null);
+  const flashTimer = useRef<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
 
   const current = problems[index];
@@ -18,34 +25,48 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
 
   const normalizedAnswer = useMemo(() => current?.answer?.replace(/\s+/g, "") ?? "", [current]);
   const normalizedInput = useMemo(() => input.replace(/\s+/g, ""), [input]);
-  const isCorrect = checked && normalizedInput.length > 0 && normalizedInput === normalizedAnswer;
+  const isCorrect = lastResult === "correct";
 
   const appendDigit = (digit: string) => {
-    if (checked) return;
     setInput((prev) => (prev === "0" ? digit : `${prev}${digit}`));
+    setChecked(false);
   };
 
   const backspace = () => {
-    if (checked) return;
     setInput((prev) => prev.slice(0, -1));
+    setChecked(false);
   };
 
   const clearInput = () => {
-    if (checked) return;
     setInput("");
+    setChecked(false);
   };
 
   const toggleSign = () => {
-    if (checked) return;
     setInput((prev) => {
       if (!prev) return "-";
       return prev.startsWith("-") ? prev.slice(1) : `-${prev}`;
     });
+    setChecked(false);
   };
 
   const onCheck = () => {
     if (!current) return;
-    if (!checked && normalizedInput === normalizedAnswer) setCorrectCount((v) => v + 1);
+    const isNowCorrect = normalizedInput === normalizedAnswer && normalizedInput.length > 0;
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    setLastResult(isNowCorrect ? "correct" : "wrong");
+    setFlashVisible(true);
+    flashTimer.current = window.setTimeout(() => {
+      setFlashVisible(false);
+    }, 2000);
+    if (isNowCorrect && !countedCorrect) {
+      setCorrectCount((v) => v + 1);
+      setCountedCorrect(true);
+      if (autoNextTimer.current) window.clearTimeout(autoNextTimer.current);
+      autoNextTimer.current = window.setTimeout(() => {
+        onNext(false);
+      }, 2000);
+    }
     setChecked(true);
   };
 
@@ -54,14 +75,25 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
     setRevealAnswer(true);
   };
 
-  const onNext = () => {
+  const onNext = (forceCheck: boolean) => {
     if (!current) return;
-    if (!checked) onCheck();
+    if (autoNextTimer.current) {
+      window.clearTimeout(autoNextTimer.current);
+      autoNextTimer.current = null;
+    }
+    if (flashTimer.current) {
+      window.clearTimeout(flashTimer.current);
+      flashTimer.current = null;
+      setFlashVisible(false);
+    }
+    if (forceCheck && !checked) onCheck();
     if (!isLast) {
       setIndex((v) => v + 1);
       setInput("");
       setChecked(false);
       setRevealAnswer(false);
+      setCountedCorrect(false);
+      setLastResult(null);
     }
   };
 
@@ -74,8 +106,20 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
     setInput("");
     setChecked(false);
     setRevealAnswer(false);
+    setCountedCorrect(false);
     setCorrectCount(0);
+    setLastResult(null);
+    if (autoNextTimer.current) window.clearTimeout(autoNextTimer.current);
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    setFlashVisible(false);
   }, [problems]);
+
+  useEffect(() => {
+    return () => {
+      if (autoNextTimer.current) window.clearTimeout(autoNextTimer.current);
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    };
+  }, []);
 
   if (!current) {
     return (
@@ -110,11 +154,14 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
           <input
             className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onNext();
+            onChange={(e) => {
+              setInput(e.target.value);
+              setChecked(false);
+              setLastResult(null);
             }}
-            disabled={checked}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onNext(true);
+            }}
             placeholder="数字を入力"
           />
         </label>
@@ -128,15 +175,24 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
 
         <button
           className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
-          onClick={onNext}
+          onClick={() => onNext(true)}
         >
           {isLast ? "おわり" : "つぎへ"}
         </button>
       </div>
 
-      {checked ? (
-        <div className={`mt-4 rounded-xl border px-4 py-3 text-sm ${isCorrect ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
-          {isCorrect ? "正解！" : "まちがい。"}
+      {flashVisible ? (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
+          <div className={`flex items-center gap-8 transition-all duration-300 ${flashVisible ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${isCorrect ? "flash-good" : "flash-bad"}`}>
+            <img
+              src={isCorrect ? arkSuccess : arfBad}
+              alt={isCorrect ? "せいかい" : "ふせいかい"}
+              className="h-56 w-56 rounded-full bg-white object-cover shadow-sm"
+            />
+            <span className={`text-7xl font-black tracking-wide drop-shadow-sm font-[var(--pop-font)] ${isCorrect ? "text-emerald-600" : "text-rose-600"}`}>
+              {isCorrect ? "せいかい" : "ふせいかい"}
+            </span>
+          </div>
         </div>
       ) : null}
 
@@ -162,7 +218,6 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
               key={d}
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
               onClick={() => appendDigit(d)}
-              disabled={checked}
             >
               {d}
             </button>
@@ -170,21 +225,18 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
           <button
             className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
             onClick={toggleSign}
-            disabled={checked}
           >
             ±
           </button>
           <button
             className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
             onClick={() => appendDigit("0")}
-            disabled={checked}
           >
             0
           </button>
           <button
             className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
             onClick={backspace}
-            disabled={checked}
           >
             けす
           </button>
@@ -192,7 +244,6 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
         <button
           className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
           onClick={clearInput}
-          disabled={checked}
         >
           クリア
         </button>
