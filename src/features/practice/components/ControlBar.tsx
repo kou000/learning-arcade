@@ -42,19 +42,14 @@ export function ControlBar({
     { value: "div", label: subjectLabel("div") },
     ...(hasDenpyo ? [{ value: "denpyo" as const, label: subjectLabel("denpyo") }] : []),
   ];
-  const modeOptions: { value: PracticeMode; label: string }[] = [
-    { value: "test", label: "テスト形式" },
-    { value: "one-by-one", label: "1問1答" },
-  ];
 
   const isTestMode = mode === "test";
 
   return (
-    <div className={`grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:items-end ${isTestMode ? "md:grid-cols-7" : "md:grid-cols-6"}`}>
+    <div className={`grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:items-end ${isTestMode ? "md:grid-cols-6" : "md:grid-cols-5"}`}>
       <Select label="検定" value={examBody} options={examOptions} onChange={(v) => onChangeExamBody(v as ExamBody)} />
       <Select label="級" value={grade} options={gradeOptions} onChange={(v) => onChangeGrade(Number(v) as Grade)} />
       <Select label="種目" value={subject} options={subjectOptions} onChange={(v) => onChangeSubject(v as Subject)} />
-      <Select label="モード" value={mode} options={modeOptions} onChange={(v) => onChangeMode(v as PracticeMode)} />
       {isTestMode ? (
         <>
           <NumberInput label="セット数" value={sets} min={1} max={10} onChange={onChangeSets} />
@@ -62,10 +57,8 @@ export function ControlBar({
             <Toggle label="解答を表示" checked={showAnswers} onChange={onToggleAnswers} />
           </div>
         </>
-      ) : (
-        <div className="text-sm text-slate-500 md:col-span-1">1問1答はセット数・解答表示は使いません</div>
-      )}
-      <Button onClick={onGenerate} className="w-full">問題を作る</Button>
+      ) : null}
+      <Button onClick={onGenerate} className="w-full">問題を再作成</Button>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { ExamBody, Grade, Subject } from "../../domain/specs/types";
 import { generateProblems, subjectLabel, subjectMinutes } from "../../domain/generator";
 import type { Problem } from "../../domain/generator/types";
@@ -60,6 +60,14 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
     }
   };
 
+  useEffect(() => {
+    const next: Problem[][] = [];
+    const loops = mode === "test" ? sets : 1;
+    for (let i = 0; i < loops; i++) next.push(generateProblems(grade, subject, examBody));
+    setBundles(next);
+    timer.reset();
+  }, [grade, subject, examBody, mode, sets]);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10">
       <div className="mx-auto max-w-5xl">
@@ -67,28 +75,42 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
           <div className="absolute -top-16 -right-20 h-56 w-56 rounded-full bg-amber-200/40 blur-2xl" />
           <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-sky-200/50 blur-2xl" />
 
-          <div className="relative flex flex-wrap items-center gap-3">
-            <Button variant="ghost" onClick={onBack}>← アーケードへ</Button>
-            <h2 className="text-3xl font-black text-slate-800 font-[var(--pop-font)]">{title}</h2>
-            <div className="ml-auto text-sm text-slate-600">本番想定：{minutes}分（目安）</div>
-          </div>
+        <div className="relative flex flex-wrap items-center gap-3">
+          <Button variant="ghost" onClick={onBack}>← アーケードへ</Button>
+          <h2 className="text-3xl font-black text-slate-800 font-[var(--pop-font)]">{title}</h2>
+          <div className="ml-auto text-sm text-slate-600">本番想定：{minutes}分（目安）</div>
+        </div>
 
-          <div className="relative mt-5 grid gap-4">
-            <ControlBar
-              grade={grade}
-              subject={subject}
-              mode={mode}
-              examBody={examBody}
-              sets={sets}
-              showAnswers={showAnswers}
-              onChangeGrade={onChangeGrade}
-              onChangeSubject={setSubject}
-              onChangeExamBody={onChangeExamBody}
-              onChangeMode={onChangeMode}
-              onChangeSets={setSets}
-              onToggleAnswers={setShowAnswers}
-              onGenerate={onGenerate}
-            />
+        <div className="relative mt-5 grid gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition ${mode === "test" ? "bg-sky-600 text-white" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"}`}
+              onClick={() => onChangeMode("test")}
+            >
+              テスト形式
+            </button>
+            <button
+              className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition ${mode === "one-by-one" ? "bg-sky-600 text-white" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"}`}
+              onClick={() => onChangeMode("one-by-one")}
+            >
+              1問1答
+            </button>
+          </div>
+          <ControlBar
+            grade={grade}
+            subject={subject}
+            mode={mode}
+            examBody={examBody}
+            sets={sets}
+            showAnswers={showAnswers}
+            onChangeGrade={onChangeGrade}
+            onChangeSubject={setSubject}
+            onChangeExamBody={onChangeExamBody}
+            onChangeMode={onChangeMode}
+            onChangeSets={setSets}
+            onToggleAnswers={setShowAnswers}
+            onGenerate={onGenerate}
+          />
 
             {mode === "test" ? (
               <TimerBar

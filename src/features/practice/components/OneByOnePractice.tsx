@@ -137,14 +137,25 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
         <div className="ml-auto text-sm text-slate-600">正解 {correctCount}</div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-50 p-6">
+      <div className="mt-6">
         {current.kind === "vertical" ? (
-          <pre className="whitespace-pre-wrap text-right text-2xl leading-10 font-[var(--sheet-font)]">
-            {current.question}
-          </pre>
+          <div className="border border-slate-800 bg-white">
+            <div className="border-b border-slate-800 py-1 text-center text-xs">
+              {index + 1}
+            </div>
+            <pre className="whitespace-pre-wrap px-4 py-2 text-right text-sm leading-6 font-[var(--sheet-font)]">
+              {current.question}
+            </pre>
+            <div className="h-8 border-t border-slate-800" />
+          </div>
         ) : (
-          <div className="text-center text-3xl font-[var(--sheet-font)]">
-            {current.question}
+          <div className="grid grid-cols-[42px_1fr] border border-slate-800 bg-white">
+            <div className="flex items-center justify-center border-r border-slate-800 text-xs">
+              {index + 1}
+            </div>
+            <div className="px-4 py-2 text-base font-[var(--sheet-font)]">
+              {current.question} ＝
+            </div>
           </div>
         )}
       </div>
@@ -168,14 +179,14 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
         </label>
 
         <button
-          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50 md:mt-6"
           onClick={onCheck}
         >
           かいとうする
         </button>
 
         <button
-          className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
+          className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 md:mt-6"
           onClick={() => onNext(false)}
         >
           {isLast ? "おわり" : "つぎへ"}
