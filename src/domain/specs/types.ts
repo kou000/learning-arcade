@@ -21,6 +21,7 @@ export type MitoriSpec = {
   minutes: number;
   terms: number;
   allowNegativeFromTerm?: number;
+  chars?: number;
 };
 export type DenpyoSpec = { digitsMin: number; digitsMax: number; count: number; minutes: number; terms: number; chars?: number };
 
