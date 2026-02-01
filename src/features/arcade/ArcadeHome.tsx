@@ -1,58 +1,70 @@
 import React from "react";
-import { Mascot } from "../../ui/components/Mascot";
-import { Button } from "../../ui/components/Button";
+import arkNormal from "../../assets/ark_normal.png";
+import arkSuccess from "../../assets/ark_success.png";
 
 type Props = { onStartSoroban: () => void };
 
-function Card({ title, desc, cta, onClick }: { title: string; desc: string; cta: string; onClick: () => void }) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-      <div className="text-xl font-extrabold">{title}</div>
-      <p className="mt-2 text-sm text-slate-600">{desc}</p>
-      <div className="mt-4">
-        <Button onClick={onClick}>{cta}</Button>
-      </div>
-    </div>
-  );
-}
-
 export function ArcadeHome({ onStartSoroban }: Props) {
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-12 pt-8">
-      <header className="flex flex-col items-center gap-4 rounded-3xl bg-gradient-to-b from-sky-50 to-white p-6 text-center shadow-sm ring-1 ring-slate-200 sm:flex-row sm:text-left">
-        <Mascot size={160} className="drop-shadow-sm" />
-        <div className="flex-1">
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Learning Arcade</h1>
-          <p className="mt-2 text-base text-slate-700">
-            ちいさな「まなびゲーム」で、あそびながら つよくなる！
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            アークがいっしょに応援するよ 🐶
-          </p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-20 pt-12">
+      <div className="mx-auto max-w-5xl">
+        <div className="relative overflow-hidden rounded-[36px] border border-slate-200 bg-white/80 p-8 shadow-[0_22px_60px_-28px_rgba(15,23,42,0.55)] backdrop-blur">
+          <div className="absolute -top-16 -right-20 h-56 w-56 rounded-full bg-amber-200/40 blur-2xl" />
+          <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-sky-200/50 blur-2xl" />
 
-      <main className="mt-8 grid gap-4 sm:grid-cols-2">
-        <Card
-          title="そろばん（珠算）"
-          desc="1級〜10級の練習問題を作れるよ。見取算・乗算・除算・（1〜3級は伝票算）"
-          cta="はじめる"
-          onClick={onStartSoroban}
-        />
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6">
-          <div className="text-xl font-extrabold text-slate-700">つぎにつくる…</div>
-          <ul className="mt-3 list-disc pl-5 text-sm text-slate-600">
-            <li>計算スピード（たし算・ひき算）</li>
-            <li>ロジックパズル</li>
-            <li>英単語カード</li>
-          </ul>
-          <p className="mt-3 text-xs text-slate-500">※ここは後から増やせる「筐体スペース」</p>
-        </div>
-      </main>
+          <header className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
+            <img
+              src={arkNormal}
+              alt="アーク"
+              width={210}
+              height={210}
+              draggable={false}
+              className="select-none drop-shadow"
+            />
+            <div className="flex-1">
+              <h1 className="text-6xl font-black tracking-tight text-slate-800 sm:text-7xl font-[var(--pop-font)]">
+                Learning Arcade
+              </h1>
+              <p className="mt-3 text-xl text-slate-600">
+                ちいさな まなびゲームで あそびながら まなぼう！
+              </p>
+            </div>
+          </header>
 
-      <footer className="mt-10 text-center text-xs text-slate-500">
-        <span className="font-semibold">Tips:</span> 印刷ボタンで練習プリントにもできるよ
-      </footer>
+          <main className="relative mt-8 rounded-[30px] border border-slate-200 bg-white/90 p-6 shadow-inner">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl">✨</span>
+                  <h2 className="text-4xl font-black text-slate-800">そろばん（珠算）</h2>
+                </div>
+                <p className="mt-2 text-lg text-slate-600">
+                  そろばんのけいさんを れんしゅうしよう！
+                </p>
+              </div>
+              <div className="hidden sm:flex h-36 w-44 items-center justify-center rounded-2xl bg-amber-50 shadow-sm">
+                <img
+                  src={arkSuccess}
+                  alt="そろばん"
+                  width={148}
+                  height={98}
+                  draggable={false}
+                  className="select-none"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <button
+                onClick={onStartSoroban}
+                className="w-full rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 px-6 py-6 text-3xl font-black text-white shadow-[0_12px_0_rgba(14,116,144,0.25)] transition active:translate-y-0.5 active:shadow-[0_7px_0_rgba(14,116,144,0.25)]"
+              >
+                はじめる
+              </button>
+            </div>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
