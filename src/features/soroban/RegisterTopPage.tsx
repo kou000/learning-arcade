@@ -43,7 +43,9 @@ export function RegisterTopPage({
   onGoShop,
   onGoShelf,
 }: Props) {
-  const [config, setConfig] = useState<PracticeConfig>(() => loadPracticeConfig());
+  const [config, setConfig] = useState<PracticeConfig>(() =>
+    loadPracticeConfig(),
+  );
   const [coins, setCoins] = useState(() => loadRegisterProgress().coins);
 
   const registerSubject = toRegisterSubject(config);
@@ -62,9 +64,9 @@ export function RegisterTopPage({
   ];
 
   const subjectOptions: Array<{ value: RegisterSubject; label: string }> = [
-    { value: "mitori", label: "見取り算（レシート）" },
-    { value: "mul", label: "掛け算（まとめ買い）" },
-    { value: "div", label: "割り算（袋分け）" },
+    { value: "mitori", label: "みとりざん（れしーと）" },
+    { value: "mul", label: "かけざん（まとめがい）" },
+    { value: "div", label: "わりざん（ふくろわけ）" },
   ];
 
   useEffect(() => {
@@ -74,9 +76,10 @@ export function RegisterTopPage({
         ? config.grade
         : (available[0] ?? config.grade);
       const spec = getGradeSpec("zenshugakuren", nextGrade);
-      const nextSubject = config.subject === "denpyo" && !spec?.denpyo
-        ? "mitori"
-        : config.subject;
+      const nextSubject =
+        config.subject === "denpyo" && !spec?.denpyo
+          ? "mitori"
+          : config.subject;
       setConfig((prev) => ({
         ...prev,
         examBody: "zenshugakuren",
@@ -115,7 +118,7 @@ export function RegisterTopPage({
           onGoShelf={onGoShelf}
         />
 
-        <div className="grid content-start gap-3 rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm lg:max-w-3xl">
+        <div className="grid content-start gap-3 rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm">
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             所持コイン: <span className="font-bold">{coins}</span>
           </div>
@@ -173,9 +176,9 @@ export function RegisterTopPage({
               className="h-auto w-full object-cover"
             />
             <div className="absolute inset-0 bg-slate-900/10" />
-            <div className="absolute inset-x-0 bottom-6 flex justify-center">
+            <div className="absolute inset-x-0 bottom-20 flex justify-center">
               <button
-                className="rounded-2xl bg-sky-600 px-7 py-3 text-lg font-black text-white shadow-[0_10px_24px_-8px_rgba(2,132,199,0.7)] transition hover:bg-sky-700"
+                className="rounded-2xl bg-sky-600 px-10 py-4 text-2xl font-black text-white shadow-[0_14px_28px_-10px_rgba(2,132,199,0.75)] transition hover:bg-sky-700"
                 onClick={onGoRegisterPlay}
               >
                 スタート

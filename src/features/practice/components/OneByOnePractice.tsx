@@ -301,7 +301,7 @@ export function OneByOnePractice({ problems, onRegenerate }: Props) {
 
       <div className="mt-6 grid gap-2">
         <div className="grid grid-cols-3 gap-2">
-          {["7", "8", "9", "4", "5", "6", "1", "2", "3"].map((d) => (
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
             <button
               key={d}
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"

@@ -66,6 +66,12 @@ function parseDiv(problem: Problem): { total: number; people: number } {
   };
 }
 
+function peopleLabel(people: number): string {
+  if (people === 1) return "ひとり";
+  if (people === 2) return "ふたり";
+  return `${people}にん`;
+}
+
 function rewardFor(subject: RegisterSubject, grade: Grade): number {
   const base = subject === "mitori" ? 6 : 5;
   return base + Math.max(0, 11 - grade);
@@ -97,12 +103,9 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     generateProblems(config.grade, registerSubject, config.examBody),
   );
   const [index, setIndex] = useState(0);
-  const [bubbleStep, setBubbleStep] = useState(
-    registerSubject === "mitori" ? 0 : 1,
-  );
+  const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
   const [quotient, setQuotient] = useState("");
-  const [remainder, setRemainder] = useState("");
   const [isReadingPaused, setIsReadingPaused] = useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
@@ -112,6 +115,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const flashTimer = useRef<number | null>(null);
   const feedbackTimer = useRef<number | null>(null);
   const dogReplyTimer = useRef<number | null>(null);
+  const autoNextTimer = useRef<number | null>(null);
 
   const current = problems[index];
   const mitoriLines = useMemo(
@@ -122,9 +126,14 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const currentReward = rewardFor(registerSubject, config.grade);
 
   useEffect(() => {
-    if (registerSubject !== "mitori") return;
-    if (bubbleStep > mitoriLines.length) return;
     if (isReadingPaused) return;
+
+    const shouldAutoStep =
+      registerSubject === "mitori"
+        ? bubbleStep <= mitoriLines.length
+        : bubbleStep === 0;
+    if (!shouldAutoStep) return;
+
     const timer = window.setTimeout(
       () => {
         setBubbleStep((prev) => prev + 1);
@@ -132,7 +141,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       bubbleStep === 0 ? 3000 : 1000,
     );
     return () => window.clearTimeout(timer);
-  }, [registerSubject, bubbleStep, mitoriLines.length, index, isReadingPaused]);
+  }, [registerSubject, bubbleStep, mitoriLines.length, isReadingPaused]);
 
   const clearFeedbackTimers = () => {
     if (thankYouTimer.current) {
@@ -151,14 +160,25 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       window.clearTimeout(dogReplyTimer.current);
       dogReplyTimer.current = null;
     }
+    if (autoNextTimer.current) {
+      window.clearTimeout(autoNextTimer.current);
+      autoNextTimer.current = null;
+    }
+  };
+
+  const clearAnswerFeedback = () => {
+    clearFeedbackTimers();
+    setStatus("idle");
+    setClerkEcho(null);
+    setDogReply(null);
+    setShowCorrectFlash(false);
   };
 
   const resetInputs = () => {
-    setBubbleStep(registerSubject === "mitori" ? 0 : 1);
+    setBubbleStep(0);
     setIsReadingPaused(false);
     setAnswer("");
     setQuotient("");
-    setRemainder("");
     clearFeedbackTimers();
     setStatus("idle");
     setClerkEcho(null);
@@ -205,12 +225,15 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       flashTimer.current = window.setTimeout(() => {
         setShowCorrectFlash(false);
       }, 1600);
+      autoNextTimer.current = window.setTimeout(() => {
+        moveNext();
+      }, 1700);
     }, 700);
   };
 
   const buildClerkEcho = () => {
     if (registerSubject === "div") {
-      return `しょう ${quotient || "0"}、あまり ${remainder || "0"} ですね。`;
+      return `しょう ${quotient || "0"} ですね。`;
     }
     return `${answer || "0"} えんですね。`;
   };
@@ -234,10 +257,8 @@ export function RegisterGamePage({ onGoRegister }: Props) {
 
     if (registerSubject === "div") {
       const expectedQ = parseNumber(current.answer);
-      const expectedR = 0;
       const inputQ = parseNumber(quotient);
-      const inputR = parseNumber(remainder);
-      if (inputQ === expectedQ && inputR === expectedR) {
+      if (inputQ === expectedQ) {
         dogReplyTimer.current = window.setTimeout(() => {
           onCorrect();
         }, 1000);
@@ -294,13 +315,70 @@ export function RegisterGamePage({ onGoRegister }: Props) {
 
   const mul = registerSubject === "mul" ? parseMul(current) : null;
   const div = registerSubject === "div" ? parseDiv(current) : null;
+  const isDivMode = registerSubject === "div";
   const receiptReady =
-    registerSubject !== "mitori" || bubbleStep > mitoriLines.length;
+    registerSubject === "mitori"
+      ? bubbleStep > mitoriLines.length
+      : bubbleStep > 0;
   const isReadingItems =
-    registerSubject === "mitori" && bubbleStep <= mitoriLines.length;
+    registerSubject === "mitori"
+      ? bubbleStep <= mitoriLines.length
+      : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
   const isDialogMode = isReadingItems || isFeedbackDialogue;
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
+  const activeInput = isDivMode ? quotient : answer;
+
+  const setActiveInput = (value: string) => {
+    clearAnswerFeedback();
+    if (isDivMode) {
+      setQuotient(value);
+    } else {
+      setAnswer(value);
+    }
+  };
+
+  const appendDigit = (digit: string) => {
+    const next = activeInput === "0" ? digit : `${activeInput}${digit}`;
+    setActiveInput(next);
+  };
+
+  const backspace = () => {
+    setActiveInput(activeInput.slice(0, -1));
+  };
+
+  const clearInput = () => {
+    setActiveInput("");
+  };
+
+  const toggleSign = () => {
+    if (isDivMode) return;
+    if (!activeInput) {
+      setActiveInput("-");
+      return;
+    }
+    setActiveInput(
+      activeInput.startsWith("-") ? activeInput.slice(1) : `-${activeInput}`,
+    );
+  };
+  const promptText = (() => {
+    if (registerSubject === "mitori") {
+      if (bubbleStep === 0) return "おかいけいおねがいします！";
+      if (currentLine) {
+        return currentLine.sign === -1
+          ? `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} クーポン ${currentLine.value}円引き`
+          : `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} ${currentLine.value}円`;
+      }
+      return "合計いくらですか";
+    }
+    if (registerSubject === "mul" && mul) {
+      return `${MUL_NAMES[index % MUL_NAMES.length]} ${mul.price}円 を ${mul.count} こ ください！`;
+    }
+    if (registerSubject === "div" && div) {
+      return `あめを ${div.total} こ、${peopleLabel(div.people)}にわけたいです！`;
+    }
+    return "";
+  })();
 
   return (
     <SceneFrame
@@ -346,9 +424,11 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       }
     >
       <div className="grid h-full grid-rows-[1fr] gap-3">
-        <div className="grid min-h-0 gap-3">
+        <div
+          className={`grid min-h-0 gap-3 ${isDialogMode ? "" : "lg:grid-cols-[1fr_320px]"}`}
+        >
           <div
-            className={`rounded-2xl ${isDialogMode ? "w-full bg-transparent p-0 shadow-none border-none" : "w-full lg:w-1/2 border border-slate-200 bg-white/92 p-4 shadow-sm"}`}
+            className={`rounded-2xl ${isDialogMode ? "w-full bg-transparent p-0 shadow-none border-none" : "w-full border border-slate-200 bg-white/92 p-4 shadow-sm"}`}
           >
             {isFeedbackDialogue ? (
               <div className="relative min-h-[360px]">
@@ -381,7 +461,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
               </div>
             ) : null}
 
-            {registerSubject === "mitori" && !isFeedbackDialogue ? (
+            {!isFeedbackDialogue ? (
               <div className="grid gap-3">
                 {isReadingItems ? (
                   <div className="relative min-h-[360px]">
@@ -390,42 +470,21 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                         おきゃくさん（しばいぬ）
                       </div>
                       <div className="mt-1 text-xl font-black leading-relaxed">
-                        {bubbleStep === 0
-                          ? "おかいけいおねがいします！"
-                          : currentLine?.sign === -1
-                            ? `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} クーポン ${currentLine?.value}円引き`
-                            : `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} ${currentLine?.value}円`}
+                        {promptText}
                       </div>
                       <div className="absolute -bottom-3 right-[164px] h-6 w-6 rotate-45 border-b-2 border-r-2 border-slate-200 bg-white/95" />
                     </div>
                   </div>
                 ) : (
                   <div className="rounded-2xl bg-sky-100/90 p-3 text-slate-800">
-                    {bubbleStep <= mitoriLines.length ? (
-                      <>
-                        <div className="text-xs text-slate-600">
-                          おきゃくさん（しばいぬ）
-                        </div>
-                        <div className="mt-1 text-lg font-bold">
-                          {mitoriLines[bubbleStep - 1]?.sign === -1
-                            ? `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} クーポン ${mitoriLines[bubbleStep - 1]?.value}円引き`
-                            : `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} ${mitoriLines[bubbleStep - 1]?.value}円`}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-xs text-slate-600">
-                          おきゃくさん（しばいぬ）
-                        </div>
-                        <div className="mt-1 text-lg font-bold">
-                          合計いくらですか
-                        </div>
-                      </>
-                    )}
+                    <div className="text-xs text-slate-600">
+                      おきゃくさん（しばいぬ）
+                    </div>
+                    <div className="mt-1 text-lg font-bold">{promptText}</div>
                   </div>
                 )}
 
-                {receiptReady && !isFeedbackDialogue ? (
+                {registerSubject === "mitori" && receiptReady ? (
                   <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
                     <div className="text-sm font-bold text-slate-700">
                       レシート
@@ -448,87 +507,37 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                     ))}
                   </div>
                 ) : null}
-              </div>
-            ) : null}
 
-            {registerSubject === "mul" && mul && !isFeedbackDialogue ? (
-              <div className="grid gap-3">
-                <div className="rounded-2xl bg-sky-100/90 p-3 text-slate-800">
-                  <div className="text-xs text-slate-600">
-                    おきゃくさん（しばいぬ）
+                {registerSubject !== "mitori" && receiptReady ? (
+                  <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
+                    <div className="text-sm font-bold text-slate-700">問題</div>
+                    <div className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-[var(--sheet-font)] text-slate-900">
+                      {current.question}
+                    </div>
                   </div>
-                  <div className="mt-1 text-lg font-bold">
-                    {MUL_NAMES[index % MUL_NAMES.length]} {mul.price}円 ×{" "}
-                    {mul.count}こ
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {registerSubject === "div" && div && !isFeedbackDialogue ? (
-              <div className="grid gap-3">
-                <div className="rounded-2xl bg-sky-100/90 p-3 text-slate-800">
-                  <div className="text-xs text-slate-600">
-                    おきゃくさん（しばいぬ）
-                  </div>
-                  <div className="mt-1 text-lg font-bold">
-                    あめが {div.total}こ、{div.people}にんに分ける
-                  </div>
-                </div>
+                ) : null}
               </div>
             ) : null}
 
             {!isDialogMode ? (
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {registerSubject === "div" ? (
-                  <>
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-slate-700">しょう</span>
-                      <input
-                        className="rounded-xl border border-slate-200 px-3 py-2"
-                        value={quotient}
-                        onChange={(e) => {
-                          setQuotient(e.target.value);
-                          clearFeedbackTimers();
-                          setStatus("idle");
-                          setClerkEcho(null);
-                          setDogReply(null);
-                          setShowCorrectFlash(false);
-                        }}
-                        placeholder="しょう"
-                      />
-                    </label>
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-slate-700">あまり</span>
-                      <input
-                        className="rounded-xl border border-slate-200 px-3 py-2"
-                        value={remainder}
-                        onChange={(e) => {
-                          setRemainder(e.target.value);
-                          clearFeedbackTimers();
-                          setStatus("idle");
-                          setClerkEcho(null);
-                          setDogReply(null);
-                          setShowCorrectFlash(false);
-                        }}
-                        placeholder="あまり"
-                      />
-                    </label>
-                  </>
+                  <label className="grid gap-1 text-sm md:col-span-2">
+                    <span className="text-slate-700">しょう</span>
+                    <input
+                      className="rounded-xl border border-slate-200 px-3 py-2"
+                      value={quotient}
+                      onChange={(e) => setActiveInput(e.target.value)}
+                      placeholder="しょう"
+                    />
+                  </label>
                 ) : (
                   <label className="grid gap-1 text-sm md:col-span-2">
                     <span className="text-white">ごうけい</span>
                     <input
                       className="rounded-xl border border-slate-200 px-3 py-2"
                       value={answer}
-                      onChange={(e) => {
-                        setAnswer(e.target.value);
-                        clearFeedbackTimers();
-                        setStatus("idle");
-                        setClerkEcho(null);
-                        setDogReply(null);
-                        setShowCorrectFlash(false);
-                      }}
+                      onChange={(e) => setActiveInput(e.target.value)}
                       placeholder="数字を入力"
                     />
                   </label>
@@ -545,21 +554,53 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                 >
                   きんがくをつたえる
                 </button>
-
-                {status === "correct" ? (
-                  <button
-                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-900 shadow-sm hover:bg-emerald-100"
-                    onClick={moveNext}
-                  >
-                    {index >= problems.length - 1
-                      ? "つぎのセットへ"
-                      : "つぎの問題へ"}
-                  </button>
-                ) : null}
               </div>
             ) : null}
           </div>
 
+          {!isDialogMode ? (
+            <div className="self-end rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm">
+              <div className="text-sm font-bold text-slate-700 text-white">
+                レジ
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+                  <button
+                    key={d}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50"
+                    onClick={() => appendDigit(d)}
+                  >
+                    {d}
+                  </button>
+                ))}
+                <button
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
+                  onClick={toggleSign}
+                  disabled={isDivMode}
+                >
+                  ±
+                </button>
+                <button
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50"
+                  onClick={() => appendDigit("0")}
+                >
+                  0
+                </button>
+                <button
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50"
+                  onClick={backspace}
+                >
+                  ←
+                </button>
+              </div>
+              <button
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50"
+                onClick={clearInput}
+              >
+                クリア
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
       {showCorrectFlash ? (
