@@ -30,7 +30,6 @@ export function ControlBar({
 }: Props) {
   const gradeOptions = getAvailableGrades(examBody).map((g) => ({ value: g, label: `${g}級` }));
   const examOptions: { value: ExamBody; label: string }[] = [
-    { value: "zenshuren", label: EXAM_BODY_LABELS.zenshuren },
     { value: "zenshugakuren", label: EXAM_BODY_LABELS.zenshugakuren },
   ];
 

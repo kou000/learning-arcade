@@ -11,14 +11,20 @@ import { OneByOnePractice } from "./components/OneByOnePractice";
 import { Button } from "../../ui/components/Button";
 import type { PracticeMode } from "./types";
 import { EXAM_BODY_LABELS, getAvailableGrades, getGradeSpec } from "../../domain/specs/kenteiSpec";
+import { loadPracticeConfig, savePracticeConfig } from "../soroban/state";
 
-export function PracticePage({ onBack }: { onBack: () => void }) {
-  const [grade, setGrade] = useState<Grade>(7);
-  const [subject, setSubject] = useState<Subject>("mitori");
-  const [mode, setMode] = useState<PracticeMode>("test");
-  const [examBody, setExamBody] = useState<ExamBody>("zenshugakuren");
-  const [sets, setSets] = useState<number>(1);
-  const [showAnswers, setShowAnswers] = useState<boolean>(false);
+type Props = {
+  onBack: () => void;
+  onGoRegister: () => void;
+};
+
+export function PracticePage({ onBack, onGoRegister }: Props) {
+  const [grade, setGrade] = useState<Grade>(() => loadPracticeConfig().grade);
+  const [subject, setSubject] = useState<Subject>(() => loadPracticeConfig().subject);
+  const [mode, setMode] = useState<PracticeMode>(() => loadPracticeConfig().mode);
+  const [examBody, setExamBody] = useState<ExamBody>(() => loadPracticeConfig().examBody);
+  const [sets, setSets] = useState<number>(() => loadPracticeConfig().sets);
+  const [showAnswers, setShowAnswers] = useState<boolean>(() => loadPracticeConfig().showAnswers);
 
   const [bundles, setBundles] = useState<Problem[][]>(() => [generateProblems(7, "mitori", "zenshugakuren")]);
 
@@ -61,12 +67,26 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
   };
 
   useEffect(() => {
+    if (examBody !== "zenshugakuren") {
+      const available = getAvailableGrades("zenshugakuren");
+      const nextGrade = available.includes(grade) ? grade : (available[0] ?? grade);
+      const spec = getGradeSpec("zenshugakuren", nextGrade);
+      const nextSubject = subject === "denpyo" && !spec?.denpyo ? "mitori" : subject;
+      setExamBody("zenshugakuren");
+      setGrade(nextGrade);
+      setSubject(nextSubject);
+      return;
+    }
     const next: Problem[][] = [];
     const loops = mode === "test" ? sets : 1;
     for (let i = 0; i < loops; i++) next.push(generateProblems(grade, subject, examBody));
     setBundles(next);
     timer.reset();
   }, [grade, subject, examBody, mode, sets]);
+
+  useEffect(() => {
+    savePracticeConfig({ grade, subject, mode, examBody, sets, showAnswers });
+  }, [grade, subject, mode, examBody, sets, showAnswers]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10">
@@ -94,6 +114,12 @@ export function PracticePage({ onBack }: { onBack: () => void }) {
               onClick={() => onChangeMode("one-by-one")}
             >
               れんしゅうモード
+            </button>
+            <button
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-900 shadow-sm transition hover:bg-emerald-100"
+              onClick={onGoRegister}
+            >
+              ゲームモード
             </button>
           </div>
           <ControlBar
