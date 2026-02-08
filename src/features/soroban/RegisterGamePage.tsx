@@ -97,6 +97,11 @@ function subjectLabel(subject: RegisterSubject): string {
   return "割り算";
 }
 
+function isAdminModeFromEnv(): boolean {
+  const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
+  return raw === "1" || raw === "true" || raw === "on";
+}
+
 function subjectUnlockLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
   if (subject === "mul") return "かけざん";
@@ -125,6 +130,7 @@ function buildUnlockMessage(
 }
 
 export function RegisterGamePage({ onGoRegister }: Props) {
+  const [isAdminMode] = useState(() => isAdminModeFromEnv());
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const config = loadPracticeConfig();
   const registerSubject = toRegisterSubject(config);
@@ -336,6 +342,16 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       dogReplyTimer.current = window.setTimeout(() => {
         showWrongReply();
       }, 1000);
+    }
+  };
+
+  const onAdminFillAnswer = () => {
+    if (!current) return;
+    clearAnswerFeedback();
+    if (isDivMode) {
+      setQuotient(current.answer);
+    } else {
+      setAnswer(current.answer);
     }
   };
 
@@ -610,6 +626,14 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                 >
                   {isDivMode ? "ふくろのかずをつたえる" : "きんがくをつたえる"}
                 </button>
+                {isAdminMode ? (
+                  <button
+                    className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100"
+                    onClick={onAdminFillAnswer}
+                  >
+                    こたえをにゅうりょく
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>

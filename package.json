@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:admin": "VITE_REGISTER_ADMIN_MODE=true vite",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

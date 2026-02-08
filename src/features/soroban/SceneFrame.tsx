@@ -89,6 +89,7 @@ type FrameProps = {
   subtitle: string;
   backgroundImage?: string;
   outsideTopLeft?: React.ReactNode;
+  headerRight?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -97,6 +98,7 @@ export function SceneFrame({
   subtitle,
   backgroundImage,
   outsideTopLeft,
+  headerRight,
   children,
 }: FrameProps) {
   const [hasImageError, setHasImageError] = useState(false);
@@ -104,11 +106,14 @@ export function SceneFrame({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-4 text-center">
-          <h1 className="text-4xl font-black text-slate-800 font-[var(--pop-font)]">
-            {title}
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
+        <div className="mb-4">
+          <div className="flex items-center justify-center">
+            <h1 className="text-4xl font-black text-slate-800 font-[var(--pop-font)] text-center">
+              {title}
+            </h1>
+            {headerRight ? <div className="ml-3">{headerRight}</div> : null}
+          </div>
+          <p className="mt-1 text-center text-sm text-slate-600">{subtitle}</p>
         </div>
 
         {outsideTopLeft ? <div className="mb-2">{outsideTopLeft}</div> : null}

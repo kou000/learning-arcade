@@ -8,6 +8,11 @@ import { ShelfPage } from "./features/soroban/ShelfPage";
 
 type Route = "home" | "soroban" | "soroban-register" | "soroban-register-play" | "soroban-shop" | "soroban-shelf";
 
+function isAdminModeFromEnv(): boolean {
+  const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
+  return raw === "1" || raw === "true" || raw === "on";
+}
+
 function getRouteFromHash(): Route {
   const h = window.location.hash.replace("#", "").replace(/^\/+/, "").replace(/\/+$/, "");
   if (h === "soroban") return "soroban";
@@ -20,6 +25,7 @@ function getRouteFromHash(): Route {
 
 export default function App() {
   const [route, setRoute] = useState<Route>(() => getRouteFromHash());
+  const isAdminMode = isAdminModeFromEnv();
 
   useEffect(() => {
     const onHashChange = () => setRoute(getRouteFromHash());
@@ -35,7 +41,14 @@ export default function App() {
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
 
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen">
+      {isAdminMode ? (
+        <header className="pointer-events-none fixed right-4 top-4 z-50">
+          <span className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 shadow-sm">
+            ADMIN MODE
+          </span>
+        </header>
+      ) : null}
       {route === "home" ? <ArcadeHome onStartSoroban={goSoroban} /> : null}
       {route === "soroban" ? (
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
