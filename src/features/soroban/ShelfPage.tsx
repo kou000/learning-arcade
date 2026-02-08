@@ -134,6 +134,8 @@ export function ShelfPage({
       title="コレクションの棚"
       subtitle="買ったグッズを自由に配置"
       backgroundImage="/assets/shelf-bg.png"
+      fullscreenBackground
+      hideHeader
     >
       <div className="grid h-full grid-rows-[auto_auto_1fr] gap-3">
         <SorobanModeNav

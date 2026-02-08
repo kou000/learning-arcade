@@ -13,7 +13,8 @@ import {
   loadPracticeConfig,
   loadRegisterProgress,
   saveRegisterProgress,
-  type PracticeConfig, type RegisterSubject,
+  type PracticeConfig,
+  type RegisterSubject,
 } from "./state";
 
 type Props = {
@@ -106,7 +107,9 @@ function subjectLabel(subject: RegisterSubject): string {
 }
 
 function isAdminModeFromEnv(): boolean {
-  const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
+  const raw = String(
+    import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "",
+  ).toLowerCase();
   return raw === "1" || raw === "true" || raw === "on";
 }
 
@@ -123,7 +126,9 @@ function buildUnlockMessage(
 ): string | null {
   const prevGrades = getRegisterUnlockedGrades(prev);
   const nextGrades = getRegisterUnlockedGrades(next);
-  const newlyUnlockedGrade = nextGrades.find((grade) => !prevGrades.includes(grade));
+  const newlyUnlockedGrade = nextGrades.find(
+    (grade) => !prevGrades.includes(grade),
+  );
   if (newlyUnlockedGrade != null) {
     return `${newlyUnlockedGrade}きゅうが かいほうされたよ！`;
   }
@@ -142,7 +147,11 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const config = loadPracticeConfig();
   const registerSubject = toRegisterSubject(config);
-  const selection = clampRegisterSelection(progress, config.grade, registerSubject);
+  const selection = clampRegisterSelection(
+    progress,
+    config.grade,
+    registerSubject,
+  );
   const playGrade = selection.grade;
   const playSubject = selection.subject;
 
@@ -153,7 +162,9 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
   const [quotient, setQuotient] = useState("");
-  const [wrongProblemIndexes, setWrongProblemIndexes] = useState<Set<number>>(new Set());
+  const [wrongProblemIndexes, setWrongProblemIndexes] = useState<Set<number>>(
+    new Set(),
+  );
   const [isReadingPaused, setIsReadingPaused] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState<number>(1);
   const [isRoundFinished, setIsRoundFinished] = useState(false);
@@ -188,10 +199,19 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       () => {
         setBubbleStep((prev) => prev + 1);
       },
-      Math.max(150, Math.floor((bubbleStep === 0 ? 3000 : 1000) / readingSpeed)),
+      Math.max(
+        150,
+        Math.floor((bubbleStep === 0 ? 3000 : 1000) / readingSpeed),
+      ),
     );
     return () => window.clearTimeout(timer);
-  }, [playSubject, bubbleStep, mitoriLines.length, isReadingPaused, readingSpeed]);
+  }, [
+    playSubject,
+    bubbleStep,
+    mitoriLines.length,
+    isReadingPaused,
+    readingSpeed,
+  ]);
 
   const clearFeedbackTimers = () => {
     if (thankYouTimer.current) {
@@ -239,9 +259,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   };
 
   const resetRound = () => {
-    setProblems(
-      generateProblems(playGrade, playSubject, config.examBody),
-    );
+    setProblems(generateProblems(playGrade, playSubject, config.examBody));
     setIndex(0);
     setWrongProblemIndexes(new Set());
     resetInputs();
@@ -266,7 +284,11 @@ export function RegisterGamePage({ onGoRegister }: Props) {
         coins: prevProgress.coins + currentReward,
       });
       if (isLastQuestion && passed) {
-        const advanced = advanceRegisterProgressOnClear(next, playGrade, playSubject);
+        const advanced = advanceRegisterProgressOnClear(
+          next,
+          playGrade,
+          playSubject,
+        );
         unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
         next = saveRegisterProgress(advanced);
       }
@@ -279,9 +301,15 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     if (isLastQuestion) {
       const resultSummary = `けっか ${finalCorrectCount}/${problems.length}もん せいかい`;
       const unlockSummary = unlockMessage ? `\n${unlockMessage}` : "";
-      const passSummary = passMessage ? `\n${passMessage}` : (passed ? "\nごうかく！" : "");
+      const passSummary = passMessage
+        ? `\n${passMessage}`
+        : passed
+          ? "\nごうかく！"
+          : "";
       setClerkEcho(null);
-      setDogReply(`おつかれさま！\n${resultSummary}${unlockSummary}${passSummary}`);
+      setDogReply(
+        `おつかれさま！\n${resultSummary}${unlockSummary}${passSummary}`,
+      );
       setIsRoundFinished(true);
       return;
     }
@@ -382,9 +410,11 @@ export function RegisterGamePage({ onGoRegister }: Props) {
         title="そろばんレジゲーム"
         subtitle="問題を作成できませんでした"
         backgroundImage={registerGameBg}
+        fullscreenBackground
+        hideHeader
         outsideTopLeft={
           <button
-            className="w-fit rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
+            className="w-fit rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"
             onClick={onGoRegister}
           >
             ← ゲームモードTOP
@@ -404,9 +434,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const div = playSubject === "div" ? parseDiv(current) : null;
   const isDivMode = playSubject === "div";
   const receiptReady =
-    playSubject === "mitori"
-      ? bubbleStep > mitoriLines.length
-      : bubbleStep > 0;
+    playSubject === "mitori" ? bubbleStep > mitoriLines.length : bubbleStep > 0;
   const isReadingItems =
     playSubject === "mitori"
       ? bubbleStep <= mitoriLines.length
@@ -472,25 +500,27 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       title="そろばんレジゲーム"
       subtitle="練習モード設定で出題中"
       backgroundImage={registerGameBg}
+      fullscreenBackground
+      hideHeader
       outsideTopLeft={
         <div className="grid gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl px-3 py-0.5 text-sm text-slate-800">
             <button
-              className="w-fit rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
+              className="h-12 w-fit rounded-xl bg-transparent px-4 text-sm font-semibold text-white hover:bg-white/10"
               onClick={onGoRegister}
             >
               ← ゲームモードTOP
             </button>
             <button
-              className="w-fit rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
+              className="h-12 w-fit rounded-xl border border-white/60 bg-white/55 px-4 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm hover:bg-white/70"
               onClick={() => setIsReadingPaused((prev) => !prev)}
             >
               {isReadingPaused ? "読み上げ再開" : "読み上げ一時停止"}
             </button>
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
+            <label className="flex h-12 items-center gap-1.5 rounded-xl border border-white/60 bg-white/55 px-3 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
               <span>よみあげ速度</span>
               <select
-                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs"
+                className="h-8 rounded-md border border-white/70 bg-white/75 px-2 text-sm leading-tight text-slate-800"
                 value={String(readingSpeed)}
                 onChange={(e) => setReadingSpeed(Number(e.target.value))}
               >
@@ -501,19 +531,17 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                 ))}
               </select>
             </label>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm text-slate-600 shadow-sm">
             <span>
               問題 {index + 1} / {problems.length}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5">
+            <span className="rounded-full bg-white/70 px-2 py-0.5">
               {subjectLabel(playSubject)}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5">
+            <span className="rounded-full bg-white/70 px-2 py-0.5">
               {playGrade}級
             </span>
             <button
-              className="ml-auto rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold hover:bg-slate-50"
+              className="h-12 rounded-lg border border-white/60 bg-white/70 px-3 text-sm font-semibold text-slate-800 hover:bg-white/85"
               onClick={onGoRegister}
             >
               条件を変える
@@ -522,7 +550,10 @@ export function RegisterGamePage({ onGoRegister }: Props) {
         </div>
       }
     >
-      <div className="grid h-full grid-rows-[1fr] gap-3">
+      <div
+        className="grid h-full grid-rows-[1fr] gap-3 text-lg"
+        style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
+      >
         <div
           className={`grid min-h-0 gap-3 ${isDialogMode ? "" : "lg:grid-cols-[1fr_320px]"}`}
         >
@@ -532,10 +563,10 @@ export function RegisterGamePage({ onGoRegister }: Props) {
             {isFeedbackDialogue ? (
               <div className="relative min-h-[360px]">
                 {clerkEcho ? (
-                  <div className="absolute left-[calc(50%-260px)] top-[85%] w-[min(440px,calc(100%-24px))] -translate-x-1/2 -translate-y-1/2">
+                  <div className="absolute left-[25%] top-[86%] w-[min(440px,calc(100%-24px))] -translate-x-1/2 -translate-y-1/2">
                     <div className="relative rounded-[24px] border-2 border-slate-200 bg-white/95 px-5 py-4 text-slate-800 shadow-lg">
                       <div className="text-xs font-semibold text-slate-500">
-                        店員さん
+                        てんいんさん
                       </div>
                       <div className="mt-1 text-xl font-black leading-relaxed">
                         {clerkEcho}
@@ -545,7 +576,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                   </div>
                 ) : null}
                 {dogReply ? (
-                  <div className="absolute left-[calc(50%+100px)] top-6 w-[min(480px,calc(100%-24px))] -translate-x-1/2">
+                  <div className="absolute left-[60%] top-[17%] w-[min(480px,calc(100%-24px))] -translate-x-1/2">
                     <div className="relative rounded-[24px] border-2 border-sky-200 bg-sky-100/95 px-5 py-4 text-sky-900 shadow-lg">
                       <div className="text-xs font-semibold text-sky-700">
                         おきゃくさん（しばいぬ）
@@ -564,7 +595,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
               <div className="grid gap-3">
                 {isReadingItems ? (
                   <div className="relative min-h-[360px]">
-                    <div className="absolute left-[calc(50%+100px)] top-6 w-[min(480px,calc(100%-24px))] -translate-x-1/2 rounded-[24px] border-2 border-slate-200 bg-white/95 px-5 py-4 text-slate-800 shadow-lg">
+                    <div className="absolute left-[60%] top-[17%] w-[min(480px,calc(100%-24px))] -translate-x-1/2 rounded-[24px] border-2 border-slate-200 bg-white/95 px-5 py-4 text-slate-800 shadow-lg">
                       <div className="text-xs font-semibold text-slate-500">
                         おきゃくさん（しばいぬ）
                       </div>

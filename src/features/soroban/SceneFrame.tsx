@@ -47,6 +47,7 @@ type NavProps = {
   onGoRegister: () => void;
   onGoShop: () => void;
   onGoShelf: () => void;
+  large?: boolean;
 };
 
 export function SorobanSubnav({
@@ -54,6 +55,7 @@ export function SorobanSubnav({
   onGoRegister,
   onGoShop,
   onGoShelf,
+  large = false,
 }: NavProps) {
   const tabs: Array<{
     key: NavProps["current"];
@@ -61,16 +63,16 @@ export function SorobanSubnav({
     onClick: () => void;
   }> = [
     { key: "register", label: "レジゲーム", onClick: onGoRegister },
-    { key: "shop", label: "ショップ", onClick: onGoShop },
-    { key: "shelf", label: "たな", onClick: onGoShelf },
+    { key: "shop", label: "ショップ(じゅんびちゅう)", onClick: onGoShop },
+    { key: "shelf", label: "たな(じゅんびちゅう)", onClick: onGoShelf },
   ];
 
   return (
-    <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-sm sm:grid-cols-3">
+    <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-3">
       {tabs.map((tab) => (
         <button
           key={tab.key}
-          className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+          className={`rounded-xl px-4 py-3 ${large ? "text-base" : "text-sm"} font-semibold transition ${
             current === tab.key
               ? "bg-sky-600 text-white"
               : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -88,8 +90,12 @@ type FrameProps = {
   title: string;
   subtitle: string;
   backgroundImage?: string;
+  fullscreenBackground?: boolean;
   outsideTopLeft?: React.ReactNode;
+  headerLeft?: React.ReactNode;
   headerRight?: React.ReactNode;
+  headerAlign?: "center" | "left";
+  hideHeader?: boolean;
   children: React.ReactNode;
 };
 
@@ -97,28 +103,51 @@ export function SceneFrame({
   title,
   subtitle,
   backgroundImage,
+  fullscreenBackground = false,
   outsideTopLeft,
+  headerLeft,
   headerRight,
+  headerAlign = "center",
+  hideHeader = false,
   children,
 }: FrameProps) {
   const [hasImageError, setHasImageError] = useState(false);
+  const useFullscreen = fullscreenBackground && Boolean(backgroundImage);
+  const fullscreenHeightClass = hideHeader
+    ? "h-[calc(100vh-3.5rem)]"
+    : "h-[calc(100vh-7.5rem)]";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-4">
-          <div className="flex items-center justify-center">
-            <h1 className="text-4xl font-black text-slate-800 font-[var(--pop-font)] text-center">
-              {title}
-            </h1>
-            {headerRight ? <div className="ml-3">{headerRight}</div> : null}
+    <div
+      className={`min-h-screen ${useFullscreen ? "bg-slate-900/90 p-0" : "bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10"}`}
+    >
+      <div className={useFullscreen ? "w-full" : "mx-auto max-w-6xl"}>
+        {!hideHeader ? (
+          <div className={useFullscreen ? "mb-2" : "mb-4"}>
+            <div
+              className={`flex items-center gap-3 ${headerAlign === "left" ? "justify-start" : "justify-center"}`}
+            >
+              {headerLeft ? <div>{headerLeft}</div> : null}
+              <h1
+                className={`text-4xl font-black text-slate-800 font-[var(--pop-font)] ${headerAlign === "left" ? "text-left" : "text-center"}`}
+              >
+                {title}
+              </h1>
+              {headerRight ? <div>{headerRight}</div> : null}
+            </div>
+            <p
+              className={`mt-1 text-sm text-slate-600 ${headerAlign === "left" ? "text-left" : "text-center"}`}
+            >
+              {subtitle}
+            </p>
           </div>
-          <p className="mt-1 text-center text-sm text-slate-600">{subtitle}</p>
-        </div>
+        ) : null}
 
         {outsideTopLeft ? <div className="mb-2">{outsideTopLeft}</div> : null}
 
-        <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-slate-100 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.7)]">
+        <div
+          className={`relative overflow-hidden ${useFullscreen ? `${fullscreenHeightClass} rounded-none border-0 shadow-none` : "rounded-[28px] border border-slate-200 bg-slate-100 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.7)]"}`}
+        >
           {backgroundImage ? (
             <>
               {!hasImageError ? (
@@ -126,10 +155,12 @@ export function SceneFrame({
                   src={backgroundImage}
                   alt="background"
                   onError={() => setHasImageError(true)}
-                  className="h-auto w-full object-cover"
+                  className={`w-full ${useFullscreen ? "h-full object-cover object-top" : "h-auto object-cover"}`}
                 />
               ) : (
-                <div className="h-[520px] w-full bg-[linear-gradient(140deg,#fef3c7_0%,#dbeafe_55%,#e2e8f0_100%)]" />
+                <div
+                  className={`w-full bg-[linear-gradient(140deg,#fef3c7_0%,#dbeafe_55%,#e2e8f0_100%)] ${useFullscreen ? "h-full" : "h-[520px]"}`}
+                />
               )}
 
               {hasImageError ? (
@@ -139,7 +170,11 @@ export function SceneFrame({
               ) : null}
 
               <div className="absolute inset-0 bg-slate-900/10" />
-              <div className="absolute inset-0 p-4 sm:p-6">{children}</div>
+              <div
+                className={`absolute inset-0 ${useFullscreen ? "p-0" : "p-4 sm:p-6"}`}
+              >
+                {children}
+              </div>
             </>
           ) : (
             <div className="bg-white/95 p-4 sm:p-6">{children}</div>
