@@ -1,24 +1,31 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { generateProblems } from "../../domain/generator";
+import { generateProblems, subjectMinutes } from "../../domain/generator";
 import type { Problem } from "../../domain/generator/types";
 import type { Grade } from "../../domain/specs/types";
+import { getGradeSpec } from "../../domain/specs/kenteiSpec";
 import { SceneFrame } from "./SceneFrame";
 import registerGameBg from "../../assets/register-game-bg.png";
 import arkSuccess from "../../assets/ark_success.png";
 import {
   advanceRegisterProgressOnClear,
+  canPlayStage,
   clampRegisterSelection,
+  getClearedStage,
   getRegisterUnlockedGrades,
   getRegisterUnlockedSubjects,
   loadPracticeConfig,
+  loadRegisterPlayConfig,
+  markStageCleared,
   loadRegisterProgress,
+  saveRegisterPlayConfig,
   saveRegisterProgress,
-  type PracticeConfig,
+  type RegisterStage,
   type RegisterSubject,
 } from "./state";
 
 type Props = {
   onGoRegister: () => void;
+  onGoRegisterStage: () => void;
 };
 
 type ParsedMitoriLine = {
@@ -36,7 +43,6 @@ const RECEIPT_NAMES = [
   "せっけん",
 ];
 const MUL_NAMES = ["ガム", "あめ", "シール", "カード", "クッキー", "えんぴつ"];
-const REGISTER_PASS_RATE = 0.7;
 const READING_SPEED_OPTIONS = [
   { label: "0.5x", value: 0.5 },
   { label: "1x", value: 1 },
@@ -45,6 +51,13 @@ const READING_SPEED_OPTIONS = [
   { label: "5x", value: 5 },
   { label: "10x", value: 10 },
 ] as const;
+const STAGE_ALPHA_SECONDS = 15;
+
+const STAGE_QUESTION_COUNT: Record<RegisterStage, number> = {
+  1: 3,
+  2: 3,
+  3: 5,
+};
 
 function parseNumber(text: string): number {
   const cleaned = text.replace(/[^0-9-]/g, "");
@@ -89,15 +102,29 @@ function rewardFor(subject: RegisterSubject, grade: Grade): number {
   return base + Math.max(0, 11 - grade);
 }
 
-function toRegisterSubject(config: PracticeConfig): RegisterSubject {
-  if (
-    config.subject === "mul" ||
-    config.subject === "div" ||
-    config.subject === "mitori"
-  ) {
-    return config.subject;
-  }
-  return "mitori";
+function registerStageLabel(stage: RegisterStage): string {
+  return `すてーじ ${stage}`;
+}
+
+function questionCountFromSpec(grade: Grade, subject: RegisterSubject): number {
+  const spec = getGradeSpec("zenshugakuren", grade);
+  if (!spec) return 1;
+  if (subject === "mitori") return Math.max(1, spec.mitori.count);
+  if (subject === "mul") return Math.max(1, spec.mul.count);
+  return Math.max(1, spec.div.count);
+}
+
+function buildTimeLimitSeconds(
+  grade: Grade,
+  subject: RegisterSubject,
+  stage: RegisterStage,
+): number | null {
+  if (stage === 1) return null;
+  const minutes = subjectMinutes(grade, subject, "zenshugakuren");
+  const specCount = questionCountFromSpec(grade, subject);
+  const perQ = Math.max(1, Math.ceil((minutes * 60) / specCount));
+  if (stage === 2) return (perQ + STAGE_ALPHA_SECONDS) * 5;
+  return perQ * 5;
 }
 
 function subjectLabel(subject: RegisterSubject): string {
@@ -142,32 +169,56 @@ function buildUnlockMessage(
   return null;
 }
 
-export function RegisterGamePage({ onGoRegister }: Props) {
+export function RegisterGamePage({
+  onGoRegister,
+  onGoRegisterStage,
+}: Props) {
   const [isAdminMode] = useState(() => isAdminModeFromEnv());
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const config = loadPracticeConfig();
-  const registerSubject = toRegisterSubject(config);
+  const playConfig = loadRegisterPlayConfig();
+  const registerSubject = playConfig.subject;
   const selection = clampRegisterSelection(
     progress,
-    config.grade,
+    playConfig.grade,
     registerSubject,
   );
+  const playStage: RegisterStage = canPlayStage(
+    progress,
+    selection.grade,
+    selection.subject,
+    playConfig.stage,
+  )
+    ? playConfig.stage
+    : 1;
   const playGrade = selection.grade;
   const playSubject = selection.subject;
+  const questionCount = STAGE_QUESTION_COUNT[playStage];
+  const timeLimitSeconds = buildTimeLimitSeconds(
+    playGrade,
+    playSubject,
+    playStage,
+  );
 
   const [problems, setProblems] = useState<Problem[]>(() =>
-    generateProblems(playGrade, playSubject, config.examBody),
+    generateProblems(playGrade, playSubject, config.examBody).slice(
+      0,
+      questionCount,
+    ),
   );
   const [index, setIndex] = useState(0);
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
   const [quotient, setQuotient] = useState("");
-  const [wrongProblemIndexes, setWrongProblemIndexes] = useState<Set<number>>(
-    new Set(),
-  );
   const [isReadingPaused, setIsReadingPaused] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState<number>(1);
   const [isRoundFinished, setIsRoundFinished] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(
+    timeLimitSeconds,
+  );
+  const [wrongQuestionsCount, setWrongQuestionsCount] = useState(0);
+  const [hasMistakeOnCurrentQuestion, setHasMistakeOnCurrentQuestion] =
+    useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
   const [dogReply, setDogReply] = useState<string | null>(null);
@@ -185,6 +236,40 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     [current, playSubject],
   );
   const currentReward = rewardFor(playSubject, playGrade);
+  const isReadingDialogueForTimer =
+    playSubject === "mitori"
+      ? bubbleStep <= mitoriLines.length
+      : bubbleStep === 0;
+  const isFeedbackDialogueForTimer = Boolean(clerkEcho || dogReply);
+  const shouldPauseCountdownForDialogue =
+    isReadingDialogueForTimer || isFeedbackDialogueForTimer;
+
+  useEffect(() => {
+    saveRegisterPlayConfig({
+      grade: playGrade,
+      subject: playSubject,
+      stage: playStage,
+    });
+  }, [playGrade, playSubject, playStage]);
+
+  useEffect(() => {
+    if (secondsLeft == null) return;
+    if (secondsLeft <= 0) return;
+    if (isRoundFinished) return;
+    if (shouldPauseCountdownForDialogue) return;
+
+    const timer = window.setTimeout(() => {
+      setSecondsLeft((prev) => (prev == null ? null : Math.max(0, prev - 1)));
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [secondsLeft, isRoundFinished, shouldPauseCountdownForDialogue]);
+
+  useEffect(() => {
+    if (secondsLeft == null) return;
+    if (secondsLeft > 0) return;
+    if (isRoundFinished) return;
+    onTimeoutFail();
+  }, [secondsLeft, isRoundFinished, index, wrongQuestionsCount]);
 
   useEffect(() => {
     if (isReadingPaused) return;
@@ -250,6 +335,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     setIsReadingPaused(false);
     setAnswer("");
     setQuotient("");
+    setHasMistakeOnCurrentQuestion(false);
     clearFeedbackTimers();
     setStatus("idle");
     setClerkEcho(null);
@@ -258,66 +344,101 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     setIsRoundFinished(false);
   };
 
-  const resetRound = () => {
-    setProblems(generateProblems(playGrade, playSubject, config.examBody));
-    setIndex(0);
-    setWrongProblemIndexes(new Set());
-    resetInputs();
-  };
-
   const moveNext = () => {
     setIndex((prev) => prev + 1);
     resetInputs();
   };
 
+  const onTimeoutFail = () => {
+    clearFeedbackTimers();
+    setStatus("wrong");
+    const correctCount = Math.max(0, index - wrongQuestionsCount);
+    setDogReply(
+      `じかんぎれ…\nけっか ${correctCount}/${problems.length}もん せいかい\nこのステージはしっぱい！`,
+    );
+    setIsRoundFinished(true);
+  };
+
+  const onWrongAnswer = () => {
+    clearFeedbackTimers();
+    if (!hasMistakeOnCurrentQuestion) {
+      setHasMistakeOnCurrentQuestion(true);
+      setWrongQuestionsCount((prev) => prev + 1);
+    }
+    setStatus("wrong");
+    setDogReply("ちがうよ");
+    setIsRoundFinished(false);
+    feedbackTimer.current = window.setTimeout(() => {
+      setStatus("idle");
+      setClerkEcho(null);
+      setDogReply(null);
+    }, 900);
+  };
+
   const onCorrect = () => {
     setStatus("correct");
     let unlockMessage: string | null = null;
-    let passMessage: string | null = null;
+    const stageName = registerStageLabel(playStage);
     const isLastQuestion = index >= problems.length - 1;
-    const passLine = Math.ceil(problems.length * REGISTER_PASS_RATE);
-    const finalCorrectCount = problems.length - wrongProblemIndexes.size;
-    const passed = finalCorrectCount >= passLine;
+    const stagePassed = wrongQuestionsCount === 0;
+    const finalCorrectCount = Math.max(
+      0,
+      problems.length - wrongQuestionsCount,
+    );
     setProgress((prevProgress) => {
       let next = saveRegisterProgress({
         ...prevProgress,
         coins: prevProgress.coins + currentReward,
       });
-      if (isLastQuestion && passed) {
-        const advanced = advanceRegisterProgressOnClear(
+      if (isLastQuestion && stagePassed) {
+        const stageMarked = markStageCleared(
           next,
           playGrade,
           playSubject,
+          playStage,
         );
-        unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
-        next = saveRegisterProgress(advanced);
+        next = saveRegisterProgress(stageMarked);
+        if (playStage === 3) {
+          const advanced = advanceRegisterProgressOnClear(
+            next,
+            playGrade,
+            playSubject,
+          );
+          unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
+          next = saveRegisterProgress(advanced);
+        }
       }
       return next;
     });
-    if (isLastQuestion && !passed) {
-      passMessage = `せいとうりつ ${finalCorrectCount}/${problems.length}（ごうかく ${passLine} もん）で、かいほうは つぎのかいにちょうせんしてね。`;
-    }
 
     if (isLastQuestion) {
       const resultSummary = `けっか ${finalCorrectCount}/${problems.length}もん せいかい`;
-      const unlockSummary = unlockMessage ? `\n${unlockMessage}` : "";
-      const passSummary = passMessage
-        ? `\n${passMessage}`
-        : passed
-          ? "\nごうかく！"
-          : "";
-      setClerkEcho(null);
-      setDogReply(
-        `おつかれさま！\n${resultSummary}${unlockSummary}${passSummary}`,
-      );
-      setIsRoundFinished(true);
+      const stageSummary = stagePassed
+        ? `${stageName} くりあ！`
+        : `${stageName} しっぱい…`;
+      const unlockSummary =
+        stagePassed && unlockMessage ? `\n${unlockMessage}` : "";
+      clearFeedbackTimers();
+      setDogReply("ありがとう！");
+      thankYouTimer.current = window.setTimeout(() => {
+        setDogReply(null);
+        setShowCorrectFlash(true);
+        flashTimer.current = window.setTimeout(() => {
+          setShowCorrectFlash(false);
+        }, 1600);
+        feedbackTimer.current = window.setTimeout(() => {
+          setDogReply(
+            `おつかれさま！\n${stageSummary}\n${resultSummary}${unlockSummary}`,
+          );
+          setIsRoundFinished(true);
+        }, 1700);
+      }, 700);
       return;
     }
 
     setDogReply("ありがとう！");
     clearFeedbackTimers();
     thankYouTimer.current = window.setTimeout(() => {
-      setClerkEcho(null);
       setDogReply(null);
       setShowCorrectFlash(true);
       flashTimer.current = window.setTimeout(() => {
@@ -346,18 +467,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     clearFeedbackTimers();
 
     const showWrongReply = () => {
-      setStatus("wrong");
-      setWrongProblemIndexes((prev) => {
-        if (prev.has(index)) return prev;
-        const next = new Set(prev);
-        next.add(index);
-        return next;
-      });
-      setDogReply("ちがうよ");
-      feedbackTimer.current = window.setTimeout(() => {
-        setClerkEcho(null);
-        setDogReply(null);
-      }, 1200);
+      onWrongAnswer();
     };
 
     if (playSubject === "div") {
@@ -540,11 +650,23 @@ export function RegisterGamePage({ onGoRegister }: Props) {
             <span className="rounded-full bg-white/70 px-2 py-0.5">
               {playGrade}級
             </span>
+            <span className="rounded-full bg-white/70 px-2 py-0.5">
+              {registerStageLabel(playStage)}
+            </span>
+            {secondsLeft != null ? (
+              <span className="rounded-full bg-white/70 px-2 py-0.5 font-bold">
+                のこり {secondsLeft}s
+              </span>
+            ) : (
+              <span className="rounded-full bg-white/70 px-2 py-0.5">
+                じかんせいげんなし
+              </span>
+            )}
             <button
               className="h-12 rounded-lg border border-white/60 bg-white/70 px-3 text-sm font-semibold text-slate-800 hover:bg-white/85"
-              onClick={onGoRegister}
+              onClick={onGoRegisterStage}
             >
-              条件を変える
+              ステージせんたくへ
             </button>
           </div>
         </div>
@@ -759,9 +881,9 @@ export function RegisterGamePage({ onGoRegister }: Props) {
         <div className="fixed bottom-6 right-6 z-40">
           <button
             className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
-            onClick={onGoRegister}
+            onClick={onGoRegisterStage}
           >
-            ゲームモードTOPへ
+            ステージせんたくへ
           </button>
         </div>
       ) : null}

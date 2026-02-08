@@ -9,6 +9,7 @@ const REGISTER_START_GRADE: Grade = REGISTER_GRADE_ORDER[0] ?? 8;
 const REGISTER_SUBJECT_ORDER = ["mitori", "mul", "div"] as const;
 
 export type RegisterSubject = typeof REGISTER_SUBJECT_ORDER[number];
+export type RegisterStage = 1 | 2 | 3;
 
 export type PracticeConfig = {
   grade: Grade;
@@ -27,11 +28,19 @@ export type RegisterProgress = {
   shelfSlots: Array<string | null>;
   unlockedGrades: Grade[];
   unlockedStageByGrade: Partial<Record<Grade, number>>;
+  stageClearByGradeSubject: Partial<Record<Grade, Partial<Record<RegisterSubject, 0 | 1 | 2 | 3>>>>;
+};
+
+export type RegisterPlayConfig = {
+  grade: Grade;
+  subject: RegisterSubject;
+  stage: RegisterStage;
 };
 
 type SorobanSaveData = {
   practiceConfig: PracticeConfig;
   registerProgress: RegisterProgress;
+  registerPlayConfig: RegisterPlayConfig;
 };
 
 export const DEFAULT_PRACTICE_CONFIG: PracticeConfig = {
@@ -51,6 +60,13 @@ export const DEFAULT_REGISTER_PROGRESS: RegisterProgress = {
   shelfSlots: Array.from({ length: 8 }, () => null),
   unlockedGrades: [REGISTER_START_GRADE],
   unlockedStageByGrade: { [REGISTER_START_GRADE]: 0 },
+  stageClearByGradeSubject: {},
+};
+
+export const DEFAULT_REGISTER_PLAY_CONFIG: RegisterPlayConfig = {
+  grade: REGISTER_START_GRADE,
+  subject: "mitori",
+  stage: 1,
 };
 
 function normalizePracticeConfig(input: Partial<PracticeConfig> | undefined): PracticeConfig {
@@ -102,6 +118,20 @@ function normalizeRegisterProgress(input: Partial<RegisterProgress> | undefined)
     unlockedStageByGrade[grade] = Math.max(0, Math.min(2, Math.floor(stage)));
   });
 
+  const stageClearInput = input?.stageClearByGradeSubject ?? {};
+  const stageClearByGradeSubject: Partial<Record<Grade, Partial<Record<RegisterSubject, 0 | 1 | 2 | 3>>>> = {};
+  REGISTER_GRADE_ORDER.forEach((grade) => {
+    const subjectMap = stageClearInput[grade];
+    if (!subjectMap) return;
+    const next: Partial<Record<RegisterSubject, 0 | 1 | 2 | 3>> = {};
+    REGISTER_SUBJECT_ORDER.forEach((subject) => {
+      const raw = subjectMap[subject];
+      const value = Number.isFinite(raw) ? Number(raw) : 0;
+      next[subject] = Math.max(0, Math.min(3, Math.floor(value))) as 0 | 1 | 2 | 3;
+    });
+    stageClearByGradeSubject[grade] = next;
+  });
+
   return {
     coins: Math.max(0, Math.floor(input?.coins ?? DEFAULT_REGISTER_PROGRESS.coins)),
     purchasedItemIds: Array.from(new Set((input?.purchasedItemIds ?? []).filter((id): id is string => typeof id === "string"))),
@@ -113,7 +143,19 @@ function normalizeRegisterProgress(input: Partial<RegisterProgress> | undefined)
     }),
     unlockedGrades,
     unlockedStageByGrade,
+    stageClearByGradeSubject,
   };
+}
+
+function normalizeRegisterPlayConfig(input: Partial<RegisterPlayConfig> | undefined): RegisterPlayConfig {
+  const grade = REGISTER_GRADE_ORDER.includes(input?.grade as Grade)
+    ? (input?.grade as Grade)
+    : DEFAULT_REGISTER_PLAY_CONFIG.grade;
+  const subject = input?.subject === "mitori" || input?.subject === "mul" || input?.subject === "div"
+    ? input.subject
+    : DEFAULT_REGISTER_PLAY_CONFIG.subject;
+  const stage = input?.stage === 1 || input?.stage === 2 || input?.stage === 3 ? input.stage : 1;
+  return { grade, subject, stage };
 }
 
 function readAll(): SorobanSaveData {
@@ -121,6 +163,7 @@ function readAll(): SorobanSaveData {
     return {
       practiceConfig: DEFAULT_PRACTICE_CONFIG,
       registerProgress: DEFAULT_REGISTER_PROGRESS,
+      registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
     };
   }
 
@@ -130,17 +173,20 @@ function readAll(): SorobanSaveData {
       return {
         practiceConfig: DEFAULT_PRACTICE_CONFIG,
         registerProgress: DEFAULT_REGISTER_PROGRESS,
+        registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
       };
     }
     const parsed = JSON.parse(raw) as Partial<SorobanSaveData>;
     return {
       practiceConfig: normalizePracticeConfig(parsed.practiceConfig),
       registerProgress: normalizeRegisterProgress(parsed.registerProgress),
+      registerPlayConfig: normalizeRegisterPlayConfig(parsed.registerPlayConfig),
     };
   } catch {
     return {
       practiceConfig: DEFAULT_PRACTICE_CONFIG,
       registerProgress: DEFAULT_REGISTER_PROGRESS,
+      registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
     };
   }
 }
@@ -169,6 +215,17 @@ export function saveRegisterProgress(input: Partial<RegisterProgress>): Register
   const current = readAll();
   const next = normalizeRegisterProgress({ ...current.registerProgress, ...input });
   writeAll({ ...current, registerProgress: next });
+  return next;
+}
+
+export function loadRegisterPlayConfig(): RegisterPlayConfig {
+  return readAll().registerPlayConfig;
+}
+
+export function saveRegisterPlayConfig(input: Partial<RegisterPlayConfig>): RegisterPlayConfig {
+  const current = readAll();
+  const next = normalizeRegisterPlayConfig({ ...current.registerPlayConfig, ...input });
+  writeAll({ ...current, registerPlayConfig: next });
   return next;
 }
 
@@ -228,5 +285,48 @@ export function advanceRegisterProgressOnClear(
     next.unlockedGrades.push(nextGrade);
     next.unlockedStageByGrade[nextGrade] = 0;
   }
+  return normalizeRegisterProgress(next);
+}
+
+export function getClearedStage(
+  progress: RegisterProgress,
+  grade: Grade,
+  subject: RegisterSubject,
+): 0 | 1 | 2 | 3 {
+  const normalized = normalizeRegisterProgress(progress);
+  return normalized.stageClearByGradeSubject[grade]?.[subject] ?? 0;
+}
+
+export function canPlayStage(
+  progress: RegisterProgress,
+  grade: Grade,
+  subject: RegisterSubject,
+  stage: RegisterStage,
+): boolean {
+  const selection = clampRegisterSelection(progress, grade, subject);
+  if (selection.grade !== grade || selection.subject !== subject) return false;
+  if (stage === 1) return true;
+  const cleared = getClearedStage(progress, grade, subject);
+  return cleared >= (stage - 1);
+}
+
+export function markStageCleared(
+  progress: RegisterProgress,
+  grade: Grade,
+  subject: RegisterSubject,
+  stage: RegisterStage,
+): RegisterProgress {
+  const normalized = normalizeRegisterProgress(progress);
+  const current = getClearedStage(normalized, grade, subject);
+  const nextStage = Math.max(current, stage) as 0 | 1 | 2 | 3;
+  const nextByGrade = { ...(normalized.stageClearByGradeSubject[grade] ?? {}) };
+  nextByGrade[subject] = nextStage;
+  const next: RegisterProgress = {
+    ...normalized,
+    stageClearByGradeSubject: {
+      ...normalized.stageClearByGradeSubject,
+      [grade]: nextByGrade,
+    },
+  };
   return normalizeRegisterProgress(next);
 }

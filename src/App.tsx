@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { ArcadeHome } from "./features/arcade/ArcadeHome";
 import { PracticePage } from "./features/practice/PracticePage";
 import { RegisterGamePage } from "./features/soroban/RegisterGamePage";
+import { RegisterStagePage } from "./features/soroban/RegisterStagePage";
 import { RegisterTopPage } from "./features/soroban/RegisterTopPage";
 import { ShopPage } from "./features/soroban/ShopPage";
 import { ShelfPage } from "./features/soroban/ShelfPage";
 
-type Route = "home" | "soroban" | "soroban-register" | "soroban-register-play" | "soroban-shop" | "soroban-shelf";
+type Route = "home" | "soroban" | "soroban-register" | "soroban-register-stage" | "soroban-register-play" | "soroban-shop" | "soroban-shelf";
 
 function isAdminModeFromEnv(): boolean {
   const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
@@ -17,6 +18,7 @@ function getRouteFromHash(): Route {
   const h = window.location.hash.replace("#", "").replace(/^\/+/, "").replace(/\/+$/, "");
   if (h === "soroban") return "soroban";
   if (h === "soroban/register") return "soroban-register";
+  if (h === "soroban/register/stage") return "soroban-register-stage";
   if (h === "soroban/register/play") return "soroban-register-play";
   if (h === "soroban/shop") return "soroban-shop";
   if (h === "soroban/shelf") return "soroban-shelf";
@@ -36,6 +38,7 @@ export default function App() {
   const goHome = () => { window.location.hash = ""; };
   const goSoroban = () => { window.location.hash = "/soroban"; };
   const goRegister = () => { window.location.hash = "/soroban/register"; };
+  const goRegisterStage = () => { window.location.hash = "/soroban/register/stage"; };
   const goRegisterPlay = () => { window.location.hash = "/soroban/register/play"; };
   const goShop = () => { window.location.hash = "/soroban/shop"; };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
@@ -54,10 +57,16 @@ export default function App() {
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
       ) : null}
       {route === "soroban-register" ? (
-        <RegisterTopPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoRegisterPlay={goRegisterPlay} onGoShop={goShop} onGoShelf={goShelf} />
+        <RegisterTopPage onGoPractice={goSoroban} onGoRegisterStage={goRegisterStage} onGoShop={goShop} onGoShelf={goShelf} />
+      ) : null}
+      {route === "soroban-register-stage" ? (
+        <RegisterStagePage onGoRegisterTop={goRegister} onGoRegisterPlay={goRegisterPlay} onGoShop={goShop} onGoShelf={goShelf} />
       ) : null}
       {route === "soroban-register-play" ? (
-        <RegisterGamePage onGoRegister={goRegister} />
+        <RegisterGamePage
+          onGoRegister={goRegister}
+          onGoRegisterStage={goRegisterStage}
+        />
       ) : null}
       {route === "soroban-shop" ? (
         <ShopPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
