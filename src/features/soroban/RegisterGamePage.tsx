@@ -6,17 +6,19 @@ import { SceneFrame } from "./SceneFrame";
 import registerGameBg from "../../assets/register-game-bg.png";
 import arkSuccess from "../../assets/ark_success.png";
 import {
+  advanceRegisterProgressOnClear,
+  clampRegisterSelection,
+  getRegisterUnlockedGrades,
+  getRegisterUnlockedSubjects,
   loadPracticeConfig,
   loadRegisterProgress,
   saveRegisterProgress,
-  type PracticeConfig,
+  type PracticeConfig, type RegisterSubject,
 } from "./state";
 
 type Props = {
   onGoRegister: () => void;
 };
-
-type RegisterSubject = "mitori" | "mul" | "div";
 
 type ParsedMitoriLine = {
   sign: 1 | -1;
@@ -33,6 +35,7 @@ const RECEIPT_NAMES = [
   "せっけん",
 ];
 const MUL_NAMES = ["ガム", "あめ", "シール", "カード", "クッキー", "えんぴつ"];
+const REGISTER_PASS_RATE = 0.7;
 
 function parseNumber(text: string): number {
   const cleaned = text.replace(/[^0-9-]/g, "");
@@ -94,18 +97,49 @@ function subjectLabel(subject: RegisterSubject): string {
   return "割り算";
 }
 
+function subjectUnlockLabel(subject: RegisterSubject): string {
+  if (subject === "mitori") return "みとりざん";
+  if (subject === "mul") return "かけざん";
+  return "わりざん";
+}
+
+function buildUnlockMessage(
+  prev: ReturnType<typeof loadRegisterProgress>,
+  next: ReturnType<typeof loadRegisterProgress>,
+  playedGrade: Grade,
+): string | null {
+  const prevGrades = getRegisterUnlockedGrades(prev);
+  const nextGrades = getRegisterUnlockedGrades(next);
+  const newlyUnlockedGrade = nextGrades.find((grade) => !prevGrades.includes(grade));
+  if (newlyUnlockedGrade != null) {
+    return `${newlyUnlockedGrade}きゅうが かいほうされたよ！`;
+  }
+
+  const prevSubjects = getRegisterUnlockedSubjects(prev, playedGrade);
+  const nextSubjects = getRegisterUnlockedSubjects(next, playedGrade);
+  if (nextSubjects.length > prevSubjects.length) {
+    const unlockedSubject = nextSubjects[nextSubjects.length - 1];
+    return `${subjectUnlockLabel(unlockedSubject)}が かいほうされたよ！`;
+  }
+  return null;
+}
+
 export function RegisterGamePage({ onGoRegister }: Props) {
+  const [progress, setProgress] = useState(() => loadRegisterProgress());
   const config = loadPracticeConfig();
   const registerSubject = toRegisterSubject(config);
+  const selection = clampRegisterSelection(progress, config.grade, registerSubject);
+  const playGrade = selection.grade;
+  const playSubject = selection.subject;
 
-  const [progress, setProgress] = useState(() => loadRegisterProgress());
   const [problems, setProblems] = useState<Problem[]>(() =>
-    generateProblems(config.grade, registerSubject, config.examBody),
+    generateProblems(playGrade, playSubject, config.examBody),
   );
   const [index, setIndex] = useState(0);
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
   const [quotient, setQuotient] = useState("");
+  const [wrongProblemIndexes, setWrongProblemIndexes] = useState<Set<number>>(new Set());
   const [isReadingPaused, setIsReadingPaused] = useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
@@ -120,16 +154,16 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const current = problems[index];
   const mitoriLines = useMemo(
     () =>
-      current && registerSubject === "mitori" ? parseMitoriLines(current) : [],
-    [current, registerSubject],
+      current && playSubject === "mitori" ? parseMitoriLines(current) : [],
+    [current, playSubject],
   );
-  const currentReward = rewardFor(registerSubject, config.grade);
+  const currentReward = rewardFor(playSubject, playGrade);
 
   useEffect(() => {
     if (isReadingPaused) return;
 
     const shouldAutoStep =
-      registerSubject === "mitori"
+      playSubject === "mitori"
         ? bubbleStep <= mitoriLines.length
         : bubbleStep === 0;
     if (!shouldAutoStep) return;
@@ -141,7 +175,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       bubbleStep === 0 ? 3000 : 1000,
     );
     return () => window.clearTimeout(timer);
-  }, [registerSubject, bubbleStep, mitoriLines.length, isReadingPaused]);
+  }, [playSubject, bubbleStep, mitoriLines.length, isReadingPaused]);
 
   const clearFeedbackTimers = () => {
     if (thankYouTimer.current) {
@@ -188,20 +222,11 @@ export function RegisterGamePage({ onGoRegister }: Props) {
 
   const resetRound = () => {
     setProblems(
-      generateProblems(config.grade, registerSubject, config.examBody),
+      generateProblems(playGrade, playSubject, config.examBody),
     );
     setIndex(0);
+    setWrongProblemIndexes(new Set());
     resetInputs();
-  };
-
-  const updateCoins = (amount: number) => {
-    setProgress((prev) => {
-      const next = saveRegisterProgress({
-        ...prev,
-        coins: prev.coins + amount,
-      });
-      return next;
-    });
   };
 
   const moveNext = () => {
@@ -215,8 +240,33 @@ export function RegisterGamePage({ onGoRegister }: Props) {
 
   const onCorrect = () => {
     setStatus("correct");
-    setDogReply("ありがとう！");
-    updateCoins(currentReward);
+    let unlockMessage: string | null = null;
+    let passMessage: string | null = null;
+    const passLine = Math.ceil(problems.length * REGISTER_PASS_RATE);
+    const finalCorrectCount = problems.length - wrongProblemIndexes.size;
+    const passed = finalCorrectCount >= passLine;
+    setProgress((prevProgress) => {
+      let next = saveRegisterProgress({
+        ...prevProgress,
+        coins: prevProgress.coins + currentReward,
+      });
+      if (index >= problems.length - 1 && passed) {
+        const advanced = advanceRegisterProgressOnClear(next, playGrade, playSubject);
+        unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
+        next = saveRegisterProgress(advanced);
+      }
+      return next;
+    });
+    if (index >= problems.length - 1 && !passed) {
+      passMessage = `せいとうりつ ${finalCorrectCount}/${problems.length}（ごうかく ${passLine} もん）で、かいほうは つぎのかいにちょうせんしてね。`;
+    }
+    setDogReply(
+      unlockMessage
+        ? `ありがとう！\n${unlockMessage}`
+        : passMessage
+          ? `ありがとう！\n${passMessage}`
+          : "ありがとう！",
+    );
     clearFeedbackTimers();
     thankYouTimer.current = window.setTimeout(() => {
       setClerkEcho(null);
@@ -232,8 +282,8 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   };
 
   const buildClerkEcho = () => {
-    if (registerSubject === "div") {
-      return `しょう ${quotient || "0"} ですね。`;
+    if (playSubject === "div") {
+      return `ふくろ ${quotient || "0"}こにわけますね。`;
     }
     return `${answer || "0"} えんですね。`;
   };
@@ -248,6 +298,12 @@ export function RegisterGamePage({ onGoRegister }: Props) {
 
     const showWrongReply = () => {
       setStatus("wrong");
+      setWrongProblemIndexes((prev) => {
+        if (prev.has(index)) return prev;
+        const next = new Set(prev);
+        next.add(index);
+        return next;
+      });
       setDogReply("ちがうよ");
       feedbackTimer.current = window.setTimeout(() => {
         setClerkEcho(null);
@@ -255,7 +311,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       }, 1200);
     };
 
-    if (registerSubject === "div") {
+    if (playSubject === "div") {
       const expectedQ = parseNumber(current.answer);
       const inputQ = parseNumber(quotient);
       if (inputQ === expectedQ) {
@@ -313,15 +369,15 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     );
   }
 
-  const mul = registerSubject === "mul" ? parseMul(current) : null;
-  const div = registerSubject === "div" ? parseDiv(current) : null;
-  const isDivMode = registerSubject === "div";
+  const mul = playSubject === "mul" ? parseMul(current) : null;
+  const div = playSubject === "div" ? parseDiv(current) : null;
+  const isDivMode = playSubject === "div";
   const receiptReady =
-    registerSubject === "mitori"
+    playSubject === "mitori"
       ? bubbleStep > mitoriLines.length
       : bubbleStep > 0;
   const isReadingItems =
-    registerSubject === "mitori"
+    playSubject === "mitori"
       ? bubbleStep <= mitoriLines.length
       : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
@@ -362,7 +418,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     );
   };
   const promptText = (() => {
-    if (registerSubject === "mitori") {
+    if (playSubject === "mitori") {
       if (bubbleStep === 0) return "おかいけいおねがいします！";
       if (currentLine) {
         return currentLine.sign === -1
@@ -371,10 +427,10 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       }
       return "合計いくらですか";
     }
-    if (registerSubject === "mul" && mul) {
+    if (playSubject === "mul" && mul) {
       return `${MUL_NAMES[index % MUL_NAMES.length]} ${mul.price}円 を ${mul.count} こ ください！`;
     }
-    if (registerSubject === "div" && div) {
+    if (playSubject === "div" && div) {
       return `あめを ${div.total} こ、${peopleLabel(div.people)}にわけたいです！`;
     }
     return "";
@@ -408,10 +464,10 @@ export function RegisterGamePage({ onGoRegister }: Props) {
               問題 {index + 1} / {problems.length}
             </span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5">
-              {subjectLabel(registerSubject)}
+              {subjectLabel(playSubject)}
             </span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5">
-              {config.grade}級
+              {playGrade}級
             </span>
             <button
               className="ml-auto rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold hover:bg-slate-50"
@@ -451,7 +507,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                       <div className="text-xs font-semibold text-sky-700">
                         おきゃくさん（しばいぬ）
                       </div>
-                      <div className="mt-1 text-xl font-black leading-relaxed">
+                      <div className="mt-1 whitespace-pre-line text-xl font-black leading-relaxed">
                         {dogReply}
                       </div>
                       <div className="absolute -bottom-3 right-[164px] h-6 w-6 rotate-45 border-b-2 border-r-2 border-sky-200 bg-sky-100/95" />
@@ -484,7 +540,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                   </div>
                 )}
 
-                {registerSubject === "mitori" && receiptReady ? (
+                {playSubject === "mitori" && receiptReady ? (
                   <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
                     <div className="text-sm font-bold text-slate-700">
                       レシート
@@ -508,7 +564,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                   </div>
                 ) : null}
 
-                {registerSubject !== "mitori" && receiptReady ? (
+                {playSubject !== "mitori" && receiptReady ? (
                   <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
                     <div className="text-sm font-bold text-slate-700">問題</div>
                     <div className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-[var(--sheet-font)] text-slate-900">
@@ -521,7 +577,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
 
             {!isDialogMode ? (
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {registerSubject === "div" ? (
+                {playSubject === "div" ? (
                   <label className="grid gap-1 text-sm md:col-span-2">
                     <span className="text-slate-700">しょう</span>
                     <input
@@ -552,7 +608,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                   onClick={onTellAmount}
                   disabled={!receiptReady}
                 >
-                  きんがくをつたえる
+                  {isDivMode ? "ふくろのかずをつたえる" : "きんがくをつたえる"}
                 </button>
               </div>
             ) : null}

@@ -3,16 +3,20 @@ import registerGameTop from "../../assets/register-game-top.png";
 import {
   EXAM_BODY_LABELS,
   getAvailableGrades,
-  getGradeSpec,
 } from "../../domain/specs/kenteiSpec";
 import type { ExamBody, Grade } from "../../domain/specs/types";
 import { Select } from "../../ui/components/Select";
 import { SceneFrame, SorobanModeNav, SorobanSubnav } from "./SceneFrame";
 import {
+  clampRegisterSelection,
+  getRegisterUnlockedGrades,
+  getRegisterUnlockedSubjects,
   loadPracticeConfig,
   loadRegisterProgress,
   savePracticeConfig,
   type PracticeConfig,
+  type RegisterProgress,
+  type RegisterSubject,
 } from "./state";
 
 type Props = {
@@ -22,8 +26,6 @@ type Props = {
   onGoShop: () => void;
   onGoShelf: () => void;
 };
-
-type RegisterSubject = "mitori" | "mul" | "div";
 
 function toRegisterSubject(config: PracticeConfig): RegisterSubject {
   if (
@@ -46,17 +48,16 @@ export function RegisterTopPage({
   const [config, setConfig] = useState<PracticeConfig>(() =>
     loadPracticeConfig(),
   );
-  const [coins, setCoins] = useState(() => loadRegisterProgress().coins);
+  const [progress, setProgress] = useState<RegisterProgress>(() => loadRegisterProgress());
 
   const registerSubject = toRegisterSubject(config);
+  const selection = clampRegisterSelection(progress, config.grade, registerSubject);
+  const unlockedGrades = getRegisterUnlockedGrades(progress);
+  const unlockedSubjects = getRegisterUnlockedSubjects(progress, selection.grade);
 
   const gradeOptions = useMemo(
-    () =>
-      getAvailableGrades(config.examBody).map((grade) => ({
-        value: grade,
-        label: `${grade}級`,
-      })),
-    [config.examBody],
+    () => unlockedGrades.map((grade) => ({ value: grade, label: `${grade}級` })),
+    [unlockedGrades],
   );
 
   const examOptions: { value: ExamBody; label: string }[] = [
@@ -67,30 +68,32 @@ export function RegisterTopPage({
     { value: "mitori", label: "みとりざん（れしーと）" },
     { value: "mul", label: "かけざん（まとめがい）" },
     { value: "div", label: "わりざん（ふくろわけ）" },
-  ];
+  ].filter((option) => unlockedSubjects.includes(option.value));
 
   useEffect(() => {
-    if (config.examBody !== "zenshugakuren") {
+    const correctedGrade = selection.grade;
+    const correctedSubject = selection.subject;
+
+    if (
+      config.examBody !== "zenshugakuren" ||
+      config.grade !== correctedGrade ||
+      registerSubject !== correctedSubject
+    ) {
       const available = getAvailableGrades("zenshugakuren");
-      const nextGrade = available.includes(config.grade)
-        ? config.grade
-        : (available[0] ?? config.grade);
-      const spec = getGradeSpec("zenshugakuren", nextGrade);
-      const nextSubject =
-        config.subject === "denpyo" && !spec?.denpyo
-          ? "mitori"
-          : config.subject;
+      const nextGrade = available.includes(correctedGrade)
+        ? correctedGrade
+        : (available[0] ?? correctedGrade);
       setConfig((prev) => ({
         ...prev,
         examBody: "zenshugakuren",
         grade: nextGrade,
-        subject: nextSubject,
+        subject: correctedSubject,
       }));
       return;
     }
     savePracticeConfig(config);
-    setCoins(loadRegisterProgress().coins);
-  }, [config]);
+    setProgress(loadRegisterProgress());
+  }, [config, selection.grade, selection.subject, registerSubject]);
 
   return (
     <SceneFrame
@@ -120,7 +123,7 @@ export function RegisterTopPage({
 
         <div className="grid content-start gap-3 rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm">
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            所持コイン: <span className="font-bold">{coins}</span>
+            所持コイン: <span className="font-bold">{progress.coins}</span>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
@@ -134,31 +137,23 @@ export function RegisterTopPage({
                 const grade = grades.includes(config.grade)
                   ? config.grade
                   : (grades[0] ?? config.grade);
-                const spec = getGradeSpec(examBody, grade);
-                const subject =
-                  config.subject === "denpyo" && !spec?.denpyo
-                    ? "mitori"
-                    : config.subject;
-                setConfig((prev) => ({ ...prev, examBody, grade, subject }));
+                const clamped = clampRegisterSelection(progress, grade, registerSubject);
+                setConfig((prev) => ({ ...prev, examBody, grade, subject: clamped.subject }));
               }}
             />
             <Select
               label="級"
-              value={config.grade}
+              value={selection.grade}
               options={gradeOptions}
               onChange={(value) => {
                 const grade = Number(value) as Grade;
-                const spec = getGradeSpec(config.examBody, grade);
-                const subject =
-                  config.subject === "denpyo" && !spec?.denpyo
-                    ? "mitori"
-                    : config.subject;
-                setConfig((prev) => ({ ...prev, grade, subject }));
+                const clamped = clampRegisterSelection(progress, grade, registerSubject);
+                setConfig((prev) => ({ ...prev, grade, subject: clamped.subject }));
               }}
             />
             <Select
               label="レジ問題"
-              value={registerSubject}
+              value={selection.subject}
               options={subjectOptions}
               onChange={(value) =>
                 setConfig((prev) => ({
