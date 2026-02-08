@@ -125,6 +125,9 @@ export function RegisterTopPage({
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             所持コイン: <span className="font-bold">{progress.coins}</span>
           </div>
+          <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+            クリアでつぎがかいほうされます。みとりざん → かけざん → わりざんのじゅんで進み、わりざんまでクリアするとつぎの級があそべます。
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
             <Select
