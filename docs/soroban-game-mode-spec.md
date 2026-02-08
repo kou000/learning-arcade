@@ -1,0 +1,149 @@
+# そろばんゲームモード仕様（AI実装者向け）
+
+このドキュメントは `learning-arcade` のそろばんゲームモード（レジゲーム）について、AI/開発者が改修しやすいように構成と制約をまとめたものです。  
+`docs/` 配下なので通常の Vite ビルド成果物には含まれません（コードから import しない限りバンドル対象外）。
+
+## 1. ルーティング構成
+
+`src/App.tsx` で hash を手動パースして画面を切り替える。
+
+- `#/soroban` : 練習ページ（`PracticePage`）
+- `#/soroban/register` : ゲームモードTOP（`RegisterTopPage`）
+- `#/soroban/register/play` : レジゲーム本編（`RegisterGamePage`）
+- `#/soroban/shop` : ショップ（`ShopPage`）
+- `#/soroban/shelf` : 棚（`ShelfPage`）
+
+## 2. 出題ロジックの原則
+
+ゲームモードは新規出題ロジックを持たず、練習モードと同じジェネレーターを使用する。
+
+- ジェネレーター: `generateProblems(grade, subject, examBody)`
+- 実装箇所:
+  - 練習: `src/features/practice/PracticePage.tsx`
+  - ゲーム: `src/features/soroban/RegisterGamePage.tsx`
+
+つまり「数値・答え」は共通で、ゲーム側は表示演出のみ変換する。
+
+## 3. 設定/保存（localStorage）
+
+`src/features/soroban/state.ts` が保存窓口。
+
+- キー: `learning-arcade:soroban-state`
+- 保存データ:
+  - `practiceConfig`（練習/ゲーム共通の出題条件）
+  - `registerProgress`（コイン、購入済み、棚、解放進行）
+
+### practiceConfig
+
+- `grade`, `subject`, `examBody`, `mode`, `sets`, `showAnswers`
+- 正規化で `examBody` は実質 `zenshugakuren` に寄せる運用
+
+### registerProgress
+
+- `coins`
+- `purchasedItemIds`
+- `shelfRows`, `shelfCols`, `shelfSlots`
+- `unlockedGrades`
+- `unlockedStageByGrade`（`0:みとり`, `1:かけ`, `2:わり`）
+
+## 4. ゲーム進行の解放仕様
+
+`state.ts` の `advanceRegisterProgressOnClear` を利用。
+
+- 初期: 最易級の `みとり` のみ
+- クリア順: `みとり -> かけ -> わり`
+- 同一級で `わり` クリア後、次の級を解放
+- ただし `RegisterGamePage.tsx` では合格ライン通過時のみ解放処理を適用
+  - `REGISTER_PASS_RATE = 0.7`
+  - 一度でも誤答した問題は不正解として記録（`wrongProblemIndexes`）
+
+## 5. 画面責務
+
+## 5.1 RegisterTopPage（ゲームTOP）
+
+ファイル: `src/features/soroban/RegisterTopPage.tsx`
+
+- 役割:
+  - 解放済み範囲で `級` / `レジ問題` を選択
+  - スタートで `#/soroban/register/play` へ遷移
+- 背景画像:
+  - `src/assets/register-game-top.png`
+
+## 5.2 RegisterGamePage（本編）
+
+ファイル: `src/features/soroban/RegisterGamePage.tsx`
+
+- 役割:
+  - 問題読み上げ（吹き出し）
+  - 回答入力
+  - 正誤演出
+  - 報酬付与
+  - ラウンド終了時の結果表示/解放メッセージ
+- 背景画像:
+  - `src/assets/register-game-bg.png`
+- 読み上げ速度:
+  - `0.5x / 1x / 1.5x / 2x / 5x / 10x`
+
+### 科目ごとの扱い
+
+- みとり:
+  - 問題行を順次読み上げ
+  - レシート表示に整形（商品名はゲーム用固定名）
+- かけ:
+  - 問題文を会話表示
+  - 試験形式の式領域も表示
+- わり:
+  - 余り入力はなし（商のみ）
+  - ボタン文言は「ふくろのかずをつたえる」
+
+## 5.3 ShopPage
+
+ファイル: `src/features/soroban/ShopPage.tsx`
+
+- 固定商品配列は `src/features/soroban/catalog.ts`
+- 支払いトレー:
+  - `1000 / 500 / 100 / 50 / 10`
+- 価格未満なら購入不可、所持コイン不足でも不可
+- おつりは表示のみ（MVP）
+- 画像欠損時は `no image` プレースホルダー
+
+## 5.4 ShelfPage
+
+ファイル: `src/features/soroban/ShelfPage.tsx`
+
+- 購入済みグッズをスロットに配置/解除
+- 棚拡張:
+  - 行追加コスト: `150 + (rows-2)*100`
+  - 列追加コスト: `180 + (cols-4)*120`
+- 画像欠損時プレースホルダー表示
+
+## 6. 共通UI
+
+`src/features/soroban/SceneFrame.tsx`
+
+- 背景1枚 + オーバーレイ構造
+- `outsideTopLeft` に画像外の戻るボタン等を配置
+- 背景画像欠損時はグラデ背景へフォールバック
+
+## 7. adminモード
+
+- 環境変数: `VITE_REGISTER_ADMIN_MODE`
+  - truthy: `1`, `true`, `on`
+- 影響:
+  - `App.tsx` でグローバル `ADMIN MODE` バッジ表示
+  - `RegisterGamePage.tsx` で「こたえをにゅうりょく」ボタン表示
+- 起動用スクリプト:
+  - `package.json` の `dev:admin`
+
+## 8. 既知の制約・実装ルール
+
+- 現在 UI からは `zenshugakuren` のみ選択可（他団体ロジックは残置）
+- ゲーム中の見た目は会話優先で、試験用表示領域は必要時のみ出す
+- 出題自体は必ず `practiceConfig` + `generateProblems` の再利用を維持する
+
+## 9. 改修時の推奨手順
+
+1. `state.ts` で保存形式互換を維持（既存キーを増やしすぎない）
+2. `RegisterTopPage` で選択可能範囲を制御
+3. `RegisterGamePage` は「出題値そのまま・表示のみ変換」を守る
+4. 変更後は `npm run build` を通す
