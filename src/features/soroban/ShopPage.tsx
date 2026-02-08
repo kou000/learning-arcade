@@ -14,7 +14,14 @@ type Props = {
   onGoShelf: () => void;
 };
 
-const DENOMINATIONS = [1000, 500, 100, 50, 10] as const;
+const COINS = [
+  { value: 500, image: "/assets/coin/coin-500.png" },
+  { value: 100, image: "/assets/coin/coin-100.png" },
+  { value: 50, image: "/assets/coin/coin-50.png" },
+  { value: 10, image: "/assets/coin/coin-10.png" },
+  { value: 5, image: "/assets/coin/coin-5.png" },
+  { value: 1, image: "/assets/coin/coin-1.png" },
+] as const;
 
 function ItemPreview({ src, alt }: { src: string; alt: string }) {
   const [missing, setMissing] = useState(false);
@@ -34,6 +41,39 @@ function ItemPreview({ src, alt }: { src: string; alt: string }) {
       onError={() => setMissing(true)}
       className="h-24 w-24 rounded-xl border border-slate-200 bg-white object-contain p-2"
     />
+  );
+}
+
+function CoinButton({
+  value,
+  image,
+  onClick,
+}: {
+  value: number;
+  image: string;
+  onClick: () => void;
+}) {
+  const [missing, setMissing] = useState(false);
+
+  return (
+    <button
+      className="grid place-items-center gap-1 rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold shadow-sm hover:bg-slate-50"
+      onClick={onClick}
+    >
+      {missing ? (
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-[10px] text-slate-500">
+          no image
+        </div>
+      ) : (
+        <img
+          src={image}
+          alt={`${value}円`}
+          onError={() => setMissing(true)}
+          className="h-12 w-12 object-contain"
+        />
+      )}
+      <span>{value}円</span>
+    </button>
   );
 }
 
@@ -183,15 +223,14 @@ export function ShopPage({
               <div>不足: {Math.max(0, activeItem.price - trayTotal)}円</div>
             </div>
 
-            <div className="mt-3 grid grid-cols-5 gap-2">
-              {DENOMINATIONS.map((yen) => (
-                <button
-                  key={yen}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50"
-                  onClick={() => setTray((prev) => [...prev, yen])}
-                >
-                  {yen}
-                </button>
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {COINS.map((coin) => (
+                <CoinButton
+                  key={coin.value}
+                  value={coin.value}
+                  image={coin.image}
+                  onClick={() => setTray((prev) => [...prev, coin.value])}
+                />
               ))}
             </div>
 

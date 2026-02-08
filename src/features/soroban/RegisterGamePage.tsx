@@ -481,30 +481,26 @@ export function RegisterGamePage({ onGoRegister }: Props) {
             >
               ← ゲームモードTOP
             </button>
-            {isReadingItems ? (
-              <button
-                className="w-fit rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
-                onClick={() => setIsReadingPaused((prev) => !prev)}
+            <button
+              className="w-fit rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
+              onClick={() => setIsReadingPaused((prev) => !prev)}
+            >
+              {isReadingPaused ? "読み上げ再開" : "読み上げ一時停止"}
+            </button>
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
+              <span>よみあげ速度</span>
+              <select
+                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs"
+                value={String(readingSpeed)}
+                onChange={(e) => setReadingSpeed(Number(e.target.value))}
               >
-                {isReadingPaused ? "読み上げ再開" : "読み上げ一時停止"}
-              </button>
-            ) : null}
-            {isReadingItems ? (
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
-                <span>よみあげ速度</span>
-                <select
-                  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs"
-                  value={String(readingSpeed)}
-                  onChange={(e) => setReadingSpeed(Number(e.target.value))}
-                >
-                  {READING_SPEED_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
+                {READING_SPEED_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm text-slate-600 shadow-sm">
             <span>
