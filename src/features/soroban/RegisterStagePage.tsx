@@ -148,6 +148,7 @@ export function RegisterStagePage({
     left: string;
     top: string;
     color: string;
+    titleColor: string;
     titleTilt: string;
     titleTop: string;
     detailTop: string;
@@ -157,6 +158,7 @@ export function RegisterStagePage({
       left: "22%",
       top: "0%",
       color: "bg-emerald-600",
+      titleColor: "#708135",
       titleTilt: "-4deg",
       titleTop: "9%",
       detailTop: "31%",
@@ -166,6 +168,7 @@ export function RegisterStagePage({
       left: "50%",
       top: "-2.5%",
       color: "bg-amber-600",
+      titleColor: "#d3872b",
       titleTilt: "0deg",
       titleTop: "9.5%",
       detailTop: "31%",
@@ -175,6 +178,7 @@ export function RegisterStagePage({
       left: "79%",
       top: "0%",
       color: "bg-sky-600",
+      titleColor: "#6792a6",
       titleTilt: "3deg",
       titleTop: "9%",
       detailTop: "31%",
@@ -242,53 +246,58 @@ export function RegisterStagePage({
                   style={{ top: card.titleTop }}
                 >
                   <div
-                    className="text-2xl font-black text-slate-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.35)]"
-                    style={{ transform: `rotate(${card.titleTilt})` }}
+                    className="whitespace-nowrap text-3xl font-black text-slate-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.35)]"
+                    style={{
+                      transform: `rotate(${card.titleTilt})`,
+                      color: card.titleColor,
+                    }}
                   >
                     {stageLabel(card.stage)}
                   </div>
                 </div>
 
                 {isCleared ? (
-                  <span className="absolute right-[9%] top-[11%] rounded-full bg-emerald-600 px-2 py-1 text-xs font-bold text-white">
-                    クリア
-                  </span>
+                  <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+                    <span
+                      className="inline-block whitespace-nowrap rounded-full border-2 border-amber-100/90 bg-emerald-600/95 px-5 py-2 text-2xl font-black text-emerald-50 shadow-[0_2px_0_rgba(92,63,24,0.45)]"
+                      style={{ transform: `rotate(${card.titleTilt})` }}
+                    >
+                      ✓ クリア！
+                    </span>
+                  </div>
                 ) : null}
 
                 <div
-                  className="absolute left-[10%] right-[10%] text-sm text-slate-800"
+                  className="absolute left-[10%] right-[10%] z-10 whitespace-pre-line px-2 text-base font-bold text-slate-800"
                   style={{
                     top: card.detailTop,
                     transform: `rotate(${card.titleTilt})`,
                   }}
                 >
                   {card.stage === 1
-                    ? "3もん / じかんせいげんなし / ノーミス"
+                    ? "3もん\nじかんせいげんなし\nノーミス"
                     : null}
-                  {card.stage === 2
-                    ? "3もん / じかんせいげんあり / ノーミス"
-                    : null}
-                  {card.stage === 3
-                    ? "5もん / じかんせいげんあり / ノーミス"
-                    : null}
-                  {!canPlay ? (
-                    <div className="mt-2 inline-block rounded-full bg-black/35 px-2 py-1 text-xs font-bold text-white">
-                      ロック みかいほう
-                    </div>
-                  ) : null}
+                  {card.stage === 2 ? "3もん\nじかんせいげん\nノーミス" : null}
+                  {card.stage === 3 ? "5もん\nじかんせいげん\nノーミス" : null}
                 </div>
 
-                <div
-                  className="absolute bottom-[40%] left-[10%] right-[10%] h-2 rounded-full bg-white/50"
-                  style={{ transform: `rotate(${card.titleTilt})` }}
-                >
+                {!canPlay ? (
                   <div
-                    className={`h-2 rounded-full ${card.color}`}
+                    className="absolute left-[8%] right-[8%] top-1/2 z-30 rounded-xl bg-black/80 px-3 py-4 text-center text-white shadow-lg backdrop-blur-[1px]"
                     style={{
-                      width: isCleared ? "100%" : canPlay ? "45%" : "0%",
+                      transform: `translateY(-50%) rotate(${card.titleTilt})`,
                     }}
-                  />
-                </div>
+                  >
+                    <div className="text-base font-black">
+                      🔒 ろっく みかいほう
+                    </div>
+                    <div className="mx-2 mt-1 text-xs font-bold text-white/85">
+                      ひとつまえの すてーじを
+                      <br />
+                      くりあすると あそべるよ
+                    </div>
+                  </div>
+                ) : null}
               </button>
             );
           })}
