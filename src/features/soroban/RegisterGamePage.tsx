@@ -36,6 +36,14 @@ const RECEIPT_NAMES = [
 ];
 const MUL_NAMES = ["ガム", "あめ", "シール", "カード", "クッキー", "えんぴつ"];
 const REGISTER_PASS_RATE = 0.7;
+const READING_SPEED_OPTIONS = [
+  { label: "0.5x", value: 0.5 },
+  { label: "1x", value: 1 },
+  { label: "1.5x", value: 1.5 },
+  { label: "2x", value: 2 },
+  { label: "5x", value: 5 },
+  { label: "10x", value: 10 },
+] as const;
 
 function parseNumber(text: string): number {
   const cleaned = text.replace(/[^0-9-]/g, "");
@@ -147,6 +155,8 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const [quotient, setQuotient] = useState("");
   const [wrongProblemIndexes, setWrongProblemIndexes] = useState<Set<number>>(new Set());
   const [isReadingPaused, setIsReadingPaused] = useState(false);
+  const [readingSpeed, setReadingSpeed] = useState<number>(1);
+  const [isRoundFinished, setIsRoundFinished] = useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
   const [dogReply, setDogReply] = useState<string | null>(null);
@@ -178,10 +188,10 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       () => {
         setBubbleStep((prev) => prev + 1);
       },
-      bubbleStep === 0 ? 3000 : 1000,
+      Math.max(150, Math.floor((bubbleStep === 0 ? 3000 : 1000) / readingSpeed)),
     );
     return () => window.clearTimeout(timer);
-  }, [playSubject, bubbleStep, mitoriLines.length, isReadingPaused]);
+  }, [playSubject, bubbleStep, mitoriLines.length, isReadingPaused, readingSpeed]);
 
   const clearFeedbackTimers = () => {
     if (thankYouTimer.current) {
@@ -212,6 +222,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     setClerkEcho(null);
     setDogReply(null);
     setShowCorrectFlash(false);
+    setIsRoundFinished(false);
   };
 
   const resetInputs = () => {
@@ -224,6 +235,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     setClerkEcho(null);
     setDogReply(null);
     setShowCorrectFlash(false);
+    setIsRoundFinished(false);
   };
 
   const resetRound = () => {
@@ -236,10 +248,6 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   };
 
   const moveNext = () => {
-    if (index >= problems.length - 1) {
-      resetRound();
-      return;
-    }
     setIndex((prev) => prev + 1);
     resetInputs();
   };
@@ -248,6 +256,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
     setStatus("correct");
     let unlockMessage: string | null = null;
     let passMessage: string | null = null;
+    const isLastQuestion = index >= problems.length - 1;
     const passLine = Math.ceil(problems.length * REGISTER_PASS_RATE);
     const finalCorrectCount = problems.length - wrongProblemIndexes.size;
     const passed = finalCorrectCount >= passLine;
@@ -256,23 +265,28 @@ export function RegisterGamePage({ onGoRegister }: Props) {
         ...prevProgress,
         coins: prevProgress.coins + currentReward,
       });
-      if (index >= problems.length - 1 && passed) {
+      if (isLastQuestion && passed) {
         const advanced = advanceRegisterProgressOnClear(next, playGrade, playSubject);
         unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
         next = saveRegisterProgress(advanced);
       }
       return next;
     });
-    if (index >= problems.length - 1 && !passed) {
+    if (isLastQuestion && !passed) {
       passMessage = `せいとうりつ ${finalCorrectCount}/${problems.length}（ごうかく ${passLine} もん）で、かいほうは つぎのかいにちょうせんしてね。`;
     }
-    setDogReply(
-      unlockMessage
-        ? `ありがとう！\n${unlockMessage}`
-        : passMessage
-          ? `ありがとう！\n${passMessage}`
-          : "ありがとう！",
-    );
+
+    if (isLastQuestion) {
+      const resultSummary = `けっか ${finalCorrectCount}/${problems.length}もん せいかい`;
+      const unlockSummary = unlockMessage ? `\n${unlockMessage}` : "";
+      const passSummary = passMessage ? `\n${passMessage}` : (passed ? "\nごうかく！" : "");
+      setClerkEcho(null);
+      setDogReply(`おつかれさま！\n${resultSummary}${unlockSummary}${passSummary}`);
+      setIsRoundFinished(true);
+      return;
+    }
+
+    setDogReply("ありがとう！");
     clearFeedbackTimers();
     thankYouTimer.current = window.setTimeout(() => {
       setClerkEcho(null);
@@ -297,6 +311,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
   const onTellAmount = () => {
     if (!current) return;
     if (status === "correct") return;
+    if (isRoundFinished) return;
     setShowCorrectFlash(false);
     setClerkEcho(buildClerkEcho());
     setDogReply(null);
@@ -397,7 +412,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
       ? bubbleStep <= mitoriLines.length
       : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
-  const isDialogMode = isReadingItems || isFeedbackDialogue;
+  const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
   const activeInput = isDivMode ? quotient : answer;
 
@@ -473,6 +488,22 @@ export function RegisterGamePage({ onGoRegister }: Props) {
               >
                 {isReadingPaused ? "読み上げ再開" : "読み上げ一時停止"}
               </button>
+            ) : null}
+            {isReadingItems ? (
+              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
+                <span>よみあげ速度</span>
+                <select
+                  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs"
+                  value={String(readingSpeed)}
+                  onChange={(e) => setReadingSpeed(Number(e.target.value))}
+                >
+                  {READING_SPEED_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm text-slate-600 shadow-sm">
@@ -622,7 +653,7 @@ export function RegisterGamePage({ onGoRegister }: Props) {
                 <button
                   className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
                   onClick={onTellAmount}
-                  disabled={!receiptReady}
+                  disabled={!receiptReady || isRoundFinished}
                 >
                   {isDivMode ? "ふくろのかずをつたえる" : "きんがくをつたえる"}
                 </button>
@@ -695,6 +726,16 @@ export function RegisterGamePage({ onGoRegister }: Props) {
               せいかい
             </span>
           </div>
+        </div>
+      ) : null}
+      {isRoundFinished ? (
+        <div className="fixed bottom-6 right-6 z-40">
+          <button
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
+            onClick={onGoRegister}
+          >
+            ゲームモードTOPへ
+          </button>
         </div>
       ) : null}
     </SceneFrame>
