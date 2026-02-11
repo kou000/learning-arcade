@@ -43,6 +43,15 @@ function stageLabel(stage: RegisterStage): string {
   return `ステージ ${stage}`;
 }
 
+function stageDetail(stage: RegisterStage): string {
+  if (stage === 1) return "3もん\nじかんせいげんなし\nノーミス";
+  if (stage === 2) return "3もん\nじかんせいげん\nノーミス";
+  if (stage === 3) return "5もん\nじかんせいげん\nノーミス";
+  if (stage === 4) return "7もん\nじかんせいげん\nノーミス";
+  if (stage === 5) return "10もん\nじかんせいげん\nノーミス";
+  return "けんていとおなじ\nもんだいすう\nノーミス";
+}
+
 function subjectLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
   if (subject === "mul") return "かけざん";
@@ -61,6 +70,7 @@ export function RegisterStagePage({
   const [progress, setProgress] = useState<RegisterProgress>(() =>
     loadRegisterProgress(),
   );
+  const [stagePanel, setStagePanel] = useState<1 | 2>(1);
 
   const registerSubject = toRegisterSubject(config);
   const selection = clampRegisterSelection(
@@ -152,38 +162,72 @@ export function RegisterStagePage({
     titleTilt: string;
     titleTop: string;
     detailTop: string;
-  }> = [
-    {
-      stage: 1,
-      left: "22%",
-      top: "0%",
-      color: "bg-emerald-600",
-      titleColor: "#708135",
-      titleTilt: "-4deg",
-      titleTop: "9%",
-      detailTop: "31%",
-    },
-    {
-      stage: 2,
-      left: "50%",
-      top: "-2.5%",
-      color: "bg-amber-600",
-      titleColor: "#d3872b",
-      titleTilt: "0deg",
-      titleTop: "9.5%",
-      detailTop: "31%",
-    },
-    {
-      stage: 3,
-      left: "79%",
-      top: "0%",
-      color: "bg-sky-600",
-      titleColor: "#6792a6",
-      titleTilt: "3deg",
-      titleTop: "9%",
-      detailTop: "31%",
-    },
-  ];
+  }> =
+    stagePanel === 1
+      ? [
+          {
+            stage: 1,
+            left: "22%",
+            top: "0%",
+            color: "bg-emerald-600",
+            titleColor: "#708135",
+            titleTilt: "-4deg",
+            titleTop: "9%",
+            detailTop: "31%",
+          },
+          {
+            stage: 2,
+            left: "50%",
+            top: "-2.5%",
+            color: "bg-amber-600",
+            titleColor: "#d3872b",
+            titleTilt: "0deg",
+            titleTop: "9.5%",
+            detailTop: "31%",
+          },
+          {
+            stage: 3,
+            left: "79%",
+            top: "0%",
+            color: "bg-sky-600",
+            titleColor: "#6792a6",
+            titleTilt: "3deg",
+            titleTop: "9%",
+            detailTop: "31%",
+          },
+        ]
+      : [
+          {
+            stage: 4,
+            left: "22%",
+            top: "0%",
+            color: "bg-violet-600",
+            titleColor: "#7c5dc2",
+            titleTilt: "-4deg",
+            titleTop: "9%",
+            detailTop: "31%",
+          },
+          {
+            stage: 5,
+            left: "50%",
+            top: "-2.5%",
+            color: "bg-rose-600",
+            titleColor: "#cd5b83",
+            titleTilt: "0deg",
+            titleTop: "9.5%",
+            detailTop: "31%",
+          },
+          {
+            stage: 6,
+            left: "79%",
+            top: "0%",
+            color: "bg-indigo-700",
+            titleColor: "#596ec0",
+            titleTilt: "3deg",
+            titleTop: "9%",
+            detailTop: "31%",
+          },
+        ];
 
   return (
     <SceneFrame
@@ -219,6 +263,28 @@ export function RegisterStagePage({
             {subjectLabel(selection.subject)}
           </div>
         </div>
+
+        {stagePanel === 1 ? (
+          <div className="absolute right-[2.4%] top-[43%] z-20 -translate-y-1/2">
+            <button
+              aria-label="チャレンジステージへ"
+              className="rounded-2xl border-2 border-white/80 bg-white/80 px-5 py-4 text-5xl font-black leading-none text-slate-700 shadow-lg transition hover:bg-white"
+              onClick={() => setStagePanel(2)}
+            >
+              ▶
+            </button>
+          </div>
+        ) : (
+          <div className="absolute left-[2.4%] top-[43%] z-20 -translate-y-1/2">
+            <button
+              aria-label="通常ステージへ"
+              className="rounded-2xl border-2 border-white/80 bg-white/80 px-5 py-4 text-5xl font-black leading-none text-slate-700 shadow-lg transition hover:bg-white"
+              onClick={() => setStagePanel(1)}
+            >
+              ◀
+            </button>
+          </div>
+        )}
 
         <div className="absolute inset-x-0 top-[41%] h-[40%]">
           {cards.map((card) => {
@@ -274,11 +340,7 @@ export function RegisterStagePage({
                     transform: `rotate(${card.titleTilt})`,
                   }}
                 >
-                  {card.stage === 1
-                    ? "3もん\nじかんせいげんなし\nノーミス"
-                    : null}
-                  {card.stage === 2 ? "3もん\nじかんせいげん\nノーミス" : null}
-                  {card.stage === 3 ? "5もん\nじかんせいげん\nノーミス" : null}
+                  {stageDetail(card.stage)}
                 </div>
 
                 {!canPlay ? (

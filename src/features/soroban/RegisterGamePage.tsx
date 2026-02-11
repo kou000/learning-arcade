@@ -53,10 +53,12 @@ const READING_SPEED_OPTIONS = [
 ] as const;
 const STAGE_ALPHA_SECONDS = 15;
 
-const STAGE_QUESTION_COUNT: Record<RegisterStage, number> = {
+const BASE_STAGE_QUESTION_COUNT: Record<1 | 2 | 3 | 4 | 5, number> = {
   1: 3,
   2: 3,
   3: 5,
+  4: 7,
+  5: 10,
 };
 
 function parseNumber(text: string): number {
@@ -114,17 +116,27 @@ function questionCountFromSpec(grade: Grade, subject: RegisterSubject): number {
   return Math.max(1, spec.div.count);
 }
 
+function stageQuestionCount(
+  grade: Grade,
+  subject: RegisterSubject,
+  stage: RegisterStage,
+): number {
+  if (stage !== 6) return BASE_STAGE_QUESTION_COUNT[stage];
+  return questionCountFromSpec(grade, subject);
+}
+
 function buildTimeLimitSeconds(
   grade: Grade,
   subject: RegisterSubject,
   stage: RegisterStage,
+  questionCount: number,
 ): number | null {
   if (stage === 1) return null;
   const minutes = subjectMinutes(grade, subject, "zenshugakuren");
   const specCount = questionCountFromSpec(grade, subject);
   const perQ = Math.max(1, Math.ceil((minutes * 60) / specCount));
-  if (stage === 2) return (perQ + STAGE_ALPHA_SECONDS) * 5;
-  return perQ * 5;
+  if (stage === 2) return (perQ + STAGE_ALPHA_SECONDS) * questionCount;
+  return perQ * questionCount;
 }
 
 function subjectLabel(subject: RegisterSubject): string {
@@ -193,11 +205,12 @@ export function RegisterGamePage({
     : 1;
   const playGrade = selection.grade;
   const playSubject = selection.subject;
-  const questionCount = STAGE_QUESTION_COUNT[playStage];
+  const questionCount = stageQuestionCount(playGrade, playSubject, playStage);
   const timeLimitSeconds = buildTimeLimitSeconds(
     playGrade,
     playSubject,
     playStage,
+    questionCount,
   );
 
   const [problems, setProblems] = useState<Problem[]>(() =>
