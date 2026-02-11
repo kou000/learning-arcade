@@ -12,6 +12,7 @@
 - `#/soroban/register/play` : レジゲーム本編（`RegisterGamePage`）
 - `#/soroban/shop` : ショップ（`ShopPage`）
 - `#/soroban/shelf` : 棚（`ShelfPage`）
+- `#/soroban/admin` : 管理者画面（`RegisterAdminPage`）
 
 ## 2. 出題ロジックの原則
 
@@ -131,6 +132,17 @@
   - 行追加コスト: `150 + (rows-2)*100`
   - 列追加コスト: `180 + (cols-4)*120`
 - 画像欠損時プレースホルダー表示
+
+## 5.5 RegisterAdminPage（管理者画面）
+
+ファイル: `src/features/soroban/RegisterAdminPage.tsx`
+
+- 役割:
+  - `learning-arcade:soroban-state` のJSONを直接編集
+  - JSON妥当性チェック後に保存
+  - 再読込で現在値を再取得
+- 現在は暫定でパスワードなし
+- 遷移は `#/soroban/admin` を直接開く運用（ゲームTOPには専用ボタンを置かない）
 
 ## 6. 共通UI
 
