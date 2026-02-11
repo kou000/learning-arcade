@@ -4,10 +4,11 @@ import { PracticePage } from "./features/practice/PracticePage";
 import { RegisterGamePage } from "./features/soroban/RegisterGamePage";
 import { RegisterStagePage } from "./features/soroban/RegisterStagePage";
 import { RegisterTopPage } from "./features/soroban/RegisterTopPage";
+import { RegisterAdminPage } from "./features/soroban/RegisterAdminPage";
 import { ShopPage } from "./features/soroban/ShopPage";
 import { ShelfPage } from "./features/soroban/ShelfPage";
 
-type Route = "home" | "soroban" | "soroban-register" | "soroban-register-stage" | "soroban-register-play" | "soroban-shop" | "soroban-shelf";
+type Route = "home" | "soroban" | "soroban-register" | "soroban-register-stage" | "soroban-register-play" | "soroban-shop" | "soroban-shelf" | "soroban-admin";
 
 function isAdminModeFromEnv(): boolean {
   const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
@@ -22,6 +23,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/register/play") return "soroban-register-play";
   if (h === "soroban/shop") return "soroban-shop";
   if (h === "soroban/shelf") return "soroban-shelf";
+  if (h === "soroban/admin") return "soroban-admin";
   return "home";
 }
 
@@ -73,6 +75,9 @@ export default function App() {
       ) : null}
       {route === "soroban-shelf" ? (
         <ShelfPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
+      ) : null}
+      {route === "soroban-admin" ? (
+        <RegisterAdminPage onGoRegister={goRegister} />
       ) : null}
     </div>
   );

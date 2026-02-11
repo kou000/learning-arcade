@@ -2,7 +2,7 @@ import type { ExamBody, Grade, Subject } from "../../domain/specs/types";
 import { getAvailableGrades, getGradeSpec } from "../../domain/specs/kenteiSpec";
 import type { PracticeMode } from "../practice/types";
 
-const STORAGE_KEY = "learning-arcade:soroban-state";
+export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
 const REGISTER_EXAM_BODY: ExamBody = "zenshugakuren";
 const REGISTER_GRADE_ORDER: Grade[] = [...getAvailableGrades(REGISTER_EXAM_BODY)].sort((a, b) => b - a);
 const REGISTER_START_GRADE: Grade = REGISTER_GRADE_ORDER[0] ?? 8;
@@ -172,7 +172,7 @@ function readAll(): SorobanSaveData {
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(SOROBAN_STORAGE_KEY);
     if (!raw) {
       return {
         practiceConfig: DEFAULT_PRACTICE_CONFIG,
@@ -197,7 +197,7 @@ function readAll(): SorobanSaveData {
 
 function writeAll(data: SorobanSaveData): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  window.localStorage.setItem(SOROBAN_STORAGE_KEY, JSON.stringify(data));
 }
 
 export function loadPracticeConfig(): PracticeConfig {

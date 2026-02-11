@@ -54,6 +54,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `/#/soroban/register/play` : `RegisterGamePage`
 - `/#/soroban/shop` : `ShopPage`
 - `/#/soroban/shelf` : `ShelfPage`
+- `/#/soroban/admin` : `RegisterAdminPage`
 
 補足:
 
@@ -100,6 +101,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `RegisterGamePage` : レジゲーム本編
 - `ShopPage` : 報酬ショップ
 - `ShelfPage` : コレクション棚
+- `RegisterAdminPage` : セーブデータ編集（管理者画面）
 - `SceneFrame` : ゲーム系共通フレーム
 - `catalog.ts` : ショップ商品定義
 - `state.ts` : ゲーム進行と保存管理
