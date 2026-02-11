@@ -372,7 +372,7 @@ export function RegisterStagePage({
 
         <div className="absolute inset-x-0 bottom-2 px-4">
           <div className="rounded-2xl border border-white/35 bg-white/58 p-4 shadow-sm backdrop-blur-md">
-            <div className="grid gap-3 sm:grid-cols-3 [&_label>span]:text-slate-800 [&_select]:border-white/60 [&_select]:bg-white/75 [&_select]:text-slate-800 [&_select]:shadow-sm">
+            <div className="grid gap-3 sm:grid-cols-3 [&_label>span]:text-slate-800 [&_select]:h-12 [&_select]:min-h-[48px] [&_select]:border-white/60 [&_select]:bg-white/75 [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-base [&_select]:text-slate-800 [&_select]:shadow-sm">
               <Select
                 label="けんてい"
                 value={config.examBody}
