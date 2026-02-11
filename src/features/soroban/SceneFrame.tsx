@@ -87,62 +87,27 @@ export function SorobanSubnav({
 }
 
 type FrameProps = {
-  title: string;
-  subtitle: string;
   backgroundImage?: string;
   fullscreenBackground?: boolean;
   outsideTopLeft?: React.ReactNode;
-  headerLeft?: React.ReactNode;
-  headerRight?: React.ReactNode;
-  headerAlign?: "center" | "left";
-  hideHeader?: boolean;
   children: React.ReactNode;
 };
 
 export function SceneFrame({
-  title,
-  subtitle,
   backgroundImage,
   fullscreenBackground = false,
   outsideTopLeft,
-  headerLeft,
-  headerRight,
-  headerAlign = "center",
-  hideHeader = false,
   children,
 }: FrameProps) {
   const [hasImageError, setHasImageError] = useState(false);
   const useFullscreen = fullscreenBackground && Boolean(backgroundImage);
-  const fullscreenHeightClass = hideHeader
-    ? "h-[calc(100vh-3.5rem)]"
-    : "h-[calc(100vh-7.5rem)]";
+  const fullscreenHeightClass = "h-[calc(100vh-3.5rem)]";
 
   return (
     <div
       className={`min-h-screen ${useFullscreen ? "bg-slate-900/90 p-0" : "bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-16 pt-10"}`}
     >
       <div className={useFullscreen ? "w-full" : "mx-auto max-w-6xl"}>
-        {!hideHeader ? (
-          <div className={useFullscreen ? "mb-2" : "mb-4"}>
-            <div
-              className={`flex items-center gap-3 ${headerAlign === "left" ? "justify-start" : "justify-center"}`}
-            >
-              {headerLeft ? <div>{headerLeft}</div> : null}
-              <h1
-                className={`text-4xl font-black text-slate-800 font-[var(--pop-font)] ${headerAlign === "left" ? "text-left" : "text-center"}`}
-              >
-                {title}
-              </h1>
-              {headerRight ? <div>{headerRight}</div> : null}
-            </div>
-            <p
-              className={`mt-1 text-sm text-slate-600 ${headerAlign === "left" ? "text-left" : "text-center"}`}
-            >
-              {subtitle}
-            </p>
-          </div>
-        ) : null}
-
         {outsideTopLeft ? <div className="mb-2">{outsideTopLeft}</div> : null}
 
         <div

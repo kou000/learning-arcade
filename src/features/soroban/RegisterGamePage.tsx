@@ -181,10 +181,7 @@ function buildUnlockMessage(
   return null;
 }
 
-export function RegisterGamePage({
-  onGoRegister,
-  onGoRegisterStage,
-}: Props) {
+export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [isAdminMode] = useState(() => isAdminModeFromEnv());
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const config = loadPracticeConfig();
@@ -530,11 +527,8 @@ export function RegisterGamePage({
   if (!current) {
     return (
       <SceneFrame
-        title="そろばんレジゲーム"
-        subtitle="問題を作成できませんでした"
         backgroundImage={registerGameBg}
         fullscreenBackground
-        hideHeader
         outsideTopLeft={
           <button
             className="w-fit rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"
@@ -607,7 +601,7 @@ export function RegisterGamePage({
           ? `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} クーポン ${currentLine.value}円引き`
           : `${RECEIPT_NAMES[(bubbleStep - 1) % RECEIPT_NAMES.length]} ${currentLine.value}円`;
       }
-      return "合計いくらですか";
+      return "ごうけいいくらですか";
     }
     if (playSubject === "mul" && mul) {
       return `${MUL_NAMES[index % MUL_NAMES.length]} ${mul.price}円 を ${mul.count} こ ください！`;
@@ -620,11 +614,8 @@ export function RegisterGamePage({
 
   return (
     <SceneFrame
-      title="そろばんレジゲーム"
-      subtitle="練習モード設定で出題中"
       backgroundImage={registerGameBg}
       fullscreenBackground
-      hideHeader
       outsideTopLeft={
         <div className="grid gap-2">
           <div className="flex flex-nowrap items-center gap-2 overflow-x-auto rounded-xl px-3 py-0.5 text-sm text-slate-800 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
@@ -639,11 +630,13 @@ export function RegisterGamePage({
               onClick={() => setIsReadingPaused((prev) => !prev)}
             >
               {isReadingPaused ? (
-                <span className="inline-block whitespace-pre-line">読み上げ
-再開</span>
+                <span className="inline-block whitespace-pre-line">
+                  読み上げ 再開
+                </span>
               ) : (
-                <span className="inline-block whitespace-pre-line">読み上げ
-一時停止</span>
+                <span className="inline-block whitespace-pre-line">
+                  読み上げ 一時停止
+                </span>
               )}
             </button>
             <label className="flex h-12 items-center gap-1.5 rounded-xl border border-white/60 bg-white/55 px-3 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
@@ -685,8 +678,9 @@ export function RegisterGamePage({
               className="h-12 w-20 rounded-lg border border-white/60 bg-white/70 px-2 text-center text-sm font-semibold leading-tight text-slate-800 hover:bg-white/85"
               onClick={onGoRegisterStage}
             >
-              <span className="inline-block whitespace-pre-line">ステージ
-せんたく</span>
+              <span className="inline-block whitespace-pre-line">
+                ステージ せんたく
+              </span>
             </button>
           </div>
         </div>

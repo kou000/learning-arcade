@@ -231,11 +231,8 @@ export function RegisterStagePage({
 
   return (
     <SceneFrame
-      title="ステージせんたく"
-      subtitle="きゅうとしゅるいをえらんでステージにちょうせん"
       backgroundImage="/assets/register-stage-select.png"
       fullscreenBackground
-      hideHeader
       outsideTopLeft={
         <button
           className="rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"

@@ -20,12 +20,8 @@ export function RegisterTopPage({
 
   return (
     <SceneFrame
-      title="そろばんレジゲーム"
-      subtitle="条件を決めてスタートすると、レジ問題ページに進みます"
       backgroundImage={registerGameTop}
       fullscreenBackground
-      hideHeader
-      headerAlign="left"
       outsideTopLeft={
         <button
           className="rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"

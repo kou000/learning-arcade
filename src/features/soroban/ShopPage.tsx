@@ -134,11 +134,8 @@ export function ShopPage({
 
   return (
     <SceneFrame
-      title="ごほうびショップ"
-      subtitle="レジゲームでためたコインで おかいもの"
       backgroundImage="/assets/shop-bg.png"
       fullscreenBackground
-      hideHeader
     >
       <div className="grid h-full grid-rows-[auto_auto_1fr] gap-3">
         <SorobanModeNav
