@@ -654,11 +654,11 @@ export function RegisterGamePage({
               {registerStageLabel(playStage)}
             </span>
             {secondsLeft != null ? (
-              <span className="rounded-full bg-white/70 px-2 py-0.5 font-bold">
+              <span className="inline-flex min-w-[8.5rem] justify-center rounded-full bg-white/70 px-2 py-0.5 font-bold tabular-nums">
                 のこり {secondsLeft}s
               </span>
             ) : (
-              <span className="rounded-full bg-white/70 px-2 py-0.5">
+              <span className="inline-flex min-w-[8.5rem] justify-center rounded-full bg-white/70 px-2 py-0.5">
                 じかんせいげんなし
               </span>
             )}
