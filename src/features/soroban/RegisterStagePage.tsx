@@ -43,9 +43,17 @@ function stageLabel(stage: RegisterStage): string {
   return `ステージ ${stage}`;
 }
 
-function stageDetail(stage: RegisterStage): string {
+function stageDetail(stage: RegisterStage, subject: RegisterSubject): string {
+  if (subject === "mitori") {
+    if (stage === 1) return "2もん\nじかんせいげんなし\nノーミス";
+    if (stage === 2) return "2もん\nじかんせいげんゆるめ\nノーミス";
+    if (stage === 3) return "3もん\nじかんせいげん\nノーミス";
+    if (stage === 4) return "5もん\nじかんせいげん\nノーミス";
+    if (stage === 5) return "7もん\nじかんせいげん\nノーミス";
+    return "けんていとおなじ\nもんだいすう\nノーミス";
+  }
   if (stage === 1) return "3もん\nじかんせいげんなし\nノーミス";
-  if (stage === 2) return "3もん\nじかんせいげん\nノーミス";
+  if (stage === 2) return "3もん\nじかんせいげんゆるめ\nノーミス";
   if (stage === 3) return "5もん\nじかんせいげん\nノーミス";
   if (stage === 4) return "7もん\nじかんせいげん\nノーミス";
   if (stage === 5) return "10もん\nじかんせいげん\nノーミス";
@@ -337,7 +345,7 @@ export function RegisterStagePage({
                     transform: `rotate(${card.titleTilt})`,
                   }}
                 >
-                  {stageDetail(card.stage)}
+                  {stageDetail(card.stage, selection.subject)}
                 </div>
 
                 {!canPlay ? (

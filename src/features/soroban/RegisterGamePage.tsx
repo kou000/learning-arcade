@@ -60,6 +60,13 @@ const BASE_STAGE_QUESTION_COUNT: Record<1 | 2 | 3 | 4 | 5, number> = {
   4: 7,
   5: 10,
 };
+const MITORI_STAGE_QUESTION_COUNT: Record<1 | 2 | 3 | 4 | 5, number> = {
+  1: 2,
+  2: 2,
+  3: 3,
+  4: 5,
+  5: 7,
+};
 
 function parseNumber(text: string): number {
   const cleaned = text.replace(/[^0-9-]/g, "");
@@ -121,7 +128,10 @@ function stageQuestionCount(
   subject: RegisterSubject,
   stage: RegisterStage,
 ): number {
-  if (stage !== 6) return BASE_STAGE_QUESTION_COUNT[stage];
+  if (stage !== 6) {
+    if (subject === "mitori") return MITORI_STAGE_QUESTION_COUNT[stage];
+    return BASE_STAGE_QUESTION_COUNT[stage];
+  }
   return questionCountFromSpec(grade, subject);
 }
 
