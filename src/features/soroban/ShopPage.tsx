@@ -6,6 +6,7 @@ import {
   savePracticeConfig,
   saveRegisterProgress,
 } from "./state";
+import { toKanaNumber } from "./kanaNumber";
 
 type Props = {
   onGoPractice: () => void;
@@ -29,7 +30,7 @@ function ItemPreview({ src, alt }: { src: string; alt: string }) {
   if (missing) {
     return (
       <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500">
-        no image
+        がぞうなし
       </div>
     );
   }
@@ -62,17 +63,17 @@ function CoinButton({
     >
       {missing ? (
         <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-[10px] text-slate-500">
-          no image
+          がぞうなし
         </div>
       ) : (
         <img
           src={image}
-          alt={`${value}円`}
+          alt={`${toKanaNumber(value)}えん`}
           onError={() => setMissing(true)}
           className="h-12 w-12 object-contain"
         />
       )}
-      <span>{value}円</span>
+      <span>{toKanaNumber(value)}えん</span>
     </button>
   );
 }
@@ -100,15 +101,15 @@ export function ShopPage({
   const purchase = () => {
     if (!activeItem) return;
     if (progress.purchasedItemIds.includes(activeItem.id)) {
-      setResult("このグッズは すでに もっています。");
+      setResult("このグッズは もうもっているよ");
       return;
     }
     if (progress.coins < activeItem.price) {
-      setResult("コインが たりません。");
+      setResult("コインが たりないよ");
       return;
     }
     if (trayTotal < activeItem.price) {
-      setResult("トレーのお金が たりません。ついかしてください。");
+      setResult("トレーのおかねが たりないよ");
       return;
     }
 
@@ -125,8 +126,8 @@ export function ShopPage({
 
     setResult(
       change > 0
-        ? `こうにゅう かんりょう。おつり ${change}円`
-        : "こうにゅう かんりょう。ぴったり！（+3コイン）",
+        ? `こうにゅう かんりょう おつり ${toKanaNumber(change)}えん`
+        : "こうにゅう かんりょう ぴったり ボーナス さんコイン",
     );
     setTray([]);
     setActiveItemId(null);
@@ -159,7 +160,8 @@ export function ShopPage({
         />
 
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-bold">所持コイン:</span> {progress.coins}
+          <span className="font-bold">てもちコイン:</span>{" "}
+          {toKanaNumber(progress.coins)}
         </div>
 
         <div className="grid gap-3 overflow-auto rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
@@ -174,7 +176,7 @@ export function ShopPage({
                 <div className="font-bold text-slate-800">{item.name}</div>
                 <div className="text-sm text-slate-600">{item.description}</div>
                 <div className="text-sm font-semibold text-slate-700">
-                  {item.price} コイン
+                  {toKanaNumber(item.price)} コイン
                 </div>
                 <button
                   className={`rounded-xl px-3 py-2 text-sm font-semibold ${
@@ -189,7 +191,7 @@ export function ShopPage({
                     setResult("");
                   }}
                 >
-                  {purchased ? "購入済み" : "買う"}
+                  {purchased ? "こうにゅうずみ" : "かう"}
                 </button>
               </div>
             );
@@ -202,7 +204,7 @@ export function ShopPage({
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="text-lg font-black text-slate-800">
-                {activeItem.name} を買う
+                {activeItem.name} をかう
               </div>
               <button
                 className="ml-auto rounded-lg border border-slate-200 px-2 py-1 text-xs"
@@ -212,14 +214,17 @@ export function ShopPage({
                   setResult("");
                 }}
               >
-                閉じる
+                とじる
               </button>
             </div>
 
             <div className="mt-3 grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <div>価格: {activeItem.price}コイン</div>
-              <div>トレー合計: {trayTotal}円</div>
-              <div>不足: {Math.max(0, activeItem.price - trayTotal)}円</div>
+              <div>ねだん: {toKanaNumber(activeItem.price)}コイン</div>
+              <div>トレーごうけい: {toKanaNumber(trayTotal)}えん</div>
+              <div>
+                ふそく: {toKanaNumber(Math.max(0, activeItem.price - trayTotal))}
+                えん
+              </div>
             </div>
 
             <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -244,7 +249,7 @@ export function ShopPage({
                 className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
                 onClick={purchase}
               >
-                支払って購入
+                しはらって こうにゅう
               </button>
             </div>
 

@@ -4,9 +4,26 @@ export type ShopItem = {
   price: number;
   image: string;
   description: string;
+  placeable?: boolean;
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
+  {
+    id: "shelf-upper-unlock",
+    name: "たなうえだんかいほう",
+    price: 300,
+    image: "",
+    description: "たなの うえだんを つかえるようにする。",
+    placeable: false,
+  },
+  {
+    id: "shelf-lower-unlock",
+    name: "たなしただんかいほう",
+    price: 300,
+    image: "",
+    description: "たなの しただんを つかえるようにする。",
+    placeable: false,
+  },
   {
     id: "shiba-plush",
     name: "しばいぬぬいぐるみ",
@@ -37,9 +54,9 @@ export const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "ark-pouch",
-    name: "ARKぽーち",
+    name: "あーくぽーち",
     price: 420,
     image: "/assets/items/pencil-cup.png",
-    description: "ARKろごいりの おおきめ ぽーち。",
+    description: "あーくろごいりの おおきめ ぽーち。",
   },
 ];

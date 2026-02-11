@@ -100,7 +100,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `RegisterTopPage` : ゲームTOP（条件選択）
 - `RegisterGamePage` : レジゲーム本編
 - `ShopPage` : 報酬ショップ
-- `ShelfPage` : コレクション棚
+- `ShelfPage` : 棚スロット配置（タップ起点モーダルで購入済みグッズを配置）
 - `RegisterAdminPage` : セーブデータ編集（管理者画面）
 - `SceneFrame` : ゲーム系共通フレーム
 - `catalog.ts` : ショップ商品定義

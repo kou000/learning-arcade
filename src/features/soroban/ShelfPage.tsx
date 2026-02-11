@@ -1,11 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { SceneFrame, SorobanModeNav, SorobanSubnav } from "./SceneFrame";
+import React, { useEffect, useMemo, useState } from "react";
+import { SceneFrame } from "./SceneFrame";
 import { SHOP_ITEMS } from "./catalog";
-import {
-  loadRegisterProgress,
-  savePracticeConfig,
-  saveRegisterProgress,
-} from "./state";
+import { loadRegisterProgress, saveRegisterProgress } from "./state";
 
 type Props = {
   onGoPractice: () => void;
@@ -14,12 +10,30 @@ type Props = {
   onGoShelf: () => void;
 };
 
-function ShelfItemImage({ src, alt }: { src: string; alt: string }) {
+const SHELF_ROWS = 3;
+const UPPER_ROW_UNLOCK_ID = "shelf-upper-unlock";
+const LOWER_ROW_UNLOCK_ID = "shelf-lower-unlock";
+
+function ShelfItemImage({
+  src,
+  alt,
+  size = "picker",
+}: {
+  src: string;
+  alt: string;
+  size?: "picker" | "slot";
+}) {
   const [missing, setMissing] = useState(false);
+  const sizeClass =
+    size === "slot"
+      ? "h-[clamp(90px,14vw,150px)] w-[clamp(90px,14vw,150px)]"
+      : "h-12 w-12";
 
   if (missing) {
     return (
-      <div className="h-12 w-12 rounded-lg border border-dashed border-slate-300 bg-slate-100" />
+      <div
+        className={`${sizeClass} rounded-lg border border-dashed border-white/70 bg-white/50`}
+      />
     );
   }
 
@@ -28,227 +42,268 @@ function ShelfItemImage({ src, alt }: { src: string; alt: string }) {
       src={src}
       alt={alt}
       onError={() => setMissing(true)}
-      className="h-12 w-12 rounded-lg border border-slate-200 bg-white object-contain p-1"
+      className={`${sizeClass} object-contain drop-shadow-[0_6px_8px_rgba(15,23,42,0.45)]`}
     />
   );
 }
 
-function rowExpansionCost(rows: number): number {
-  return 150 + Math.max(0, rows - 2) * 100;
-}
-
-function colExpansionCost(cols: number): number {
-  return 180 + Math.max(0, cols - 4) * 120;
-}
-
 export function ShelfPage({
-  onGoPractice,
+  onGoPractice: _onGoPractice,
   onGoRegister,
-  onGoShop,
-  onGoShelf,
+  onGoShop: _onGoShop,
+  onGoShelf: _onGoShelf,
 }: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const purchasedItems = useMemo(
     () =>
-      SHOP_ITEMS.filter((item) => progress.purchasedItemIds.includes(item.id)),
+      SHOP_ITEMS.filter(
+        (item) =>
+          progress.purchasedItemIds.includes(item.id) && item.placeable !== false,
+      ),
     [progress.purchasedItemIds],
   );
+  const shelfCols = Math.max(1, progress.shelfCols);
+  const slotCount = shelfCols * SHELF_ROWS;
+  const shelfSlots = useMemo(
+    () =>
+      Array.from(
+        { length: slotCount },
+        (_, idx) => progress.shelfSlots[idx] ?? null,
+      ),
+    [progress.shelfSlots, slotCount],
+  );
 
-  const updateProgress = (
+  useEffect(() => {
+    if (
+      progress.shelfRows === SHELF_ROWS &&
+      progress.shelfSlots.length === slotCount
+    )
+      return;
+    setProgress((prev) =>
+      saveRegisterProgress({
+        ...prev,
+        shelfRows: SHELF_ROWS,
+        shelfSlots: Array.from(
+          { length: prev.shelfCols * SHELF_ROWS },
+          (_, idx) => prev.shelfSlots[idx] ?? null,
+        ),
+      }),
+    );
+  }, [progress, slotCount]);
+
+  const saveProgress = (
     updater: (current: typeof progress) => typeof progress,
   ) => {
-    setProgress((prev) => {
-      const draft = updater(prev);
-      return saveRegisterProgress(draft);
-    });
+    setProgress((prev) => saveRegisterProgress(updater(prev)));
   };
 
-  const onSlotClick = (idx: number) => {
-    updateProgress((prev) => {
-      const slots = [...prev.shelfSlots];
-      if (selectedItemId) {
-        for (let i = 0; i < slots.length; i++) {
-          if (slots[i] === selectedItemId) slots[i] = null;
-        }
-        slots[idx] = slots[idx] === selectedItemId ? null : selectedItemId;
-      } else if (slots[idx]) {
-        slots[idx] = null;
+  const closePicker = () => {
+    setIsPickerOpen(false);
+  };
+
+  const placeOrRemoveAt = (slotIndex: number, itemId: string) => {
+    saveProgress((prev) => {
+      const slots = Array.from(
+        { length: prev.shelfCols * SHELF_ROWS },
+        (_, idx) => prev.shelfSlots[idx] ?? null,
+      );
+      const isSameItemAtSlot = slots[slotIndex] === itemId;
+
+      if (isSameItemAtSlot) {
+        slots[slotIndex] = null;
+        return { ...prev, shelfRows: SHELF_ROWS, shelfSlots: slots };
       }
-      return { ...prev, shelfSlots: slots };
+
+      for (let i = 0; i < slots.length; i++) {
+        if (slots[i] === itemId) slots[i] = null;
+      }
+      slots[slotIndex] = itemId;
+      return { ...prev, shelfRows: SHELF_ROWS, shelfSlots: slots };
     });
   };
 
-  const expandRows = () => {
-    const cost = rowExpansionCost(progress.shelfRows);
-    if (progress.coins < cost) {
-      setMessage("コインが足りません");
+  const openPicker = () => {
+    setIsPickerOpen(true);
+  };
+
+  const onSlotClick = (slotIndex: number) => {
+    const rowIndex = Math.floor(slotIndex / shelfCols);
+    const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
+    const bottomUnlocked = progress.purchasedItemIds.includes(
+      LOWER_ROW_UNLOCK_ID,
+    );
+    const isUnlocked =
+      rowIndex === 1 || (rowIndex === 0 && topUnlocked) || (rowIndex === 2 && bottomUnlocked);
+    if (!isUnlocked) return;
+
+    if (selectedItemId) {
+      placeOrRemoveAt(slotIndex, selectedItemId);
       return;
     }
-    updateProgress((prev) => {
-      const nextRows = prev.shelfRows + 1;
-      const nextSlots = [
-        ...prev.shelfSlots,
-        ...Array.from({ length: prev.shelfCols }, () => null),
-      ];
-      return {
-        ...prev,
-        coins: prev.coins - cost,
-        shelfRows: nextRows,
-        shelfSlots: nextSlots,
-      };
-    });
-    setMessage(`棚を1段ふやしました（-${cost}コイン）`);
+    openPicker();
   };
 
-  const expandCols = () => {
-    const cost = colExpansionCost(progress.shelfCols);
-    if (progress.coins < cost) {
-      setMessage("コインが足りません");
-      return;
-    }
-    updateProgress((prev) => {
-      const nextCols = prev.shelfCols + 1;
-      const nextSlots: Array<string | null> = [];
-      for (let row = 0; row < prev.shelfRows; row++) {
-        const offset = row * prev.shelfCols;
-        nextSlots.push(
-          ...prev.shelfSlots.slice(offset, offset + prev.shelfCols),
-        );
-        nextSlots.push(null);
-      }
-      return {
-        ...prev,
-        coins: prev.coins - cost,
-        shelfCols: nextCols,
-        shelfSlots: nextSlots,
-      };
-    });
-    setMessage(`棚を1列ふやしました（-${cost}コイン）`);
+  const onPickItem = (itemId: string) => {
+    setSelectedItemId(itemId);
+    closePicker();
+  };
+
+  const clearSelection = () => {
+    setSelectedItemId(null);
+  };
+  const isRowUnlocked = (rowIndex: number) => {
+    const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
+    const bottomUnlocked = progress.purchasedItemIds.includes(
+      LOWER_ROW_UNLOCK_ID,
+    );
+    return (
+      rowIndex === 1 || (rowIndex === 0 && topUnlocked) || (rowIndex === 2 && bottomUnlocked)
+    );
   };
 
   return (
     <SceneFrame
-      backgroundImage="/assets/shelf-bg.png"
+      backgroundImage="/assets/shelf.png"
       fullscreenBackground
+      outsideTopLeft={
+        <button
+          className="rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"
+          onClick={onGoRegister}
+        >
+          ← ゲームトップへ
+        </button>
+      }
     >
-      <div className="grid h-full grid-rows-[auto_auto_1fr] gap-3">
-        <SorobanModeNav
-          current="game"
-          onGoTest={() => {
-            savePracticeConfig({ mode: "test" });
-            onGoPractice();
-          }}
-          onGoPractice={() => {
-            savePracticeConfig({ mode: "one-by-one" });
-            onGoPractice();
-          }}
-          onGoGame={onGoRegister}
-        />
+      <div
+        className="relative h-full text-lg"
+        style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
+      >
+        <div className="absolute left-1/2 top-[7%] z-10 w-[92%] -translate-x-1/2 sm:w-[86%] md:w-[80%]">
+          <div className="grid gap-y-2">
+            {Array.from({ length: SHELF_ROWS }, (_, rowIndex) => {
+              const rowUnlocked = isRowUnlocked(rowIndex);
+              return (
+                <div key={rowIndex} className="relative rounded-2xl">
+                  <div
+                    className="grid"
+                    style={{
+                      gridTemplateColumns: `repeat(${shelfCols}, minmax(96px, 1fr))`,
+                      columnGap: "0.75rem",
+                    }}
+                  >
+                    {Array.from({ length: shelfCols }, (_, colIndex) => {
+                      const idx = rowIndex * shelfCols + colIndex;
+                      const itemId = shelfSlots[idx];
+                      const item = SHOP_ITEMS.find((x) => x.id === itemId);
+                      const isSelectedItem = Boolean(
+                        rowUnlocked && selectedItemId && itemId === selectedItemId,
+                      );
 
-        <SorobanSubnav
-          current="shelf"
-          onGoRegister={onGoRegister}
-          onGoShop={onGoShop}
-          onGoShelf={onGoShelf}
-        />
-
-        <div className="grid gap-2 sm:grid-cols-3">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            所持コイン: <span className="font-bold">{progress.coins}</span>
+                      return (
+                        <button
+                          key={idx}
+                          className={`flex aspect-square items-center justify-center rounded-xl border transition ${
+                            !rowUnlocked
+                              ? "border-white/35 bg-transparent"
+                              : isSelectedItem
+                                ? "border-sky-200 bg-sky-100/35"
+                                : item
+                                  ? "border-transparent bg-transparent hover:border-white/40"
+                                  : "border-dashed border-white/20 bg-transparent hover:border-white/55"
+                          }`}
+                          onClick={() => onSlotClick(idx)}
+                        >
+                          {item && rowUnlocked ? (
+                            <div className="grid place-items-center gap-1 p-1">
+                              <ShelfItemImage
+                                src={item.image}
+                                alt={item.name}
+                                size="slot"
+                              />
+                              <div className="text-[10px] leading-tight text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.65)]">
+                                {item.name}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-white/50">　</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!rowUnlocked ? (
+                    <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-2xl bg-slate-900/45 pb-[20px] text-sm font-bold text-white">
+                      みかいほう
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
-          <button
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
-            onClick={expandRows}
-          >
-            行をふやす（{rowExpansionCost(progress.shelfRows)}）
-          </button>
-          <button
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
-            onClick={expandCols}
-          >
-            列をふやす（{colExpansionCost(progress.shelfCols)}）
-          </button>
         </div>
 
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[280px_1fr]">
-          <div className="overflow-auto rounded-2xl border border-slate-200 bg-white/92 p-3 shadow-sm">
-            <div className="text-sm font-bold text-slate-700">
-              購入済みグッズ
+        <div className="absolute bottom-[24px] left-1/2 z-10 -translate-x-1/2">
+          <button
+            className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition ${
+              selectedItemId
+                ? "bg-white text-slate-800 hover:bg-slate-100"
+                : "cursor-not-allowed bg-white/60 text-slate-500"
+            }`}
+            onClick={clearSelection}
+            disabled={!selectedItemId}
+          >
+            せんたくを かいじょ
+          </button>
+        </div>
+      </div>
+
+      {isPickerOpen ? (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-900/45 p-4">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="text-lg font-black text-slate-800">
+                グッズをえらぶ
+              </div>
+              <button
+                className="ml-auto rounded-lg border border-slate-200 px-3 py-1 text-sm"
+                onClick={closePicker}
+              >
+                とじる
+              </button>
             </div>
-            <div className="mt-2 grid gap-2">
+
+            <div className="mt-3 max-h-[52vh] overflow-auto">
               {purchasedItems.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-sm text-slate-600">
-                  まだグッズがありません。ショップで購入してください。
+                  ショップで グッズを かってね
                 </div>
-              ) : null}
-              {purchasedItems.map((item) => (
-                <button
-                  key={item.id}
-                  className={`flex items-center gap-2 rounded-xl border px-2 py-2 text-left text-sm ${
-                    selectedItemId === item.id
-                      ? "border-sky-300 bg-sky-50"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
-                  }`}
-                  onClick={() =>
-                    setSelectedItemId((prev) =>
-                      prev === item.id ? null : item.id,
-                    )
-                  }
-                >
-                  <ShelfItemImage src={item.image} alt={item.name} />
-                  <span className="font-semibold text-slate-700">
-                    {item.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="overflow-auto rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm">
-            <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: `repeat(${progress.shelfCols}, minmax(88px, 1fr))`,
-              }}
-            >
-              {progress.shelfSlots.map((itemId, idx) => {
-                const item = SHOP_ITEMS.find((x) => x.id === itemId);
-                return (
-                  <button
-                    key={idx}
-                    className={`flex aspect-square items-center justify-center rounded-xl border transition ${
-                      item
-                        ? "border-slate-300 bg-slate-50 hover:bg-slate-100"
-                        : "border-dashed border-slate-300 bg-white hover:bg-slate-50"
-                    }`}
-                    onClick={() => onSlotClick(idx)}
-                  >
-                    {item ? (
-                      <div className="grid place-items-center gap-1 p-1">
-                        <ShelfItemImage src={item.image} alt={item.name} />
-                        <div className="text-[11px] text-slate-600">
-                          {item.name}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-slate-400">empty</div>
-                    )}
-                  </button>
-                );
-              })}
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {purchasedItems.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`flex items-center gap-2 rounded-xl border px-2 py-2 text-left text-sm transition ${
+                        selectedItemId === item.id
+                          ? "border-sky-300 bg-sky-50"
+                          : "border-slate-200 bg-white hover:bg-slate-50"
+                      }`}
+                      onClick={() => onPickItem(item.id)}
+                    >
+                      <ShelfItemImage src={item.image} alt={item.name} />
+                      <span className="font-semibold text-slate-700">
+                        {item.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        {message ? (
-          <div className="rounded-xl border border-slate-200 bg-white/92 px-3 py-2 text-sm text-slate-700">
-            {message}
-          </div>
-        ) : null}
-      </div>
+      ) : null}
     </SceneFrame>
   );
 }
