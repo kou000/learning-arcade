@@ -614,7 +614,7 @@ export function RegisterGamePage({
       hideHeader
       outsideTopLeft={
         <div className="grid gap-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-xl px-3 py-0.5 text-sm text-slate-800">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto rounded-xl px-3 py-0.5 text-sm text-slate-800 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0">
             <button
               className="h-12 w-fit rounded-xl bg-transparent px-4 text-sm font-semibold text-white hover:bg-white/10"
               onClick={onGoRegister}
@@ -622,10 +622,16 @@ export function RegisterGamePage({
               ← ゲームモードTOP
             </button>
             <button
-              className="h-12 w-fit rounded-xl border border-white/60 bg-white/55 px-4 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm hover:bg-white/70"
+              className="h-12 w-24 rounded-xl border border-white/60 bg-white/55 px-2 text-center text-sm font-semibold leading-tight text-slate-800 shadow-sm backdrop-blur-sm hover:bg-white/70"
               onClick={() => setIsReadingPaused((prev) => !prev)}
             >
-              {isReadingPaused ? "読み上げ再開" : "読み上げ一時停止"}
+              {isReadingPaused ? (
+                <span className="inline-block whitespace-pre-line">読み上げ
+再開</span>
+              ) : (
+                <span className="inline-block whitespace-pre-line">読み上げ
+一時停止</span>
+              )}
             </button>
             <label className="flex h-12 items-center gap-1.5 rounded-xl border border-white/60 bg-white/55 px-3 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
               <span>よみあげ速度</span>
@@ -641,32 +647,33 @@ export function RegisterGamePage({
                 ))}
               </select>
             </label>
-            <span>
+            <span className="whitespace-nowrap">
               問題 {index + 1} / {problems.length}
             </span>
-            <span className="rounded-full bg-white/70 px-2 py-0.5">
+            <span className="rounded-full bg-white/70 px-2 py-0.5 whitespace-nowrap">
               {subjectLabel(playSubject)}
             </span>
-            <span className="rounded-full bg-white/70 px-2 py-0.5">
+            <span className="rounded-full bg-white/70 px-2 py-0.5 whitespace-nowrap">
               {playGrade}級
             </span>
-            <span className="rounded-full bg-white/70 px-2 py-0.5">
+            <span className="rounded-full bg-white/70 px-2 py-0.5 whitespace-nowrap">
               {registerStageLabel(playStage)}
             </span>
             {secondsLeft != null ? (
-              <span className="inline-flex min-w-[8.5rem] justify-center rounded-full bg-white/70 px-2 py-0.5 font-bold tabular-nums">
+              <span className="inline-flex h-7 w-[9rem] shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-white/70 px-2 py-0.5 text-center font-bold tabular-nums">
                 のこり {secondsLeft}s
               </span>
             ) : (
-              <span className="inline-flex min-w-[8.5rem] justify-center rounded-full bg-white/70 px-2 py-0.5">
+              <span className="inline-flex h-7 w-[9rem] shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-white/70 px-2 py-0.5 text-center">
                 じかんせいげんなし
               </span>
             )}
             <button
-              className="h-12 rounded-lg border border-white/60 bg-white/70 px-3 text-sm font-semibold text-slate-800 hover:bg-white/85"
+              className="h-12 w-20 rounded-lg border border-white/60 bg-white/70 px-2 text-center text-sm font-semibold leading-tight text-slate-800 hover:bg-white/85"
               onClick={onGoRegisterStage}
             >
-              ステージせんたくへ
+              <span className="inline-block whitespace-pre-line">ステージ
+せんたく</span>
             </button>
           </div>
         </div>
