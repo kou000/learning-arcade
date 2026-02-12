@@ -4,6 +4,9 @@ import { SHOP_ITEMS } from "./catalog";
 import shopItemsBg from "../../assets/shop-items.png";
 import { loadRegisterProgress, saveRegisterProgress } from "./state";
 
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("ja-JP").format(value);
+
 type Props = {
   onGoPractice: () => void;
   onGoRegister: () => void;
@@ -38,7 +41,7 @@ function ItemPreview({ src, alt }: { src: string; alt: string }) {
   if (missing) {
     return (
       <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500">
-        no image
+        がぞうなし
       </div>
     );
   }
@@ -82,12 +85,12 @@ function CoinChip({
     >
       {missing ? (
         <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-[10px] text-slate-500">
-          no image
+          がぞうなし
         </div>
       ) : (
         <img
           src={image}
-          alt={`${value}円`}
+          alt={`${formatNumber(value)}えん`}
           onError={() => setMissing(true)}
           className="h-[4.5rem] w-[4.5rem] object-contain"
         />
@@ -129,15 +132,15 @@ export function ShopPage({ onGoRegister }: Props) {
   const purchase = () => {
     if (!activeItem) return;
     if (progress.purchasedItemIds.includes(activeItem.id)) {
-      setResult("このグッズは すでに もっています。");
+      setResult("このグッズは もうもっているよ");
       return;
     }
     if (progress.coins < activeItem.price) {
-      setResult("コインが たりません。");
+      setResult("コインが たりないよ");
       return;
     }
     if (trayTotal < activeItem.price) {
-      setResult("トレーのお金が たりません。ついかしてください。");
+      setResult("トレーのおかねが たりないよ");
       return;
     }
 
@@ -153,8 +156,8 @@ export function ShopPage({ onGoRegister }: Props) {
 
     setResult(
       change > 0
-        ? `こうにゅう かんりょう。おつり ${change}円`
-        : "こうにゅう かんりょう。ぴったり！（+3コイン）",
+        ? `こうにゅう かんりょう おつり ${formatNumber(change)}えん`
+        : "こうにゅう かんりょう ぴったり ボーナス さんコイン",
     );
     setTray([]);
     setActiveItemId(null);

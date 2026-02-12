@@ -63,8 +63,8 @@ export function SorobanSubnav({
     onClick: () => void;
   }> = [
     { key: "register", label: "レジゲーム", onClick: onGoRegister },
-    { key: "shop", label: "ショップ(じゅんびちゅう)", onClick: onGoShop },
-    { key: "shelf", label: "たな(じゅんびちゅう)", onClick: onGoShelf },
+    { key: "shop", label: "ショップ", onClick: onGoShop },
+    { key: "shelf", label: "たな", onClick: onGoShelf },
   ];
 
   return (
@@ -118,7 +118,7 @@ export function SceneFrame({
               {!hasImageError ? (
                 <img
                   src={backgroundImage}
-                  alt="background"
+                  alt="はいけい"
                   onError={() => setHasImageError(true)}
                   className={`w-full ${useFullscreen ? "h-full object-cover object-top" : "h-auto object-cover"}`}
                 />
@@ -130,7 +130,7 @@ export function SceneFrame({
 
               {hasImageError ? (
                 <div className="absolute left-4 top-4 rounded-lg bg-white/90 px-3 py-1 text-xs font-semibold text-slate-600">
-                  背景画像なし（/public/assets/... を配置すると反映されます）
+                  はいけいがぞうが みつからないよ
                 </div>
               ) : null}
 
