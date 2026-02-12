@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { ExamBody, Grade } from "../../domain/specs/types";
+import type { ExamBody, Grade } from "../../../domain/specs/types";
 import {
   EXAM_BODY_LABELS,
   getAvailableGrades,
-} from "../../domain/specs/kenteiSpec";
-import { Select } from "../../ui/components/Select";
-import { SceneFrame } from "./SceneFrame";
+} from "../../../domain/specs/kenteiSpec";
+import { Select } from "../../../ui/components/Select";
+import { SceneFrame } from "../SceneFrame";
 import {
   canPlayStage,
   clampRegisterSelection,
@@ -20,7 +20,7 @@ import {
   type RegisterProgress,
   type RegisterStage,
   type RegisterSubject,
-} from "./state";
+} from "../state";
 
 type Props = {
   onGoRegisterTop: () => void;

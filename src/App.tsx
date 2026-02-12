@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { ArcadeHome } from "./features/arcade/ArcadeHome";
-import { PracticePage } from "./features/practice/PracticePage";
-import { RegisterGamePage } from "./features/soroban/RegisterGamePage";
-import { RegisterStagePage } from "./features/soroban/RegisterStagePage";
-import { RegisterTopPage } from "./features/soroban/RegisterTopPage";
-import { RegisterAdminPage } from "./features/soroban/RegisterAdminPage";
-import { ShopPage } from "./features/soroban/ShopPage";
-import { ShelfPage } from "./features/soroban/ShelfPage";
+import { PracticePage } from "./features/practice/views/PracticePage";
+import { RegisterGamePage } from "./features/soroban/views/RegisterGamePage";
+import { RegisterStagePage } from "./features/soroban/views/RegisterStagePage";
+import { RegisterTopPage } from "./features/soroban/views/RegisterTopPage";
+import { RegisterAdminPage } from "./features/soroban/views/RegisterAdminPage";
+import { ShopPage, ShopPaymentPage } from "./features/soroban/views/ShopPage";
+import { ShelfPage } from "./features/soroban/views/ShelfPage";
 
-type Route = "home" | "soroban" | "soroban-register" | "soroban-register-stage" | "soroban-register-play" | "soroban-shop" | "soroban-shelf" | "soroban-admin";
+type Route =
+  | "home"
+  | "soroban"
+  | "soroban-register"
+  | "soroban-register-stage"
+  | "soroban-register-play"
+  | "soroban-shop"
+  | "soroban-shop-payment"
+  | "soroban-shelf"
+  | "soroban-admin";
 
 function isAdminModeFromEnv(): boolean {
   const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
@@ -22,9 +31,23 @@ function getRouteFromHash(): Route {
   if (h === "soroban/register/stage") return "soroban-register-stage";
   if (h === "soroban/register/play") return "soroban-register-play";
   if (h === "soroban/shop") return "soroban-shop";
+  if (h.startsWith("soroban/shop/payment/")) return "soroban-shop-payment";
   if (h === "soroban/shelf") return "soroban-shelf";
   if (h === "soroban/admin") return "soroban-admin";
   return "home";
+}
+
+function getShopPaymentItemIdFromHash(): string | null {
+  const h = window.location.hash.replace("#", "").replace(/^\/+/, "").replace(/\/+$/, "");
+  const prefix = "soroban/shop/payment/";
+  if (!h.startsWith(prefix)) return null;
+  const raw = h.slice(prefix.length);
+  if (!raw) return null;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 }
 
 export default function App() {
@@ -43,7 +66,11 @@ export default function App() {
   const goRegisterStage = () => { window.location.hash = "/soroban/register/stage"; };
   const goRegisterPlay = () => { window.location.hash = "/soroban/register/play"; };
   const goShop = () => { window.location.hash = "/soroban/shop"; };
+  const goShopPayment = (itemId: string) => {
+    window.location.hash = `/soroban/shop/payment/${encodeURIComponent(itemId)}`;
+  };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
+  const shopPaymentItemId = getShopPaymentItemIdFromHash();
 
   return (
     <div className="relative min-h-screen">
@@ -71,7 +98,14 @@ export default function App() {
         />
       ) : null}
       {route === "soroban-shop" ? (
-        <ShopPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
+        <ShopPage onGoRegister={goRegister} onGoPayment={goShopPayment} />
+      ) : null}
+      {route === "soroban-shop-payment" ? (
+        <ShopPaymentPage
+          itemId={shopPaymentItemId}
+          onGoRegister={goRegister}
+          onGoShop={goShop}
+        />
       ) : null}
       {route === "soroban-shelf" ? (
         <ShelfPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />

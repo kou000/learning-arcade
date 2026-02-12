@@ -10,7 +10,8 @@
 - `#/soroban` : 練習ページ（`PracticePage`）
 - `#/soroban/register` : ゲームモードTOP（`RegisterTopPage`）
 - `#/soroban/register/play` : レジゲーム本編（`RegisterGamePage`）
-- `#/soroban/shop` : ショップ（`ShopPage`）
+- `#/soroban/shop` : ショップTOP（`ShopPage`）
+- `#/soroban/shop/payment/:itemId` : 支払い画面（`ShopPaymentPage`）
 - `#/soroban/shelf` : 棚（`ShelfPage`）
 - `#/soroban/admin` : 管理者画面（`RegisterAdminPage`）
 
@@ -20,8 +21,8 @@
 
 - ジェネレーター: `generateProblems(grade, subject, examBody)`
 - 実装箇所:
-  - 練習: `src/features/practice/PracticePage.tsx`
-  - ゲーム: `src/features/soroban/RegisterGamePage.tsx`
+  - 練習: `src/features/practice/views/PracticePage.tsx`
+  - ゲーム: `src/features/soroban/views/RegisterGamePage.tsx`
 
 つまり「数値・答え」は共通で、ゲーム側は表示演出のみ変換する。
 
@@ -54,7 +55,7 @@
 - 初期: 最易級の `みとり` のみ
 - クリア順: `みとり -> かけ -> わり`
 - 同一級で `わり` クリア後、次の級を解放
-- ただし `RegisterGamePage.tsx` では合格ライン通過時のみ解放処理を適用
+- ただし `views/RegisterGamePage.tsx` では合格ライン通過時のみ解放処理を適用
   - `REGISTER_PASS_RATE = 0.7`
   - 一度でも誤答した問題は不正解として記録（`wrongProblemIndexes`）
 - ステージは `1..6`。
@@ -85,7 +86,7 @@
 
 ## 5.1 RegisterTopPage（ゲームTOP）
 
-ファイル: `src/features/soroban/RegisterTopPage.tsx`
+ファイル: `src/features/soroban/views/RegisterTopPage.tsx`
 
 - 役割:
   - 解放済み範囲で `級` / `レジ問題` を選択
@@ -95,7 +96,7 @@
 
 ## 5.2 RegisterGamePage（本編）
 
-ファイル: `src/features/soroban/RegisterGamePage.tsx`
+ファイル: `src/features/soroban/views/RegisterGamePage.tsx`
 
 - 役割:
   - 問題読み上げ（吹き出し）
@@ -120,11 +121,14 @@
   - 余り入力はなし（商のみ）
   - ボタン文言は「ふくろのかずをつたえる」
 
-## 5.3 ShopPage
+## 5.3 ShopPage / ShopPaymentPage
 
-ファイル: `src/features/soroban/ShopPage.tsx`
+ファイル: `src/features/soroban/views/ShopPage.tsx`
 
 - 固定商品配列は `src/features/soroban/catalog.ts`
+- `ShopPage` は商品一覧のみを担当し、商品選択で `#/soroban/shop/payment/:itemId` へ遷移
+- `ShopPage` は画面遷移直後に犬の吹き出しで「いらっしゃいませ！」を表示してから商品一覧を表示する
+- `ShopPaymentPage` は支払い操作（投入/判定）を担当
 - 棚段解放アイテム（上段/下段）をショップで購入できる
 - 支払いトレー:
   - `1000 / 500 / 100 / 50 / 10`
@@ -135,7 +139,7 @@
 
 ## 5.4 ShelfPage
 
-ファイル: `src/features/soroban/ShelfPage.tsx`
+ファイル: `src/features/soroban/views/ShelfPage.tsx`
 
 - 背景は `public/assets/shelf.png` を使用し、ゲームTOPに近い全画面レイアウトで表示
 - 棚スロットをタップすると、購入済みグッズ選択モーダルを表示
@@ -152,7 +156,7 @@
 
 ## 5.5 RegisterAdminPage（管理者画面）
 
-ファイル: `src/features/soroban/RegisterAdminPage.tsx`
+ファイル: `src/features/soroban/views/RegisterAdminPage.tsx`
 
 - 役割:
   - `learning-arcade:soroban-state` のJSONを直接編集
@@ -175,7 +179,7 @@
   - truthy: `1`, `true`, `on`
 - 影響:
   - `App.tsx` でグローバル `ADMIN MODE` バッジ表示
-  - `RegisterGamePage.tsx` で「こたえをにゅうりょく」ボタン表示
+  - `views/RegisterGamePage.tsx` で「こたえをにゅうりょく」ボタン表示
 - 起動用スクリプト:
   - `package.json` の `dev:admin`
 

@@ -25,8 +25,8 @@ src/
     generator/           # 問題生成ロジック
   features/
     arcade/              # アーケードTOP
-    practice/            # テスト/れんしゅうモード
-    soroban/             # ゲームモード（レジ/ショップ/棚）+ 保存状態
+    practice/            # テスト/れんしゅうモード（views/, components/, hooks）
+    soroban/             # ゲームモード（views/, components/ + 保存状態）
   ui/
     components/          # 汎用UI部品（Button, Selectなど）
 docs/                    # 実装向けドキュメント（ビルド非対象）
@@ -53,6 +53,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `/#/soroban/register` : `RegisterTopPage`
 - `/#/soroban/register/play` : `RegisterGamePage`
 - `/#/soroban/shop` : `ShopPage`
+- `/#/soroban/shop/payment/:itemId` : `ShopPaymentPage`
 - `/#/soroban/shelf` : `ShelfPage`
 - `/#/soroban/admin` : `RegisterAdminPage`
 
@@ -85,7 +86,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 
 ## 6.2 practice（テスト/れんしゅう）
 
-- `PracticePage.tsx` が親。
+- `views/PracticePage.tsx` が親。
 - テストモード:
   - `ProblemSheet`, `AnswerSheet`, `TimerBar`, `useTimer`
 - れんしゅうモード:
@@ -99,7 +100,8 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 
 - `RegisterTopPage` : ゲームTOP（条件選択）
 - `RegisterGamePage` : レジゲーム本編
-- `ShopPage` : 報酬ショップ
+- `ShopPage` : 報酬ショップTOP（商品一覧）
+- `ShopPaymentPage` : 支払い画面（商品ごと）
 - `ShelfPage` : 棚スロット配置（タップ起点モーダルで購入済みグッズを配置）
 - `RegisterAdminPage` : セーブデータ編集（管理者画面）
 - `SceneFrame` : ゲーム系共通フレーム

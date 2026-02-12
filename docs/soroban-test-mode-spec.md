@@ -5,7 +5,7 @@
 
 ## 1. 対象画面と切替
 
-- 画面: `src/features/practice/PracticePage.tsx`
+- 画面: `src/features/practice/views/PracticePage.tsx`
 - モード値: `mode === "test"`
 - モード切替は同ページ上のボタンで行う
 
@@ -83,7 +83,7 @@
 
 ## 7. 改修ガイド（AI向け）
 
-1. テスト固有の変更は `PracticePage.tsx` の `mode === "test"` 分岐に寄せる
+1. テスト固有の変更は `views/PracticePage.tsx` の `mode === "test"` 分岐に寄せる
 2. 問題用紙の見た目変更は `ProblemSheet.tsx` に閉じる
 3. タイマー仕様変更は `useTimer.ts` と `TimerBar.tsx` をセットで更新
 4. 変更後は `npm run build` と印刷プレビュー動作を確認する

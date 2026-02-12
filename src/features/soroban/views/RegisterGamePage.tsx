@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { generateProblems, subjectMinutes } from "../../domain/generator";
-import type { Problem } from "../../domain/generator/types";
-import type { Grade } from "../../domain/specs/types";
-import { getGradeSpec } from "../../domain/specs/kenteiSpec";
-import { SceneFrame } from "./SceneFrame";
-import registerGameBg from "../../assets/register-game-bg.png";
-import arkSuccess from "../../assets/ark_success.png";
+import { generateProblems, subjectMinutes } from "../../../domain/generator";
+import type { Problem } from "../../../domain/generator/types";
+import type { Grade } from "../../../domain/specs/types";
+import { getGradeSpec } from "../../../domain/specs/kenteiSpec";
+import { DogSpeechBubble } from "../components/DogSpeechBubble";
+import { SceneFrame } from "../SceneFrame";
+import registerGameBg from "../../../assets/register-game-bg.png";
+import arkSuccess from "../../../assets/ark_success.png";
 import {
   advanceRegisterProgressOnClear,
   canPlayStage,
@@ -21,7 +22,7 @@ import {
   saveRegisterProgress,
   type RegisterStage,
   type RegisterSubject,
-} from "./state";
+} from "../state";
 
 type Props = {
   onGoRegister: () => void;
@@ -723,15 +724,11 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 ) : null}
                 {dogReply ? (
                   <div className="absolute left-[60%] top-[17%] w-[min(480px,calc(100%-24px))] -translate-x-1/2">
-                    <div className="relative rounded-[24px] border-2 border-sky-200 bg-sky-100/95 px-5 py-4 text-sky-900 shadow-lg">
-                      <div className="text-xs font-semibold text-sky-700">
-                        おきゃくさん（しばいぬ）
-                      </div>
-                      <div className="mt-1 whitespace-pre-line text-xl font-black leading-relaxed">
-                        {dogReply}
-                      </div>
-                      <div className="absolute -bottom-3 right-[164px] h-6 w-6 rotate-45 border-b-2 border-r-2 border-sky-200 bg-sky-100/95" />
-                    </div>
+                    <DogSpeechBubble
+                      text={dogReply}
+                      tone="reply"
+                      preserveLineBreaks
+                    />
                   </div>
                 ) : null}
               </div>
@@ -741,14 +738,8 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
               <div className="grid gap-3">
                 {isReadingItems ? (
                   <div className="relative min-h-[360px]">
-                    <div className="absolute left-[60%] top-[17%] w-[min(480px,calc(100%-24px))] -translate-x-1/2 rounded-[24px] border-2 border-slate-200 bg-white/95 px-5 py-4 text-slate-800 shadow-lg">
-                      <div className="text-xs font-semibold text-slate-500">
-                        おきゃくさん（しばいぬ）
-                      </div>
-                      <div className="mt-1 text-xl font-black leading-relaxed">
-                        {promptText}
-                      </div>
-                      <div className="absolute -bottom-3 right-[164px] h-6 w-6 rotate-45 border-b-2 border-r-2 border-slate-200 bg-white/95" />
+                    <div className="absolute left-[60%] top-[17%] w-[min(480px,calc(100%-24px))] -translate-x-1/2">
+                      <DogSpeechBubble text={promptText} />
                     </div>
                   </div>
                 ) : (

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { SceneFrame } from "./SceneFrame";
-import { SOROBAN_STORAGE_KEY } from "./state";
+import { SceneFrame } from "../SceneFrame";
+import { SOROBAN_STORAGE_KEY } from "../state";
 
 type Props = {
   onGoRegister: () => void;
