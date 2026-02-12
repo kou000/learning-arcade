@@ -1,6 +1,6 @@
-import type { ExamBody, Grade, Subject } from "../../domain/specs/types";
-import { getAvailableGrades, getGradeSpec } from "../../domain/specs/kenteiSpec";
-import type { PracticeMode } from "../practice/types";
+import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
+import { getAvailableGrades, getGradeSpec } from "@/domain/specs/kenteiSpec";
+import type { PracticeMode } from "@/features/practice/types";
 
 export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
 const REGISTER_EXAM_BODY: ExamBody = "zenshugakuren";

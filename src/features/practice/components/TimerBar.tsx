@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "../../../ui/components/Button";
-import { formatMMSS } from "../hooks/useTimer";
+import { Button } from "@/ui/components/Button";
+import { formatMMSS } from "@/features/practice/hooks/useTimer";
 
 type Props = {
   secondsLeft: number;

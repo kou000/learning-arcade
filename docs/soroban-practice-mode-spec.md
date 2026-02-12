@@ -5,7 +5,7 @@
 
 ## 1. 対象画面と切替
 
-- 画面: `src/features/practice/PracticePage.tsx`
+- 画面: `src/features/practice/views/PracticePage.tsx`
 - モード値: `mode === "one-by-one"`
 - UI切替ボタン:
   - テストモード
@@ -39,7 +39,7 @@
 
 ## 4.1 親ページ
 
-`PracticePage.tsx` で以下を管理:
+`views/PracticePage.tsx` で以下を管理:
 
 - 条件コントロール（`ControlBar`）
 - タイトル/検定・級・種目表示

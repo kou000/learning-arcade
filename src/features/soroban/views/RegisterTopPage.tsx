@@ -1,7 +1,7 @@
 import React from "react";
-import registerGameTop from "../../assets/register-game-top.png";
-import { SceneFrame, SorobanSubnav } from "./SceneFrame";
-import { loadRegisterProgress } from "./state";
+import registerGameTop from "@/assets/register-game-top.png";
+import { SceneFrame, SorobanSubnav } from "@/features/soroban/components/SceneFrame";
+import { loadRegisterProgress } from "@/features/soroban/state";
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("ja-JP").format(value);
 

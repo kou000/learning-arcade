@@ -1,7 +1,7 @@
 import React from "react";
-import type { Problem } from "../../../domain/generator/types";
-import type { Subject } from "../../../domain/specs/types";
-import { subjectLabel } from "../../../domain/generator";
+import type { Problem } from "@/domain/generator/types";
+import type { Subject } from "@/domain/specs/types";
+import { subjectLabel } from "@/domain/generator";
 
 type Props = {
   problems: Problem[];

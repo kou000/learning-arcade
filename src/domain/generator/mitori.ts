@@ -1,7 +1,7 @@
-import { randInt } from "./rng";
-import type { Problem } from "./types";
-import type { MitoriSpec } from "../specs/types";
-import { formatNumber, padLeft, widthForDigits } from "./format";
+import { randInt } from "@/domain/generator/rng";
+import type { Problem } from "@/domain/generator/types";
+import type { MitoriSpec } from "@/domain/specs/types";
+import { formatNumber, padLeft, widthForDigits } from "@/domain/generator/format";
 
 function buildDigitPlan(terms: number, min: number, max: number, target: number): number[] | null {
   const base = Array.from({ length: terms }, () => min);

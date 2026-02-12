@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { ExamBody, Grade } from "../../domain/specs/types";
+import registerStageSelectBg from "@/assets/register-stage-select.png";
+import type { ExamBody, Grade } from "@/domain/specs/types";
 import {
   EXAM_BODY_LABELS,
   getAvailableGrades,
-} from "../../domain/specs/kenteiSpec";
-import { Select } from "../../ui/components/Select";
-import { SceneFrame } from "./SceneFrame";
+} from "@/domain/specs/kenteiSpec";
+import { Select } from "@/ui/components/Select";
+import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
   canPlayStage,
   clampRegisterSelection,
@@ -20,7 +21,7 @@ import {
   type RegisterProgress,
   type RegisterStage,
   type RegisterSubject,
-} from "./state";
+} from "@/features/soroban/state";
 
 type Props = {
   onGoRegisterTop: () => void;
@@ -239,7 +240,7 @@ export function RegisterStagePage({
 
   return (
     <SceneFrame
-      backgroundImage="/assets/register-stage-select.png"
+      backgroundImage={registerStageSelectBg}
       fullscreenBackground
       outsideTopLeft={
         <button
