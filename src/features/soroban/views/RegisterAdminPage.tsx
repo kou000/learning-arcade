@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { SceneFrame } from "../SceneFrame";
+import { SceneFrame } from "../components/SceneFrame";
 import { SOROBAN_STORAGE_KEY } from "../state";
 
 type Props = {

@@ -5,7 +5,8 @@ import { RegisterGamePage } from "./features/soroban/views/RegisterGamePage";
 import { RegisterStagePage } from "./features/soroban/views/RegisterStagePage";
 import { RegisterTopPage } from "./features/soroban/views/RegisterTopPage";
 import { RegisterAdminPage } from "./features/soroban/views/RegisterAdminPage";
-import { ShopPage, ShopPaymentPage } from "./features/soroban/views/ShopPage";
+import { ShopPage } from "./features/soroban/views/ShopPage";
+import { ShopPaymentPage } from "./features/soroban/views/ShopPaymentPage";
 import { ShelfPage } from "./features/soroban/views/ShelfPage";
 
 type Route =

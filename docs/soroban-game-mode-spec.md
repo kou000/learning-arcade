@@ -123,7 +123,9 @@
 
 ## 5.3 ShopPage / ShopPaymentPage
 
-ファイル: `src/features/soroban/views/ShopPage.tsx`
+ファイル:
+- `src/features/soroban/views/ShopPage.tsx`
+- `src/features/soroban/views/ShopPaymentPage.tsx`
 
 - 固定商品配列は `src/features/soroban/catalog.ts`
 - `ShopPage` は商品一覧のみを担当し、商品選択で `#/soroban/shop/payment/:itemId` へ遷移
@@ -167,7 +169,7 @@
 
 ## 6. 共通UI
 
-`src/features/soroban/SceneFrame.tsx`
+`src/features/soroban/components/SceneFrame.tsx`
 
 - 背景1枚 + オーバーレイ構造
 - `outsideTopLeft` に画像外の戻るボタン等を配置

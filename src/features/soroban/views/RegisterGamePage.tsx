@@ -4,7 +4,7 @@ import type { Problem } from "../../../domain/generator/types";
 import type { Grade } from "../../../domain/specs/types";
 import { getGradeSpec } from "../../../domain/specs/kenteiSpec";
 import { DogSpeechBubble } from "../components/DogSpeechBubble";
-import { SceneFrame } from "../SceneFrame";
+import { SceneFrame } from "../components/SceneFrame";
 import registerGameBg from "../../../assets/register-game-bg.png";
 import arkSuccess from "../../../assets/ark_success.png";
 import {

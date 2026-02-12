@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { SceneFrame } from "../SceneFrame";
+import { SceneFrame } from "../components/SceneFrame";
 import { SHOP_ITEMS } from "../catalog";
 import { loadRegisterProgress, saveRegisterProgress } from "../state";
 

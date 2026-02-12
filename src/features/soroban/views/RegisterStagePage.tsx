@@ -5,7 +5,7 @@ import {
   getAvailableGrades,
 } from "../../../domain/specs/kenteiSpec";
 import { Select } from "../../../ui/components/Select";
-import { SceneFrame } from "../SceneFrame";
+import { SceneFrame } from "../components/SceneFrame";
 import {
   canPlayStage,
   clampRegisterSelection,
