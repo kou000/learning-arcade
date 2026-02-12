@@ -6,7 +6,9 @@ import {
   savePracticeConfig,
   saveRegisterProgress,
 } from "./state";
-import { toKanaNumber } from "./kanaNumber";
+
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("ja-JP").format(value);
 
 type Props = {
   onGoPractice: () => void;
@@ -68,12 +70,12 @@ function CoinButton({
       ) : (
         <img
           src={image}
-          alt={`${toKanaNumber(value)}えん`}
+          alt={`${formatNumber(value)}えん`}
           onError={() => setMissing(true)}
           className="h-12 w-12 object-contain"
         />
       )}
-      <span>{toKanaNumber(value)}えん</span>
+      <span>{formatNumber(value)}えん</span>
     </button>
   );
 }
@@ -126,7 +128,7 @@ export function ShopPage({
 
     setResult(
       change > 0
-        ? `こうにゅう かんりょう おつり ${toKanaNumber(change)}えん`
+        ? `こうにゅう かんりょう おつり ${formatNumber(change)}えん`
         : "こうにゅう かんりょう ぴったり ボーナス さんコイン",
     );
     setTray([]);
@@ -161,7 +163,7 @@ export function ShopPage({
 
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <span className="font-bold">てもちコイン:</span>{" "}
-          {toKanaNumber(progress.coins)}
+          {formatNumber(progress.coins)}
         </div>
 
         <div className="grid gap-3 overflow-auto rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
@@ -176,7 +178,7 @@ export function ShopPage({
                 <div className="font-bold text-slate-800">{item.name}</div>
                 <div className="text-sm text-slate-600">{item.description}</div>
                 <div className="text-sm font-semibold text-slate-700">
-                  {toKanaNumber(item.price)} コイン
+                  {formatNumber(item.price)} コイン
                 </div>
                 <button
                   className={`rounded-xl px-3 py-2 text-sm font-semibold ${
@@ -219,10 +221,10 @@ export function ShopPage({
             </div>
 
             <div className="mt-3 grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <div>ねだん: {toKanaNumber(activeItem.price)}コイン</div>
-              <div>トレーごうけい: {toKanaNumber(trayTotal)}えん</div>
+              <div>ねだん: {formatNumber(activeItem.price)}コイン</div>
+              <div>トレーごうけい: {formatNumber(trayTotal)}えん</div>
               <div>
-                ふそく: {toKanaNumber(Math.max(0, activeItem.price - trayTotal))}
+                ふそく: {formatNumber(Math.max(0, activeItem.price - trayTotal))}
                 えん
               </div>
             </div>

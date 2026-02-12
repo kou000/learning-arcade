@@ -2,7 +2,8 @@ import React from "react";
 import registerGameTop from "../../assets/register-game-top.png";
 import { SceneFrame, SorobanSubnav } from "./SceneFrame";
 import { loadRegisterProgress } from "./state";
-import { toKanaNumber } from "./kanaNumber";
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("ja-JP").format(value);
 
 type Props = {
   onGoPractice: () => void;
@@ -37,7 +38,7 @@ export function RegisterTopPage({
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
         <div className="absolute right-4 top-4 rounded-xl bg-black/35 px-4 py-2 text-base font-bold text-white backdrop-blur-sm">
-          てもちコイン: {toKanaNumber(progress.coins)}コイン
+          てもちコイン: {formatNumber(progress.coins)}コイン
         </div>
 
         <div className="absolute inset-x-0 bottom-2">
