@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import coin1Image from "@/assets/coin/coin-1.png";
 import coin10Image from "@/assets/coin/coin-10.png";
 import coin100Image from "@/assets/coin/coin-100.png";
@@ -44,11 +44,24 @@ const WALLET_COIN_POSITIONS = [
   { left: "66%", top: "71%" },
 ] as const;
 
-function ItemPreview({ src, alt }: { src: string; alt: string }) {
+function ItemPreview({
+  src,
+  alt,
+  size = "normal",
+}: {
+  src: string;
+  alt: string;
+  size?: "normal" | "large";
+}) {
   const [missing, setMissing] = useState(false);
+  const sizeClass = size === "large" ? "h-36 w-36" : "h-24 w-24";
+  const frameClass =
+    size === "large" ? "border-transparent bg-transparent p-0" : "border border-slate-200 bg-white p-2";
   if (missing) {
     return (
-      <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500">
+      <div
+        className={`flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500 ${sizeClass}`}
+      >
         がぞうなし
       </div>
     );
@@ -58,7 +71,7 @@ function ItemPreview({ src, alt }: { src: string; alt: string }) {
       src={src}
       alt={alt}
       onError={() => setMissing(true)}
-      className="h-24 w-24 rounded-xl border border-slate-200 bg-white object-contain p-2"
+      className={`rounded-xl object-contain ${sizeClass} ${frameClass}`}
     />
   );
 }
@@ -144,9 +157,14 @@ export function ShopPaymentPage({
   onGoRegister,
   onGoShop,
 }: ShopPaymentPageProps) {
-  const [progress] = useState(() => loadRegisterProgress());
+  const [progress, setProgress] = useState(() => loadRegisterProgress());
   const [tray, setTray] = useState<number[]>([]);
   const [result, setResult] = useState<string>("");
+  const [purchasedItem, setPurchasedItem] = useState<{
+    name: string;
+    image: string;
+    bonus: number;
+  } | null>(null);
   const [isTrayDragging, setIsTrayDragging] = useState(false);
   const [draggingCoinValue, setDraggingCoinValue] = useState<number | null>(
     null,
@@ -168,6 +186,16 @@ export function ShopPaymentPage({
     () => tray.reduce((acc, value) => acc + value, 0),
     [tray],
   );
+  const walletCoins = useMemo(() => {
+    if (activeItem && activeItem.price <= 500) {
+      return COINS.filter((coin) => coin.value !== 500);
+    }
+    return COINS;
+  }, [activeItem]);
+
+  useEffect(() => {
+    setResult("");
+  }, [tray]);
 
   const pushCoinToTray = (value: number) => {
     setTray((prev) => [...prev, value]);
@@ -193,31 +221,41 @@ export function ShopPaymentPage({
   };
 
   const purchase = () => {
+    const latestProgress = loadRegisterProgress();
     if (!activeItem) {
       setResult("しょうひんがありません");
       return;
     }
-    if (progress.purchasedItemIds.includes(activeItem.id)) {
+    if (latestProgress.purchasedItemIds.includes(activeItem.id)) {
       setResult("このグッズは もうもっているよ");
       return;
     }
-    if (progress.coins < activeItem.price) {
-      setResult("コインが たりないよ");
+    if (trayTotal < activeItem.price) {
+      setResult(
+        `トレーのおかねが たりないよ（${activeItem.price}コイン ひつよう）`,
+      );
       return;
     }
-    if (trayTotal < activeItem.price) {
-      setResult("トレーのおかねが たりないよ");
+    if (latestProgress.coins < activeItem.price) {
+      setResult(
+        `てもちコインが たりないよ（${activeItem.price}コイン ひつよう）`,
+      );
       return;
     }
 
     const change = trayTotal - activeItem.price;
-    const exactBonus = change === 0 ? 3 : 0;
-    saveRegisterProgress({
-      ...progress,
-      coins: progress.coins - activeItem.price + exactBonus,
-      purchasedItemIds: [...progress.purchasedItemIds, activeItem.id],
+    const exactBonus = change === 0 ? Math.floor(activeItem.price * 0.1) : 0;
+    const nextProgress = saveRegisterProgress({
+      ...latestProgress,
+      coins: latestProgress.coins - activeItem.price + exactBonus,
+      purchasedItemIds: [...latestProgress.purchasedItemIds, activeItem.id],
     });
-    onGoShop();
+    setProgress(nextProgress);
+    setPurchasedItem({
+      name: activeItem.name,
+      image: activeItem.image,
+      bonus: exactBonus,
+    });
   };
 
   return (
@@ -270,7 +308,7 @@ export function ShopPaymentPage({
               setIsTrayDragging(false);
             }}
           >
-            {COINS.map((coin, index) => {
+            {walletCoins.map((coin, index) => {
               const pos = WALLET_COIN_POSITIONS[index] ?? {
                 left: "0%",
                 top: "0%",
@@ -476,16 +514,22 @@ export function ShopPaymentPage({
                 しょうひんがありません
               </div>
             )}
+          </div>
 
-            <div className="mt-2 flex gap-2">
+          <div className="absolute left-3 top-3 z-20 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-sm font-bold text-emerald-700">
+            おつりなしだと ボーナスが もらえるよ
+          </div>
+
+          <div className="absolute left-[50.5%] top-[80%] z-20 w-[40.5%]">
+            <div className="flex gap-3">
               <button
-                className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+                className="h-14 flex-1 rounded-2xl border border-slate-200 bg-white/90 px-4 text-base font-bold text-slate-700 hover:bg-white"
                 onClick={() => setTray([])}
               >
                 クリア
               </button>
               <button
-                className="flex-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                className="h-14 flex-[1.8] rounded-2xl bg-emerald-600 px-4 text-base font-black text-white hover:bg-emerald-700 disabled:opacity-60"
                 onClick={purchase}
                 disabled={!activeItem}
               >
@@ -494,13 +538,43 @@ export function ShopPaymentPage({
             </div>
 
             {result ? (
-              <div className="mt-2 rounded-xl border border-slate-200 px-2 py-1 text-xs text-slate-700">
+              <div className="mt-2 rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-700">
                 {result}
               </div>
             ) : null}
           </div>
         </div>
       </div>
+      {purchasedItem ? (
+        <div className="absolute inset-0 z-40 grid place-items-center bg-slate-900/45 p-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-2xl">
+            <div className="text-sm font-semibold text-slate-500">
+              おかいもの かんりょう！
+            </div>
+            <div className="mt-2 text-xl font-black text-slate-800">
+              {purchasedItem.name} を こうにゅうしたよ
+            </div>
+            {purchasedItem.bonus > 0 ? (
+              <div className="mt-2 text-sm font-bold text-emerald-700">
+                ぴったりしはらいボーナス +{purchasedItem.bonus}コイン
+              </div>
+            ) : null}
+            <div className="mt-4 grid place-items-center">
+              <ItemPreview
+                src={purchasedItem.image}
+                alt={purchasedItem.name}
+                size="large"
+              />
+            </div>
+            <button
+              className="mt-5 w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+              onClick={onGoShop}
+            >
+              おみせにもどる
+            </button>
+          </div>
+        </div>
+      ) : null}
     </SceneFrame>
   );
 }

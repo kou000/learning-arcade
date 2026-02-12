@@ -71,13 +71,15 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
         ) : null}
 
         {showItems ? (
-          <div className="grid min-h-0 content-start gap-3 overflow-y-auto rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-h-0 content-start gap-3 overflow-y-auto rounded-2xl border border-white/35 bg-white/35 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
             {SHOP_ITEMS.map((item) => {
               const purchased = progress.purchasedItemIds.includes(item.id);
+              const insufficientCoins = progress.coins < item.price;
+              const disabled = purchased || insufficientCoins;
               return (
                 <div
                   key={item.id}
-                  className="grid gap-2 rounded-xl border border-slate-200 bg-white p-3"
+                  className="grid gap-2 rounded-xl border border-white/50 bg-white/55 p-3 backdrop-blur-[1px]"
                 >
                   <ItemPreview src={item.image} alt={item.name} />
                   <div className="font-bold text-slate-800">{item.name}</div>
@@ -89,14 +91,18 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
                   </div>
                   <button
                     className={`rounded-xl px-3 py-2 text-sm font-semibold ${
-                      purchased
+                      disabled
                         ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
                         : "bg-sky-600 text-white hover:bg-sky-700"
                     }`}
-                    disabled={purchased}
+                    disabled={disabled}
                     onClick={() => onGoPayment(item.id)}
                   >
-                    {purchased ? "購入済み" : "かう"}
+                    {purchased
+                      ? "こうにゅうずみ"
+                      : insufficientCoins
+                        ? "コインがたりない"
+                        : "かう"}
                   </button>
                 </div>
               );
