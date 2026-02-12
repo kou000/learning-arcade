@@ -1,4 +1,4 @@
-import type { ExamBody, Grade, GradeSpec } from "./types";
+import type { ExamBody, Grade, GradeSpec } from "@/domain/specs/types";
 
 export const KENTEI_SPEC_ZENSHUREN: Record<Grade, GradeSpec> = {
   1: {

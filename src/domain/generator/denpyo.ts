@@ -1,7 +1,7 @@
-import { randInt } from "./rng";
-import type { Problem } from "./types";
-import type { DenpyoSpec } from "../specs/types";
-import { formatNumber, padLeft, widthForDigits } from "./format";
+import { randInt } from "@/domain/generator/rng";
+import type { Problem } from "@/domain/generator/types";
+import type { DenpyoSpec } from "@/domain/specs/types";
+import { formatNumber, padLeft, widthForDigits } from "@/domain/generator/format";
 
 export function generateDenpyo(spec: DenpyoSpec): Problem[] {
   const out: Problem[] = [];

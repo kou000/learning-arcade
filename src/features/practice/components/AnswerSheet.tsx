@@ -1,5 +1,5 @@
 import React from "react";
-import type { Problem } from "../../../domain/generator/types";
+import type { Problem } from "@/domain/generator/types";
 
 export function AnswerSheet({ problems }: { problems: Problem[] }) {
   return (

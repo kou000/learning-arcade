@@ -1,10 +1,10 @@
-import type { ExamBody, Grade, Subject } from "../specs/types";
-import { getGradeSpec } from "../specs/kenteiSpec";
-import type { Problem } from "./types";
-import { generateMul } from "./mul";
-import { generateDiv } from "./div";
-import { generateMitori } from "./mitori";
-import { generateDenpyo } from "./denpyo";
+import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
+import { getGradeSpec } from "@/domain/specs/kenteiSpec";
+import type { Problem } from "@/domain/generator/types";
+import { generateMul } from "@/domain/generator/mul";
+import { generateDiv } from "@/domain/generator/div";
+import { generateMitori } from "@/domain/generator/mitori";
+import { generateDenpyo } from "@/domain/generator/denpyo";
 
 export function subjectLabel(subject: Subject): string {
   switch (subject) {

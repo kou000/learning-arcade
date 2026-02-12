@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { DogSpeechBubble } from "../components/DogSpeechBubble";
-import { SceneFrame } from "../components/SceneFrame";
-import { SHOP_ITEMS } from "../catalog";
-import { loadRegisterProgress } from "../state";
+import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
+import { SceneFrame } from "@/features/soroban/components/SceneFrame";
+import { SHOP_ITEMS } from "@/features/soroban/catalog";
+import { loadRegisterProgress } from "@/features/soroban/state";
 
 type ShopPageProps = {
   onGoRegister: () => void;

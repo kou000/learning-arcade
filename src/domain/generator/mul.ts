@@ -1,7 +1,7 @@
-import { randInt } from "./rng";
-import type { Problem } from "./types";
-import type { MulSpec } from "../specs/types";
-import { formatNumber } from "./format";
+import { randInt } from "@/domain/generator/rng";
+import type { Problem } from "@/domain/generator/types";
+import type { MulSpec } from "@/domain/specs/types";
+import { formatNumber } from "@/domain/generator/format";
 
 export function generateMul(spec: MulSpec): Problem[] {
   const out: Problem[] = [];

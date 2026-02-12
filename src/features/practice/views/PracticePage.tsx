@@ -1,25 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { ExamBody, Grade, Subject } from "../../../domain/specs/types";
+import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
 import {
   generateProblems,
   subjectLabel,
   subjectMinutes,
-} from "../../../domain/generator";
-import type { Problem } from "../../../domain/generator/types";
-import { ControlBar } from "../components/ControlBar";
-import { TimerBar } from "../components/TimerBar";
-import { useTimer } from "../hooks/useTimer";
-import { ProblemSheet } from "../components/ProblemSheet";
-import { AnswerSheet } from "../components/AnswerSheet";
-import { OneByOnePractice } from "../components/OneByOnePractice";
-import { Button } from "../../../ui/components/Button";
-import type { PracticeMode } from "../types";
+} from "@/domain/generator";
+import type { Problem } from "@/domain/generator/types";
+import { ControlBar } from "@/features/practice/components/ControlBar";
+import { TimerBar } from "@/features/practice/components/TimerBar";
+import { useTimer } from "@/features/practice/hooks/useTimer";
+import { ProblemSheet } from "@/features/practice/components/ProblemSheet";
+import { AnswerSheet } from "@/features/practice/components/AnswerSheet";
+import { OneByOnePractice } from "@/features/practice/components/OneByOnePractice";
+import { Button } from "@/ui/components/Button";
+import type { PracticeMode } from "@/features/practice/types";
 import {
   EXAM_BODY_LABELS,
   getAvailableGrades,
   getGradeSpec,
-} from "../../../domain/specs/kenteiSpec";
-import { loadPracticeConfig, savePracticeConfig } from "../../soroban/state";
+} from "@/domain/specs/kenteiSpec";
+import { loadPracticeConfig, savePracticeConfig } from "@/features/soroban/state";
 
 type Props = {
   onBack: () => void;

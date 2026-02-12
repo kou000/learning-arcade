@@ -1,12 +1,12 @@
 import React from "react";
-import type { ExamBody, Grade, Subject } from "../../../domain/specs/types";
-import type { PracticeMode } from "../types";
-import { EXAM_BODY_LABELS, getAvailableGrades, getGradeSpec } from "../../../domain/specs/kenteiSpec";
-import { subjectLabel } from "../../../domain/generator";
-import { Button } from "../../../ui/components/Button";
-import { Select } from "../../../ui/components/Select";
-import { NumberInput } from "../../../ui/components/NumberInput";
-import { Toggle } from "../../../ui/components/Toggle";
+import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
+import type { PracticeMode } from "@/features/practice/types";
+import { EXAM_BODY_LABELS, getAvailableGrades, getGradeSpec } from "@/domain/specs/kenteiSpec";
+import { subjectLabel } from "@/domain/generator";
+import { Button } from "@/ui/components/Button";
+import { Select } from "@/ui/components/Select";
+import { NumberInput } from "@/ui/components/NumberInput";
+import { Toggle } from "@/ui/components/Toggle";
 
 type Props = {
   grade: Grade;

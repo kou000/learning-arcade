@@ -1,7 +1,7 @@
-import { randInt } from "./rng";
-import type { Problem } from "./types";
-import type { DivSpec } from "../specs/types";
-import { formatNumber } from "./format";
+import { randInt } from "@/domain/generator/rng";
+import type { Problem } from "@/domain/generator/types";
+import type { DivSpec } from "@/domain/specs/types";
+import { formatNumber } from "@/domain/generator/format";
 
 export function generateDiv(spec: DivSpec): Problem[] {
   const out: Problem[] = [];

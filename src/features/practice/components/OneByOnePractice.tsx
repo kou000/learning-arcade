@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import arkSuccess from "../../../assets/ark_success.png";
-import arfBad from "../../../assets/arf_bad.png";
-import arkHandsUp from "../../../assets/ark_hands_up.png";
-import type { Problem } from "../../../domain/generator/types";
+import arkSuccess from "@/assets/ark_success.png";
+import arfBad from "@/assets/arf_bad.png";
+import arkHandsUp from "@/assets/ark_hands_up.png";
+import type { Problem } from "@/domain/generator/types";
 
 type Props = {
   problems: Problem[];

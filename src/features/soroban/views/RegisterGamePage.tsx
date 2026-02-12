@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { generateProblems, subjectMinutes } from "../../../domain/generator";
-import type { Problem } from "../../../domain/generator/types";
-import type { Grade } from "../../../domain/specs/types";
-import { getGradeSpec } from "../../../domain/specs/kenteiSpec";
-import { DogSpeechBubble } from "../components/DogSpeechBubble";
-import { SceneFrame } from "../components/SceneFrame";
-import registerGameBg from "../../../assets/register-game-bg.png";
-import arkSuccess from "../../../assets/ark_success.png";
+import { generateProblems, subjectMinutes } from "@/domain/generator";
+import type { Problem } from "@/domain/generator/types";
+import type { Grade } from "@/domain/specs/types";
+import { getGradeSpec } from "@/domain/specs/kenteiSpec";
+import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
+import { SceneFrame } from "@/features/soroban/components/SceneFrame";
+import registerGameBg from "@/assets/register-game-bg.png";
+import arkSuccess from "@/assets/ark_success.png";
 import {
   advanceRegisterProgressOnClear,
   canPlayStage,
@@ -22,7 +22,7 @@ import {
   saveRegisterProgress,
   type RegisterStage,
   type RegisterSubject,
-} from "../state";
+} from "@/features/soroban/state";
 
 type Props = {
   onGoRegister: () => void;

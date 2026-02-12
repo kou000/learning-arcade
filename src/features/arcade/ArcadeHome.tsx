@@ -1,6 +1,6 @@
 import React from "react";
-import arkNormal from "../../assets/ark_normal.png";
-import arkSuccess from "../../assets/ark_success.png";
+import arkNormal from "@/assets/ark_normal.png";
+import arkSuccess from "@/assets/ark_success.png";
 
 type Props = { onStartSoroban: () => void };
 

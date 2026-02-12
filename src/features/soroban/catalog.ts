@@ -10,18 +10,18 @@ export type ShopItem = {
 export const SHOP_ITEMS: ShopItem[] = [
   {
     id: "shelf-upper-unlock",
-    name: "たなうえだんかいほう",
+    name: "たな１だんめかいほう",
     price: 300,
     image: "",
-    description: "たなの うえだんを つかえるようにする。",
+    description: "たなの １だんめを つかえるようにする。",
     placeable: false,
   },
   {
     id: "shelf-lower-unlock",
-    name: "たなしただんかいほう",
+    name: "たな３だんめかいほう",
     price: 300,
     image: "",
-    description: "たなの しただんを つかえるようにする。",
+    description: "たなの ３だんめを つかえるようにする。",
     placeable: false,
   },
   {

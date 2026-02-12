@@ -1,5 +1,5 @@
 import React from "react";
-import mascotPng from "../../assets/mascot.png";
+import mascotPng from "@/assets/mascot.png";
 
 type Props = { size?: number; className?: string; alt?: string };
 

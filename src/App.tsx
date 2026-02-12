@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { ArcadeHome } from "./features/arcade/ArcadeHome";
-import { PracticePage } from "./features/practice/views/PracticePage";
-import { RegisterGamePage } from "./features/soroban/views/RegisterGamePage";
-import { RegisterStagePage } from "./features/soroban/views/RegisterStagePage";
-import { RegisterTopPage } from "./features/soroban/views/RegisterTopPage";
-import { RegisterAdminPage } from "./features/soroban/views/RegisterAdminPage";
-import { ShopPage } from "./features/soroban/views/ShopPage";
-import { ShopPaymentPage } from "./features/soroban/views/ShopPaymentPage";
-import { ShelfPage } from "./features/soroban/views/ShelfPage";
+import { ArcadeHome } from "@/features/arcade/ArcadeHome";
+import { PracticePage } from "@/features/practice/views/PracticePage";
+import { RegisterGamePage } from "@/features/soroban/views/RegisterGamePage";
+import { RegisterStagePage } from "@/features/soroban/views/RegisterStagePage";
+import { RegisterTopPage } from "@/features/soroban/views/RegisterTopPage";
+import { RegisterAdminPage } from "@/features/soroban/views/RegisterAdminPage";
+import { ShopPage } from "@/features/soroban/views/ShopPage";
+import { ShopPaymentPage } from "@/features/soroban/views/ShopPaymentPage";
+import { ShelfPage } from "@/features/soroban/views/ShelfPage";
 
 type Route =
   | "home"
