@@ -3,6 +3,7 @@ import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { loadRegisterProgress } from "@/features/soroban/state";
+import shopTopBg from "@/assets/shop-top.png";
 
 type ShopPageProps = {
   onGoRegister: () => void;
@@ -41,7 +42,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
 
   return (
     <SceneFrame
-      backgroundImage="/assets/shop-top.png"
+      backgroundImage={shopTopBg}
       fullscreenBackground
       outsideTopLeft={
         <div className="grid gap-2">

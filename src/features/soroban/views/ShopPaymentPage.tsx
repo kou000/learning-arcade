@@ -1,4 +1,11 @@
 import React, { useMemo, useRef, useState } from "react";
+import coin1Image from "@/assets/coin/coin-1.png";
+import coin10Image from "@/assets/coin/coin-10.png";
+import coin100Image from "@/assets/coin/coin-100.png";
+import coin5Image from "@/assets/coin/coin-5.png";
+import coin50Image from "@/assets/coin/coin-50.png";
+import coin500Image from "@/assets/coin/coin-500.png";
+import shopPaymentBg from "@/assets/shop-peyment.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { loadRegisterProgress, saveRegisterProgress } from "@/features/soroban/state";
@@ -13,12 +20,12 @@ type ShopPaymentPageProps = {
 };
 
 const COINS = [
-  { value: 500, image: "/assets/coin/coin-500.png" },
-  { value: 100, image: "/assets/coin/coin-100.png" },
-  { value: 50, image: "/assets/coin/coin-50.png" },
-  { value: 10, image: "/assets/coin/coin-10.png" },
-  { value: 5, image: "/assets/coin/coin-5.png" },
-  { value: 1, image: "/assets/coin/coin-1.png" },
+  { value: 500, image: coin500Image },
+  { value: 100, image: coin100Image },
+  { value: 50, image: coin50Image },
+  { value: 10, image: coin10Image },
+  { value: 5, image: coin5Image },
+  { value: 1, image: coin1Image },
 ] as const;
 
 const COIN_IMAGE_BY_VALUE: Record<number, string> = Object.fromEntries(
@@ -215,7 +222,7 @@ export function ShopPaymentPage({
 
   return (
     <SceneFrame
-      backgroundImage="/assets/shop-peyment.png"
+      backgroundImage={shopPaymentBg}
       fullscreenBackground
       outsideTopLeft={
         <div className="grid gap-2">

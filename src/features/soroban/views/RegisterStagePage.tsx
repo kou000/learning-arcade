@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import registerStageSelectBg from "@/assets/register-stage-select.png";
 import type { ExamBody, Grade } from "@/domain/specs/types";
 import {
   EXAM_BODY_LABELS,
@@ -239,7 +240,7 @@ export function RegisterStagePage({
 
   return (
     <SceneFrame
-      backgroundImage="/assets/register-stage-select.png"
+      backgroundImage={registerStageSelectBg}
       fullscreenBackground
       outsideTopLeft={
         <button

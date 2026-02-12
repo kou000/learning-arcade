@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import shelfBg from "@/assets/shelf.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { loadRegisterProgress, saveRegisterProgress } from "@/features/soroban/state";
@@ -166,7 +167,7 @@ export function ShelfPage({
 
   return (
     <SceneFrame
-      backgroundImage="/assets/shelf.png"
+      backgroundImage={shelfBg}
       fullscreenBackground
       outsideTopLeft={
         <button
