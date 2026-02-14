@@ -107,8 +107,10 @@ function peopleLabel(people: number): string {
   return `${people}にん`;
 }
 
-function rewardForCorrectAnswer(): number {
-  return 1;
+function rewardFor(subject: RegisterSubject, grade: Grade): number {
+  const base = subject === "mitori" ? 3 : 1;
+  const gradeBonus = Math.max(0, Math.ceil((9 - grade) / 2));
+  return base + gradeBonus;
 }
 
 const STAGE_CLEAR_REWARD: Record<RegisterStage, number> = {
@@ -123,7 +125,6 @@ const STAGE_CLEAR_REWARD: Record<RegisterStage, number> = {
 function stageClearReward(stage: RegisterStage): number {
   return STAGE_CLEAR_REWARD[stage];
 }
-
 
 function registerStageLabel(stage: RegisterStage): string {
   return `すてーじ ${stage}`;
@@ -269,7 +270,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       current && playSubject === "mitori" ? parseMitoriLines(current) : [],
     [current, playSubject],
   );
-  const currentReward = rewardForCorrectAnswer();
+  const currentReward = rewardFor(playSubject, playGrade);
   const isReadingDialogueForTimer =
     playSubject === "mitori"
       ? bubbleStep <= mitoriLines.length
