@@ -8,6 +8,7 @@ import coin500Image from "@/assets/coin/coin-500.png";
 import shopPaymentBg from "@/assets/shop-peyment.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
+import { pickPurchaseSpeechByItemId } from "@/features/soroban/speech";
 import { loadRegisterProgress, saveRegisterProgress } from "@/features/soroban/state";
 
 const formatNumber = (value: number) =>
@@ -164,6 +165,7 @@ export function ShopPaymentPage({
     name: string;
     image: string;
     bonus: number;
+    speech: string;
   } | null>(null);
   const [isTrayDragging, setIsTrayDragging] = useState(false);
   const [draggingCoinValue, setDraggingCoinValue] = useState<number | null>(
@@ -255,6 +257,7 @@ export function ShopPaymentPage({
       name: activeItem.name,
       image: activeItem.image,
       bonus: exactBonus,
+      speech: pickPurchaseSpeechByItemId(activeItem.id),
     });
   };
 
@@ -553,6 +556,9 @@ export function ShopPaymentPage({
             </div>
             <div className="mt-2 text-xl font-black text-slate-800">
               {purchasedItem.name} を こうにゅうしたよ
+            </div>
+            <div className="mt-2 text-sm font-bold text-sky-700">
+              {purchasedItem.speech}
             </div>
             {purchasedItem.bonus > 0 ? (
               <div className="mt-2 text-sm font-bold text-emerald-700">

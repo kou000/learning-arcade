@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
+import { pickShopSpeech } from "@/features/soroban/speech";
 import { loadRegisterProgress } from "@/features/soroban/state";
 import shopTopBg from "@/assets/shop-top.png";
 
@@ -38,9 +39,10 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
     const query = hash.split("?")[1] ?? "";
     const params = new URLSearchParams(query);
     return params.get("fromPurchase") === "1"
-      ? "おかいあげありがとうございます！"
-      : "いらっしゃいませ！";
+      ? pickShopSpeech("purchase-return")
+      : pickShopSpeech("enter");
   });
+  const [leaveMessage] = useState(() => pickShopSpeech("leave-top"));
   const leaveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -105,9 +107,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
       >
         {!showItems || isLeaving ? (
           <div className="pointer-events-none absolute left-[23%] top-[10%] z-20 w-[min(30rem,48vw)]">
-            <DogSpeechBubble
-              text={isLeaving ? "ありがとうございました！" : enterMessage}
-            />
+            <DogSpeechBubble text={isLeaving ? leaveMessage : enterMessage} />
           </div>
         ) : null}
 
