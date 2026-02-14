@@ -55,7 +55,8 @@ export function ShelfPage({
   onGoShelf: _onGoShelf,
 }: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [activeSlotIndex, setActiveSlotIndex] = useState<number | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const purchasedItems = useMemo(
@@ -103,21 +104,15 @@ export function ShelfPage({
 
   const closePicker = () => {
     setIsPickerOpen(false);
+    setActiveSlotIndex(null);
   };
 
-  const placeOrRemoveAt = (slotIndex: number, itemId: string) => {
+  const placeAt = (slotIndex: number, itemId: string) => {
     saveProgress((prev) => {
       const slots = Array.from(
         { length: prev.shelfCols * SHELF_ROWS },
         (_, idx) => prev.shelfSlots[idx] ?? null,
       );
-      const isSameItemAtSlot = slots[slotIndex] === itemId;
-
-      if (isSameItemAtSlot) {
-        slots[slotIndex] = null;
-        return { ...prev, shelfRows: SHELF_ROWS, shelfSlots: slots };
-      }
-
       for (let i = 0; i < slots.length; i++) {
         if (slots[i] === itemId) slots[i] = null;
       }
@@ -126,11 +121,19 @@ export function ShelfPage({
     });
   };
 
-  const openPicker = () => {
-    setIsPickerOpen(true);
+  const removeAt = (slotIndex: number) => {
+    saveProgress((prev) => {
+      const slots = Array.from(
+        { length: prev.shelfCols * SHELF_ROWS },
+        (_, idx) => prev.shelfSlots[idx] ?? null,
+      );
+      slots[slotIndex] = null;
+      return { ...prev, shelfRows: SHELF_ROWS, shelfSlots: slots };
+    });
   };
 
   const onSlotClick = (slotIndex: number) => {
+    if (!isEditMode) return;
     const rowIndex = Math.floor(slotIndex / shelfCols);
     const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
     const bottomUnlocked = progress.purchasedItemIds.includes(
@@ -139,22 +142,38 @@ export function ShelfPage({
     const isUnlocked =
       rowIndex === 1 || (rowIndex === 0 && topUnlocked) || (rowIndex === 2 && bottomUnlocked);
     if (!isUnlocked) return;
-
-    if (selectedItemId) {
-      placeOrRemoveAt(slotIndex, selectedItemId);
-      return;
-    }
-    openPicker();
+    setActiveSlotIndex(slotIndex);
+    setIsPickerOpen(true);
   };
 
   const onPickItem = (itemId: string) => {
-    setSelectedItemId(itemId);
+    if (activeSlotIndex == null) return;
+    placeAt(activeSlotIndex, itemId);
     closePicker();
   };
 
-  const clearSelection = () => {
-    setSelectedItemId(null);
+  const onRemoveFromActiveSlot = () => {
+    if (activeSlotIndex == null) return;
+    removeAt(activeSlotIndex);
+    closePicker();
   };
+
+  const toggleEditMode = () => {
+    if (isEditMode) {
+      closePicker();
+      setIsEditMode(false);
+      return;
+    }
+    setIsEditMode(true);
+  };
+
+  const activeSlotItemId =
+    activeSlotIndex == null ? null : shelfSlots[activeSlotIndex];
+  const activeSlotItem =
+    activeSlotItemId == null
+      ? null
+      : SHOP_ITEMS.find((item) => item.id === activeSlotItemId) ?? null;
+
   const isRowUnlocked = (rowIndex: number) => {
     const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
     const bottomUnlocked = progress.purchasedItemIds.includes(
@@ -199,23 +218,25 @@ export function ShelfPage({
                       const idx = rowIndex * shelfCols + colIndex;
                       const itemId = shelfSlots[idx];
                       const item = SHOP_ITEMS.find((x) => x.id === itemId);
-                      const isSelectedItem = Boolean(
-                        rowUnlocked && selectedItemId && itemId === selectedItemId,
-                      );
+                      const isActiveSlot =
+                        isEditMode && isPickerOpen && activeSlotIndex === idx;
 
                       return (
                         <button
                           key={idx}
                           className={`flex aspect-square items-center justify-center rounded-xl border transition ${
-                            !rowUnlocked
+                            !isEditMode
+                              ? "border-transparent bg-transparent"
+                              : !rowUnlocked
                               ? "border-white/35 bg-transparent"
-                              : isSelectedItem
+                              : isActiveSlot
                                 ? "border-sky-200 bg-sky-100/35"
                                 : item
                                   ? "border-transparent bg-transparent hover:border-white/40"
                                   : "border-dashed border-white/20 bg-transparent hover:border-white/55"
                           }`}
                           onClick={() => onSlotClick(idx)}
+                          disabled={!isEditMode}
                         >
                           {item && rowUnlocked ? (
                             <div className="grid place-items-center gap-1 p-1">
@@ -224,9 +245,11 @@ export function ShelfPage({
                                 alt={item.name}
                                 size="slot"
                               />
-                              <div className="text-[10px] leading-tight text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.65)]">
-                                {item.name}
-                              </div>
+                              {isEditMode ? (
+                                <div className="text-[10px] leading-tight text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.65)]">
+                                  {item.name}
+                                </div>
+                              ) : null}
                             </div>
                           ) : (
                             <div className="text-xs text-white/50">　</div>
@@ -235,7 +258,7 @@ export function ShelfPage({
                       );
                     })}
                   </div>
-                  {!rowUnlocked ? (
+                  {!rowUnlocked && isEditMode ? (
                     <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-2xl bg-slate-900/45 pb-[20px] text-sm font-bold text-white">
                       みかいほう
                     </div>
@@ -244,24 +267,22 @@ export function ShelfPage({
               );
             })}
           </div>
-        </div>
-
-        <div className="absolute bottom-[24px] left-1/2 z-10 -translate-x-1/2">
-          <button
-            className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition ${
-              selectedItemId
-                ? "bg-white text-slate-800 hover:bg-slate-100"
-                : "cursor-not-allowed bg-white/60 text-slate-500"
-            }`}
-            onClick={clearSelection}
-            disabled={!selectedItemId}
-          >
-            せんたくを かいじょ
-          </button>
+          <div className="mt-3 flex justify-center">
+            <button
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                isEditMode
+                  ? "bg-white text-slate-800 hover:bg-slate-100"
+                  : "bg-white/80 text-slate-900 hover:bg-white"
+              }`}
+              onClick={toggleEditMode}
+            >
+              {isEditMode ? "へんしゅうをおわる" : "へんしゅう"}
+            </button>
+          </div>
         </div>
       </div>
 
-      {isPickerOpen ? (
+      {isEditMode && isPickerOpen ? (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-900/45 p-4">
           <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
             <div className="flex items-center gap-3">
@@ -275,6 +296,21 @@ export function ShelfPage({
                 とじる
               </button>
             </div>
+            {activeSlotItem ? (
+              <div className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                <span>いまのはいち: {activeSlotItem.name}</span>
+                <button
+                  className="ml-auto rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+                  onClick={onRemoveFromActiveSlot}
+                >
+                  このばしょから はずす
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 text-sm text-slate-600">
+                えらんだグッズを このばしょに おくよ
+              </div>
+            )}
 
             <div className="mt-3 max-h-[52vh] overflow-auto">
               {purchasedItems.length === 0 ? (
@@ -287,7 +323,7 @@ export function ShelfPage({
                     <button
                       key={item.id}
                       className={`flex items-center gap-2 rounded-xl border px-2 py-2 text-left text-sm transition ${
-                        selectedItemId === item.id
+                        activeSlotItemId === item.id
                           ? "border-sky-300 bg-sky-50"
                           : "border-slate-200 bg-white hover:bg-slate-50"
                       }`}
