@@ -16,7 +16,7 @@ const formatNumber = (value: number) =>
 type ShopPaymentPageProps = {
   itemId: string | null;
   onGoRegister: () => void;
-  onGoShop: () => void;
+  onGoShop: (opts?: { fromPurchase?: boolean }) => void;
 };
 
 const COINS = [
@@ -568,7 +568,7 @@ export function ShopPaymentPage({
             </div>
             <button
               className="mt-5 w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700"
-              onClick={onGoShop}
+              onClick={() => onGoShop({ fromPurchase: true })}
             >
               おみせにもどる
             </button>

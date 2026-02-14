@@ -25,8 +25,14 @@ function isAdminModeFromEnv(): boolean {
   return raw === "1" || raw === "true" || raw === "on";
 }
 
+function getHashPath(): string {
+  const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
+  const pathOnly = hash.split("?")[0] ?? "";
+  return pathOnly.replace(/\/+$/, "");
+}
+
 function getRouteFromHash(): Route {
-  const h = window.location.hash.replace("#", "").replace(/^\/+/, "").replace(/\/+$/, "");
+  const h = getHashPath();
   if (h === "soroban") return "soroban";
   if (h === "soroban/register") return "soroban-register";
   if (h === "soroban/register/stage") return "soroban-register-stage";
@@ -39,7 +45,7 @@ function getRouteFromHash(): Route {
 }
 
 function getShopPaymentItemIdFromHash(): string | null {
-  const h = window.location.hash.replace("#", "").replace(/^\/+/, "").replace(/\/+$/, "");
+  const h = getHashPath();
   const prefix = "soroban/shop/payment/";
   if (!h.startsWith(prefix)) return null;
   const raw = h.slice(prefix.length);
@@ -66,7 +72,11 @@ export default function App() {
   const goRegister = () => { window.location.hash = "/soroban/register"; };
   const goRegisterStage = () => { window.location.hash = "/soroban/register/stage"; };
   const goRegisterPlay = () => { window.location.hash = "/soroban/register/play"; };
-  const goShop = () => { window.location.hash = "/soroban/shop"; };
+  const goShop = (opts?: { fromPurchase?: boolean }) => {
+    window.location.hash = opts?.fromPurchase
+      ? "/soroban/shop?fromPurchase=1"
+      : "/soroban/shop";
+  };
   const goShopPayment = (itemId: string) => {
     window.location.hash = `/soroban/shop/payment/${encodeURIComponent(itemId)}`;
   };
