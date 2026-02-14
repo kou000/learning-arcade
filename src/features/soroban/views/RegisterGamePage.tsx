@@ -108,8 +108,22 @@ function peopleLabel(people: number): string {
 }
 
 function rewardFor(subject: RegisterSubject, grade: Grade): number {
-  const base = subject === "mitori" ? 6 : 5;
-  return base + Math.max(0, 11 - grade);
+  const base = subject === "mitori" ? 3 : 1;
+  const gradeBonus = Math.max(0, Math.ceil((9 - grade) / 2));
+  return base + gradeBonus;
+}
+
+const STAGE_CLEAR_REWARD: Record<RegisterStage, number> = {
+  1: 6,
+  2: 10,
+  3: 18,
+  4: 28,
+  5: 42,
+  6: 60,
+};
+
+function stageClearReward(stage: RegisterStage): number {
+  return STAGE_CLEAR_REWARD[stage];
 }
 
 function registerStageLabel(stage: RegisterStage): string {
@@ -401,17 +415,21 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     let unlockMessage: string | null = null;
     const stageName = registerStageLabel(playStage);
     const isLastQuestion = index >= problems.length - 1;
-    const stagePassed = wrongQuestionsCount === 0;
     const finalCorrectCount = Math.max(
       0,
       problems.length - wrongQuestionsCount,
     );
+    const stagePassed = wrongQuestionsCount === 0;
     setProgress((prevProgress) => {
       let next = saveRegisterProgress({
         ...prevProgress,
         coins: prevProgress.coins + currentReward,
       });
       if (isLastQuestion && stagePassed) {
+        next = saveRegisterProgress({
+          ...next,
+          coins: next.coins + stageClearReward(playStage),
+        });
         const stageMarked = markStageCleared(
           next,
           playGrade,
@@ -437,6 +455,12 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       const stageSummary = stagePassed
         ? `${stageName} くりあ！`
         : `${stageName} しっぱい…`;
+      const clearReward = stagePassed ? stageClearReward(playStage) : 0;
+      const totalReward = problems.length * currentReward + clearReward;
+      const rewardSummary =
+        clearReward > 0
+          ? `ほうしゅう +${totalReward}コイン（せいかい ${problems.length} + くりあ ${clearReward}）`
+          : `ほうしゅう +${totalReward}コイン`;
       const unlockSummary =
         stagePassed && unlockMessage ? `\n${unlockMessage}` : "";
       clearFeedbackTimers();
@@ -449,7 +473,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         }, 1600);
         feedbackTimer.current = window.setTimeout(() => {
           setDogReply(
-            `おつかれさま！\n${stageSummary}\n${resultSummary}${unlockSummary}`,
+            `おつかれさま！\n${stageSummary}\n${resultSummary}\n${rewardSummary}${unlockSummary}`,
           );
           setIsRoundFinished(true);
         }, 1700);
