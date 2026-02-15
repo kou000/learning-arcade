@@ -2,7 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import shelfBg from "@/assets/shelf.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
-import { loadRegisterProgress, saveRegisterProgress } from "@/features/soroban/state";
+import {
+  loadRegisterProgress,
+  saveRegisterProgress,
+} from "@/features/soroban/state";
 
 type Props = {
   onGoPractice: () => void;
@@ -63,7 +66,8 @@ export function ShelfPage({
     () =>
       SHOP_ITEMS.filter(
         (item) =>
-          progress.purchasedItemIds.includes(item.id) && item.placeable !== false,
+          progress.purchasedItemIds.includes(item.id) &&
+          item.placeable !== false,
       ),
     [progress.purchasedItemIds],
   );
@@ -136,11 +140,12 @@ export function ShelfPage({
     if (!isEditMode) return;
     const rowIndex = Math.floor(slotIndex / shelfCols);
     const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
-    const bottomUnlocked = progress.purchasedItemIds.includes(
-      LOWER_ROW_UNLOCK_ID,
-    );
+    const bottomUnlocked =
+      progress.purchasedItemIds.includes(LOWER_ROW_UNLOCK_ID);
     const isUnlocked =
-      rowIndex === 1 || (rowIndex === 0 && topUnlocked) || (rowIndex === 2 && bottomUnlocked);
+      rowIndex === 1 ||
+      (rowIndex === 0 && topUnlocked) ||
+      (rowIndex === 2 && bottomUnlocked);
     if (!isUnlocked) return;
     setActiveSlotIndex(slotIndex);
     setIsPickerOpen(true);
@@ -172,15 +177,16 @@ export function ShelfPage({
   const activeSlotItem =
     activeSlotItemId == null
       ? null
-      : SHOP_ITEMS.find((item) => item.id === activeSlotItemId) ?? null;
+      : (SHOP_ITEMS.find((item) => item.id === activeSlotItemId) ?? null);
 
   const isRowUnlocked = (rowIndex: number) => {
     const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
-    const bottomUnlocked = progress.purchasedItemIds.includes(
-      LOWER_ROW_UNLOCK_ID,
-    );
+    const bottomUnlocked =
+      progress.purchasedItemIds.includes(LOWER_ROW_UNLOCK_ID);
     return (
-      rowIndex === 1 || (rowIndex === 0 && topUnlocked) || (rowIndex === 2 && bottomUnlocked)
+      rowIndex === 1 ||
+      (rowIndex === 0 && topUnlocked) ||
+      (rowIndex === 2 && bottomUnlocked)
     );
   };
 
@@ -201,14 +207,14 @@ export function ShelfPage({
         className="relative h-full text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        <div className="absolute left-1/2 top-[7%] z-10 h-[calc(100vh-80px)] min-h-[620px] max-h-[680px] w-[92%] -translate-x-1/2 -translate-y-[30px] sm:w-[86%] md:w-[80%]">
-          <div className="grid h-full gap-y-2">
+        <div className="absolute left-1/2 top-[9%] z-10 h-[calc(100vh-80px)] min-h-[640px] max-h-[700px] w-[92%] -translate-x-1/2 -translate-y-[30px] sm:w-[86%] md:w-[80%]">
+          <div className="grid content-start gap-y-1">
             {Array.from({ length: SHELF_ROWS }, (_, rowIndex) => {
               const rowUnlocked = isRowUnlocked(rowIndex);
               return (
-                <div key={rowIndex} className="relative h-[calc((100%-1rem)/3)] rounded-2xl">
+                <div key={rowIndex} className="relative h-[170px] rounded-2xl">
                   <div
-                    className="grid"
+                    className="grid h-full"
                     style={{
                       gridTemplateColumns: `repeat(${shelfCols}, minmax(96px, 1fr))`,
                       columnGap: "0.75rem",
@@ -228,12 +234,12 @@ export function ShelfPage({
                             !isEditMode
                               ? "border-transparent bg-transparent"
                               : !rowUnlocked
-                              ? "border-white/35 bg-transparent"
-                              : isActiveSlot
-                                ? "border-sky-200 bg-sky-100/35"
-                                : item
-                                  ? "border-transparent bg-transparent hover:border-white/40"
-                                  : "border-dashed border-white/20 bg-transparent hover:border-white/55"
+                                ? "border-white/35 bg-transparent"
+                                : isActiveSlot
+                                  ? "border-sky-200 bg-sky-100/35"
+                                  : item
+                                    ? "border-transparent bg-transparent hover:border-white/40"
+                                    : "border-dashed border-white/20 bg-transparent hover:border-white/55"
                           }`}
                           onClick={() => onSlotClick(idx)}
                           disabled={!isEditMode}
@@ -267,7 +273,7 @@ export function ShelfPage({
               );
             })}
           </div>
-          <div className="mt-3 flex -translate-y-[60px] justify-center">
+          <div className="mt-3 flex justify-center">
             <button
               className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
                 isEditMode
