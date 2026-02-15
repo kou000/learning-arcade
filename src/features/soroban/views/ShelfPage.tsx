@@ -201,12 +201,12 @@ export function ShelfPage({
         className="relative h-full text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        <div className="absolute left-1/2 top-[7%] z-10 w-[92%] -translate-x-1/2 sm:w-[86%] md:w-[80%]">
-          <div className="grid gap-y-2">
+        <div className="absolute left-1/2 top-[7%] z-10 h-[calc(100vh-80px)] min-h-[620px] max-h-[680px] w-[92%] -translate-x-1/2 -translate-y-[30px] sm:w-[86%] md:w-[80%]">
+          <div className="grid h-full gap-y-2">
             {Array.from({ length: SHELF_ROWS }, (_, rowIndex) => {
               const rowUnlocked = isRowUnlocked(rowIndex);
               return (
-                <div key={rowIndex} className="relative rounded-2xl">
+                <div key={rowIndex} className="relative h-[calc((100%-1rem)/3)] rounded-2xl">
                   <div
                     className="grid"
                     style={{
@@ -224,7 +224,7 @@ export function ShelfPage({
                       return (
                         <button
                           key={idx}
-                          className={`flex aspect-square items-center justify-center rounded-xl border transition ${
+                          className={`flex h-full min-h-0 items-center justify-center rounded-xl border transition ${
                             !isEditMode
                               ? "border-transparent bg-transparent"
                               : !rowUnlocked
@@ -267,7 +267,7 @@ export function ShelfPage({
               );
             })}
           </div>
-          <div className="mt-3 flex justify-center">
+          <div className="mt-3 flex -translate-y-[60px] justify-center">
             <button
               className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
                 isEditMode
