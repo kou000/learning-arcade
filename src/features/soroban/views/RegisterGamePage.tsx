@@ -235,12 +235,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     questionCount,
   );
 
-  const [problems, setProblems] = useState<Problem[]>(() =>
+  const [stageProblems] = useState<Problem[]>(() =>
     generateProblems(playGrade, playSubject, config.examBody).slice(
       0,
       questionCount,
     ),
   );
+  const [problems, setProblems] = useState<Problem[]>(stageProblems);
   const [index, setIndex] = useState(0);
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -252,6 +253,11 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     timeLimitSeconds,
   );
   const [wrongQuestionsCount, setWrongQuestionsCount] = useState(0);
+  const [mistakeIndexes, setMistakeIndexes] = useState<number[]>([]);
+  const [skippedIndexes, setSkippedIndexes] = useState<number[]>([]);
+  const [isReviewMode, setIsReviewMode] = useState(false);
+  const [reviewSelection, setReviewSelection] = useState<number[]>([]);
+  const [isReviewSelectorOpen, setIsReviewSelectorOpen] = useState(false);
   const [hasMistakeOnCurrentQuestion, setHasMistakeOnCurrentQuestion] =
     useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
@@ -399,6 +405,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (!hasMistakeOnCurrentQuestion) {
       setHasMistakeOnCurrentQuestion(true);
       setWrongQuestionsCount((prev) => prev + 1);
+      setMistakeIndexes((prev) => (prev.includes(index) ? prev : [...prev, index]));
     }
     setStatus("wrong");
     setDogReply("ちがうよ");
@@ -412,6 +419,32 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const onCorrect = () => {
     setStatus("correct");
+    if (isReviewMode) {
+      const isLastQuestion = index >= problems.length - 1;
+      if (isLastQuestion) {
+        clearFeedbackTimers();
+        setDogReply("ふくしゅうおつかれさま！");
+        thankYouTimer.current = window.setTimeout(() => {
+          setDogReply("ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！");
+          setIsRoundFinished(true);
+        }, 700);
+        return;
+      }
+      setDogReply("ありがとう！");
+      clearFeedbackTimers();
+      thankYouTimer.current = window.setTimeout(() => {
+        setDogReply(null);
+        setShowCorrectFlash(true);
+        flashTimer.current = window.setTimeout(() => {
+          setShowCorrectFlash(false);
+        }, 1600);
+        autoNextTimer.current = window.setTimeout(() => {
+          moveNext();
+        }, 1700);
+      }, 700);
+      return;
+    }
+
     let unlockMessage: string | null = null;
     const stageName = registerStageLabel(playStage);
     const isLastQuestion = index >= problems.length - 1;
@@ -493,6 +526,59 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         moveNext();
       }, 1700);
     }, 700);
+  };
+
+  const onSkipQuestion = () => {
+    if (!hasMistakeOnCurrentQuestion) return;
+    if (isRoundFinished) return;
+    clearFeedbackTimers();
+    setSkippedIndexes((prev) => (prev.includes(index) ? prev : [...prev, index]));
+    const isLastQuestion = index >= problems.length - 1;
+    if (isLastQuestion) {
+      const finalCorrectCount = Math.max(0, problems.length - wrongQuestionsCount);
+      setStatus("wrong");
+      setDogReply(
+        `おつかれさま！\n${registerStageLabel(playStage)} しっぱい…\nけっか ${finalCorrectCount}/${problems.length}もん せいかい\nまちがえたもんだいを ふくしゅうしよう！`,
+      );
+      setIsRoundFinished(true);
+      return;
+    }
+    moveNext();
+  };
+
+  const openReviewSelector = () => {
+    const defaults = Array.from(new Set([...mistakeIndexes, ...skippedIndexes])).sort(
+      (a, b) => a - b,
+    );
+    setReviewSelection(defaults.length > 0 ? defaults : [0]);
+    setIsReviewSelectorOpen(true);
+  };
+
+  const toggleReviewSelection = (problemIndex: number) => {
+    setReviewSelection((prev) =>
+      prev.includes(problemIndex)
+        ? prev.filter((value) => value !== problemIndex)
+        : [...prev, problemIndex].sort((a, b) => a - b),
+    );
+  };
+
+  const startReview = () => {
+    if (reviewSelection.length === 0) return;
+    const reviewProblems = reviewSelection
+      .map((selectedIndex) => stageProblems[selectedIndex])
+      .filter((problem): problem is Problem => Boolean(problem));
+    if (reviewProblems.length === 0) return;
+
+    clearFeedbackTimers();
+    setProblems(reviewProblems);
+    setIsReviewMode(true);
+    setIsReviewSelectorOpen(false);
+    setIndex(0);
+    setWrongQuestionsCount(0);
+    setMistakeIndexes([]);
+    setSkippedIndexes([]);
+    setSecondsLeft(null);
+    resetInputs();
   };
 
   const buildClerkEcho = () => {
@@ -701,6 +787,11 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
             <span className="rounded-full bg-white/70 px-2 py-0.5 whitespace-nowrap">
               {registerStageLabel(playStage)}
             </span>
+            {isReviewMode ? (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 whitespace-nowrap text-amber-800">
+                ふくしゅうモード
+              </span>
+            ) : null}
             {secondsLeft != null ? (
               <span className="inline-flex h-7 w-[9rem] shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-white/70 px-2 py-0.5 text-center font-bold tabular-nums">
                 のこり {secondsLeft}s
@@ -854,6 +945,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     こたえをにゅうりょく
                   </button>
                 ) : null}
+                {hasMistakeOnCurrentQuestion ? (
+                  <button
+                    className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm hover:bg-amber-100"
+                    onClick={onSkipQuestion}
+                  >
+                    このもんだいをスキップ
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -933,13 +1032,74 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         </div>
       ) : null}
       {isRoundFinished ? (
-        <div className="fixed bottom-6 right-6 z-40">
+        <div className="fixed bottom-6 right-6 z-40 flex gap-2">
+          {!isReviewMode ? (
+            <button
+              className="rounded-xl border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100"
+              onClick={openReviewSelector}
+            >
+              ふくしゅうする
+            </button>
+          ) : (
+            <button
+              className="rounded-xl border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100"
+              onClick={openReviewSelector}
+            >
+              もういちど えらぶ
+            </button>
+          )}
           <button
             className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
             onClick={onGoRegisterStage}
           >
             ステージせんたくへ
           </button>
+        </div>
+      ) : null}
+      {isReviewSelectorOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="text-lg font-black text-slate-800">ふくしゅう もんだいをえらぶ</div>
+            <div className="mt-1 text-sm text-slate-600">
+              ときなおしたい もんだいを えらんでね。
+            </div>
+            <div className="mt-4 grid max-h-80 gap-2 overflow-y-auto pr-1">
+              {stageProblems.map((problem, problemIndex) => (
+                <label
+                  key={`${problem.question}-${problemIndex}`}
+                  className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 px-3 py-2 hover:bg-slate-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={reviewSelection.includes(problemIndex)}
+                    onChange={() => toggleReviewSelection(problemIndex)}
+                    className="mt-1"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-500">{problemIndex + 1}もんめ</div>
+                    <div className="whitespace-pre-wrap break-words text-sm text-slate-800">
+                      {problem.question}
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                onClick={() => setIsReviewSelectorOpen(false)}
+              >
+                とじる
+              </button>
+              <button
+                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                onClick={startReview}
+                disabled={reviewSelection.length === 0}
+              >
+                ふくしゅうスタート
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </SceneFrame>
