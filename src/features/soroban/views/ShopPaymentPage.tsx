@@ -5,7 +5,9 @@ import coin100Image from "@/assets/coin/coin-100.png";
 import coin5Image from "@/assets/coin/coin-5.png";
 import coin50Image from "@/assets/coin/coin-50.png";
 import coin500Image from "@/assets/coin/coin-500.png";
+import coinIcon from "@/assets/coin.png";
 import shopPaymentBg from "@/assets/shop-peyment.png";
+import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { pickPurchaseSpeechByItemId } from "@/features/soroban/speech";
@@ -429,7 +431,7 @@ export function ShopPaymentPage({
               ← おみせにもどる
             </button>
             <span className="inline-flex h-8 items-center rounded-full bg-white/70 px-3 py-0.5 text-sm font-bold text-slate-800">
-              てもちコイン: {progress.coins}
+              てもちコイン: <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
             </span>
           </div>
         </div>
@@ -672,7 +674,10 @@ export function ShopPaymentPage({
                     <div className="text-5xl font-black leading-none text-amber-600">
                       {formatNumber(activeItem.price)}
                     </div>
-                    <div className="text-xs font-bold text-amber-700">こいん</div>
+                    <div className="mt-1 inline-flex items-center justify-center gap-1 text-xs font-bold text-amber-700">
+                      <img src={coinIcon} alt="" aria-hidden className="h-5 w-5 object-contain" />
+                      こいん
+                    </div>
                   </div>
                   <ItemPreview src={activeItem.image} alt={activeItem.name} size="panel" />
                 </div>
@@ -740,7 +745,7 @@ export function ShopPaymentPage({
             </div>
             {purchasedItem.bonus > 0 ? (
               <div className="mt-2 text-sm font-bold text-emerald-700">
-                ぴったりしはらいボーナス +{purchasedItem.bonus}コイン
+                ぴったりしはらいボーナス +<CoinValue amount={purchasedItem.bonus} amountClassName="font-bold" unitClassName="font-bold" />
               </div>
             ) : null}
             <div className="mt-4 grid place-items-center">
@@ -764,7 +769,7 @@ export function ShopPaymentPage({
           <div className="flash-good rounded-3xl border-4 border-amber-300 bg-white/95 px-10 py-8 text-center shadow-2xl">
             <div className="text-4xl font-black tracking-wide text-amber-500">ぴったり！</div>
             <div className="mt-2 text-3xl font-black text-emerald-600">
-              ボーナス +{exactPaymentFlashBonus}コイン
+              ボーナス +<CoinValue amount={exactPaymentFlashBonus} amountClassName="font-black" unitClassName="font-black" iconClassName="h-6 w-6" />
             </div>
           </div>
         </div>

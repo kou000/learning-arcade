@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
@@ -128,7 +129,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
               ← ゲームモードTOP
             </button>
             <span className="inline-flex h-8 items-center rounded-full bg-white/70 px-3 py-0.5 text-sm font-bold text-slate-800">
-              てもちコイン: {progress.coins}
+              てもちコイン: <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
             </span>
           </div>
         </div>
@@ -161,7 +162,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
                     {item.description}
                   </div>
                   <div className="text-sm font-semibold text-slate-700">
-                    {item.price} コイン
+                    <CoinValue amount={item.price} amountClassName="font-semibold" unitClassName="font-semibold" />
                   </div>
                   <button
                     className={`rounded-xl px-3 py-2 text-sm font-semibold ${

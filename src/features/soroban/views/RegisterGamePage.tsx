@@ -4,6 +4,7 @@ import type { Problem } from "@/domain/generator/types";
 import type { Grade } from "@/domain/specs/types";
 import { getGradeSpec } from "@/domain/specs/kenteiSpec";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
+import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import registerGameBg from "@/assets/register-game-bg.png";
 import arkSuccess from "@/assets/ark_success.png";
@@ -108,18 +109,18 @@ function peopleLabel(people: number): string {
 }
 
 function rewardFor(subject: RegisterSubject, grade: Grade): number {
-  const base = subject === "mitori" ? 3 : 1;
+  const base = subject === "mitori" ? 4 : 2;
   const gradeBonus = Math.max(0, Math.ceil((9 - grade) / 2));
   return base + gradeBonus;
 }
 
 const STAGE_CLEAR_REWARD: Record<RegisterStage, number> = {
-  1: 6,
-  2: 10,
-  3: 18,
-  4: 28,
-  5: 42,
-  6: 60,
+  1: 12,
+  2: 20,
+  3: 36,
+  4: 56,
+  5: 84,
+  6: 120,
 };
 
 function stageClearReward(stage: RegisterStage): number {
@@ -209,6 +210,7 @@ function buildUnlockMessage(
 export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [isAdminMode] = useState(() => isAdminModeFromEnv());
   const [progress, setProgress] = useState(() => loadRegisterProgress());
+  const roundStartCoinsRef = useRef<number>(progress.coins);
   const config = loadPracticeConfig();
   const playConfig = loadRegisterPlayConfig();
   const registerSubject = playConfig.subject;
@@ -264,11 +266,16 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
   const [dogReply, setDogReply] = useState<string | null>(null);
   const [showCorrectFlash, setShowCorrectFlash] = useState(false);
+  const [animatedCoins, setAnimatedCoins] = useState<number>(progress.coins);
+  const [isCoinAnimating, setIsCoinAnimating] = useState(false);
   const thankYouTimer = useRef<number | null>(null);
   const flashTimer = useRef<number | null>(null);
   const feedbackTimer = useRef<number | null>(null);
   const dogReplyTimer = useRef<number | null>(null);
   const autoNextTimer = useRef<number | null>(null);
+  const coinAnimFrameRef = useRef<number | null>(null);
+  const coinAnimDelayTimerRef = useRef<number | null>(null);
+  const hasStartedCoinAnimRef = useRef(false);
 
   const current = problems[index];
   const mitoriLines = useMemo(
@@ -405,7 +412,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (!hasMistakeOnCurrentQuestion) {
       setHasMistakeOnCurrentQuestion(true);
       setWrongQuestionsCount((prev) => prev + 1);
-      setMistakeIndexes((prev) => (prev.includes(index) ? prev : [...prev, index]));
+      setMistakeIndexes((prev) =>
+        prev.includes(index) ? prev : [...prev, index],
+      );
     }
     setStatus("wrong");
     setDogReply("ちがうよ");
@@ -425,7 +434,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         clearFeedbackTimers();
         setDogReply("ふくしゅうおつかれさま！");
         thankYouTimer.current = window.setTimeout(() => {
-          setDogReply("ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！");
+          setDogReply(
+            "ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！",
+          );
           setIsRoundFinished(true);
         }, 700);
         return;
@@ -488,12 +499,6 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       const stageSummary = stagePassed
         ? `${stageName} くりあ！`
         : `${stageName} しっぱい…`;
-      const clearReward = stagePassed ? stageClearReward(playStage) : 0;
-      const totalReward = problems.length * currentReward + clearReward;
-      const rewardSummary =
-        clearReward > 0
-          ? `ほうしゅう +${totalReward}コイン（せいかい ${problems.length} + くりあ ${clearReward}）`
-          : `ほうしゅう +${totalReward}コイン`;
       const unlockSummary =
         stagePassed && unlockMessage ? `\n${unlockMessage}` : "";
       clearFeedbackTimers();
@@ -506,7 +511,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         }, 1600);
         feedbackTimer.current = window.setTimeout(() => {
           setDogReply(
-            `おつかれさま！\n${stageSummary}\n${resultSummary}\n${rewardSummary}${unlockSummary}`,
+            `おつかれさま！\n${stageSummary}\n${resultSummary}${unlockSummary}`,
           );
           setIsRoundFinished(true);
         }, 1700);
@@ -532,10 +537,15 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (!hasMistakeOnCurrentQuestion) return;
     if (isRoundFinished) return;
     clearFeedbackTimers();
-    setSkippedIndexes((prev) => (prev.includes(index) ? prev : [...prev, index]));
+    setSkippedIndexes((prev) =>
+      prev.includes(index) ? prev : [...prev, index],
+    );
     const isLastQuestion = index >= problems.length - 1;
     if (isLastQuestion) {
-      const finalCorrectCount = Math.max(0, problems.length - wrongQuestionsCount);
+      const finalCorrectCount = Math.max(
+        0,
+        problems.length - wrongQuestionsCount,
+      );
       setStatus("wrong");
       setDogReply(
         `おつかれさま！\n${registerStageLabel(playStage)} しっぱい…\nけっか ${finalCorrectCount}/${problems.length}もん せいかい\nまちがえたもんだいを ふくしゅうしよう！`,
@@ -547,9 +557,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const openReviewSelector = () => {
-    const defaults = Array.from(new Set([...mistakeIndexes, ...skippedIndexes])).sort(
-      (a, b) => a - b,
-    );
+    const defaults = Array.from(
+      new Set([...mistakeIndexes, ...skippedIndexes]),
+    ).sort((a, b) => a - b);
     setReviewSelection(defaults.length > 0 ? defaults : [0]);
     setIsReviewSelectorOpen(true);
   };
@@ -642,6 +652,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   useEffect(() => {
     return () => {
       clearFeedbackTimers();
+      if (coinAnimDelayTimerRef.current != null) {
+        window.clearTimeout(coinAnimDelayTimerRef.current);
+        coinAnimDelayTimerRef.current = null;
+      }
+      if (coinAnimFrameRef.current != null) {
+        window.cancelAnimationFrame(coinAnimFrameRef.current);
+        coinAnimFrameRef.current = null;
+      }
     };
   }, []);
 
@@ -679,6 +697,8 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
   const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
+  const showCoinGainPanel =
+    isRoundFinished && !isReviewMode && Boolean(dogReply);
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
   const activeInput = isDivMode ? quotient : answer;
   const registerDisplayValue = activeInput.length > 0 ? activeInput : "0";
@@ -733,6 +753,53 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     }
     return "";
   })();
+
+  useEffect(() => {
+    if (!showCoinGainPanel) return;
+    if (hasStartedCoinAnimRef.current) return;
+    hasStartedCoinAnimRef.current = true;
+    const from = roundStartCoinsRef.current;
+    const to = progress.coins;
+    setAnimatedCoins(from);
+    setIsCoinAnimating(false);
+
+    if (coinAnimDelayTimerRef.current != null) {
+      window.clearTimeout(coinAnimDelayTimerRef.current);
+      coinAnimDelayTimerRef.current = null;
+    }
+    coinAnimDelayTimerRef.current = window.setTimeout(() => {
+      if (from === to) {
+        setAnimatedCoins(to);
+        setIsCoinAnimating(false);
+        coinAnimDelayTimerRef.current = null;
+        return;
+      }
+      const duration = 1400;
+      const startedAt = performance.now();
+      setIsCoinAnimating(true);
+
+      const tick = (now: number) => {
+        const elapsed = Math.min(1, (now - startedAt) / duration);
+        const eased = 1 - Math.pow(1 - elapsed, 3);
+        const next = Math.round(from + (to - from) * eased);
+        setAnimatedCoins(next);
+        if (elapsed < 1) {
+          coinAnimFrameRef.current = window.requestAnimationFrame(tick);
+          return;
+        }
+        setAnimatedCoins(to);
+        setIsCoinAnimating(false);
+        coinAnimFrameRef.current = null;
+      };
+
+      if (coinAnimFrameRef.current != null) {
+        window.cancelAnimationFrame(coinAnimFrameRef.current);
+        coinAnimFrameRef.current = null;
+      }
+      coinAnimFrameRef.current = window.requestAnimationFrame(tick);
+      coinAnimDelayTimerRef.current = null;
+    }, 1000);
+  }, [showCoinGainPanel, progress.coins]);
 
   return (
     <SceneFrame
@@ -825,7 +892,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           >
             {isFeedbackDialogue ? (
               <div className="relative min-h-[360px]">
-                {clerkEcho ? (
+                {clerkEcho && !isRoundFinished ? (
                   <div className="absolute left-[25%] top-[86%] w-[min(440px,calc(100%-24px))] -translate-x-1/2 -translate-y-1/2">
                     <div className="relative rounded-[24px] border-2 border-slate-200 bg-white/95 px-5 py-4 text-slate-800 shadow-lg">
                       <div className="text-xs font-semibold text-slate-500">
@@ -1018,16 +1085,23 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         </div>
       </div>
       {showCorrectFlash ? (
-        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-slate-900/35 backdrop-blur-[1px]">
           <div className="flash-good flex items-center gap-8">
             <img
               src={arkSuccess}
               alt="せいかい"
               className="h-56 w-56 rounded-full bg-white object-cover shadow-sm"
             />
-            <span className="text-7xl font-black tracking-wide text-emerald-600 drop-shadow-sm font-[var(--pop-font)]">
-              せいかい
-            </span>
+            <div className="rounded-2xl bg-white/92 px-6 py-4 shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
+              <span
+                className="text-7xl font-extrabold tracking-wide text-amber-300 font-[var(--pop-font)]"
+                style={{
+                  textShadow: "0 2px 0 rgba(25,45,35,0.45), 0 6px 10px rgba(0,0,0,0.25)",
+                }}
+              >
+                せいかい
+              </span>
+            </div>
           </div>
         </div>
       ) : null}
@@ -1056,10 +1130,43 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           </button>
         </div>
       ) : null}
+      {showCoinGainPanel ? (
+        <div className="pointer-events-none fixed left-6 top-24 z-40 w-[18.5rem] rounded-2xl border border-amber-200 bg-white/95 p-4 shadow-xl">
+          <div className="text-xs font-bold tracking-wide text-amber-700">
+            ほうしゅう
+          </div>
+          <div className="mt-2 text-sm font-semibold text-slate-600">
+            かいしまえのコイン: {roundStartCoinsRef.current}
+          </div>
+          <div className="text-sm font-semibold text-emerald-700">
+            かくとくしたコイン: +{progress.coins - roundStartCoinsRef.current}
+          </div>
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="text-[11px] font-bold tracking-[0.14em] text-slate-500">
+              げんざいのコイン
+            </div>
+            <div className="text-right text-3xl font-black tabular-nums text-slate-800">
+              <CoinValue
+                amount={animatedCoins}
+                amountClassName="font-black tabular-nums tracking-[0.05em] text-slate-800 [text-shadow:0_1px_0_rgba(255,255,255,0.7),0_3px_6px_rgba(0,0,0,0.18)]"
+                unitClassName="font-black text-base text-slate-700 [text-shadow:0_1px_0_rgba(255,255,255,0.65)]"
+                iconClassName="h-9 w-9 drop-shadow-[0_3px_6px_rgba(0,0,0,0.35)]"
+              />
+            </div>
+          </div>
+          {isCoinAnimating ? (
+            <div className="mt-1 text-right text-[10px] font-bold text-amber-700">
+              かさんちゅう...
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {isReviewSelectorOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="text-lg font-black text-slate-800">ふくしゅう もんだいをえらぶ</div>
+            <div className="text-lg font-black text-slate-800">
+              ふくしゅう もんだいをえらぶ
+            </div>
             <div className="mt-1 text-sm text-slate-600">
               ときなおしたい もんだいを えらんでね。
             </div>
@@ -1076,7 +1183,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     className="mt-1"
                   />
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold text-slate-500">{problemIndex + 1}もんめ</div>
+                    <div className="text-xs font-semibold text-slate-500">
+                      {problemIndex + 1}もんめ
+                    </div>
                     <div className="whitespace-pre-wrap break-words text-sm text-slate-800">
                       {problem.question}
                     </div>
