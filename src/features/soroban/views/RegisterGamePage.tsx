@@ -859,7 +859,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           </div>
 
           {!isDialogMode ? (
-            <div className="self-end rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm">
+            <div className="self-end rounded-2xl border-2 border-sky-300 bg-sky-100/95 p-4 shadow-[0_8px_20px_rgba(14,116,144,0.25)]">
               <div className="text-sm font-bold text-slate-700 text-white">
                 レジ
               </div>
@@ -875,37 +875,44 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
                   <button
                     key={d}
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50"
+                    className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-xl font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                     onClick={() => appendDigit(d)}
                   >
                     {d}
                   </button>
                 ))}
                 <button
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50 disabled:opacity-40"
+                  className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
                   onClick={toggleSign}
                   disabled={isDivMode}
                 >
                   ±
                 </button>
                 <button
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-semibold shadow-sm hover:bg-slate-50"
+                  className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-xl font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                   onClick={() => appendDigit("0")}
                 >
                   0
                 </button>
                 <button
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50"
+                  className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                   onClick={backspace}
                 >
                   ←
                 </button>
               </div>
               <button
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm hover:bg-slate-50"
+                className="mt-2 w-full rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                 onClick={clearInput}
               >
                 クリア
+              </button>
+              <button
+                className="mt-2 w-full rounded-xl border border-[#3f1300] bg-gradient-to-b from-[#ff9a52] to-[#d64f16] px-4 py-4 text-lg font-black text-[#fff8ef] shadow-[0_3px_0_#7d2b07,0_8px_14px_rgba(70,18,0,0.45)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#7d2b07,0_3px_8px_rgba(70,18,0,0.4)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={onTellAmount}
+                disabled={!receiptReady || isRoundFinished}
+              >
+                {isDivMode ? "ふくろのかずをつたえる" : "かいとうする"}
               </button>
             </div>
           ) : null}
