@@ -583,7 +583,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const buildClerkEcho = () => {
     if (playSubject === "div") {
-      return `ふくろ ${quotient || "0"}こにわけますね。`;
+      return `ひとり ${quotient || "0"}こで ふくろにわけますね。`;
     }
     return `${answer || "0"} えんですね。`;
   };
@@ -935,7 +935,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   onClick={onTellAmount}
                   disabled={!receiptReady || isRoundFinished}
                 >
-                  {isDivMode ? "ふくろのかずをつたえる" : "きんがくをつたえる"}
+                  {isDivMode ? "ひとりぶんをつたえる" : "きんがくをつたえる"}
                 </button>
                 {isAdminMode ? (
                   <button
@@ -1011,7 +1011,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 onClick={onTellAmount}
                 disabled={!receiptReady || isRoundFinished}
               >
-                {isDivMode ? "ふくろのかずをつたえる" : "かいとうする"}
+                {isDivMode ? "ひとりぶんをつたえる" : "かいとうする"}
               </button>
             </div>
           ) : null}
