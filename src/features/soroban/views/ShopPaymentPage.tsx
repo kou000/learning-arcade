@@ -52,10 +52,10 @@ function ItemPreview({
 }: {
   src: string;
   alt: string;
-  size?: "normal" | "large";
+  size?: "normal" | "panel" | "large";
 }) {
   const [missing, setMissing] = useState(false);
-  const sizeClass = size === "large" ? "h-36 w-36" : "h-24 w-24";
+  const sizeClass = size === "large" ? "h-36 w-36" : size === "panel" ? "h-32 w-32" : "h-24 w-24";
   const frameClass =
     size === "large" ? "border-transparent bg-transparent p-0" : "border border-slate-200 bg-white p-2";
   if (missing) {
@@ -176,9 +176,11 @@ export function ShopPaymentPage({
     x: number;
     y: number;
   } | null>(null);
+  const [exactPaymentFlashBonus, setExactPaymentFlashBonus] = useState<number | null>(null);
   const trayRef = useRef<HTMLDivElement | null>(null);
   const walletRef = useRef<HTMLDivElement | null>(null);
   const pointerDraggingRef = useRef(false);
+  const exactFlashTimerRef = useRef<number | null>(null);
 
   const activeItem = useMemo(
     () => SHOP_ITEMS.find((item) => item.id === itemId) ?? null,
@@ -198,6 +200,16 @@ export function ShopPaymentPage({
   useEffect(() => {
     setResult("");
   }, [tray]);
+
+  useEffect(
+    () => () => {
+      if (exactFlashTimerRef.current != null) {
+        window.clearTimeout(exactFlashTimerRef.current);
+        exactFlashTimerRef.current = null;
+      }
+    },
+    [],
+  );
 
   const pushCoinToTray = (value: number) => {
     setTray((prev) => [...prev, value]);
@@ -259,6 +271,16 @@ export function ShopPaymentPage({
       bonus: exactBonus,
       speech: pickPurchaseSpeechByItemId(activeItem.id),
     });
+    if (exactBonus > 0) {
+      setExactPaymentFlashBonus(exactBonus);
+      if (exactFlashTimerRef.current != null) {
+        window.clearTimeout(exactFlashTimerRef.current);
+      }
+      exactFlashTimerRef.current = window.setTimeout(() => {
+        setExactPaymentFlashBonus(null);
+        exactFlashTimerRef.current = null;
+      }, 1400);
+    }
   };
 
   return (
@@ -498,18 +520,26 @@ export function ShopPaymentPage({
             </div>
           ) : null}
 
-          <div className="absolute right-3 top-3 z-20 w-64 rounded-2xl border border-slate-200 p-3 shadow">
+          <div className="absolute right-3 top-3 z-20 w-80 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow">
             <div className="text-sm font-bold text-slate-700">
               こうにゅうするグッズ
             </div>
             {activeItem ? (
-              <div className="mt-2 grid gap-2">
-                <ItemPreview src={activeItem.image} alt={activeItem.name} />
+              <div className="mt-2 grid gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex min-h-32 min-w-[7.25rem] flex-col justify-center rounded-2xl border-2 border-amber-300 bg-amber-50 px-3 text-center shadow-sm">
+                    <div className="text-xs font-bold tracking-wide text-amber-700">
+                      ねだん
+                    </div>
+                    <div className="text-5xl font-black leading-none text-amber-600">
+                      {formatNumber(activeItem.price)}
+                    </div>
+                    <div className="text-xs font-bold text-amber-700">こいん</div>
+                  </div>
+                  <ItemPreview src={activeItem.image} alt={activeItem.name} size="panel" />
+                </div>
                 <div className="text-sm font-bold text-slate-800">
                   {activeItem.name}
-                </div>
-                <div className="text-xs text-slate-700">
-                  ねだん: {activeItem.price}コイン
                 </div>
               </div>
             ) : (
@@ -578,6 +608,16 @@ export function ShopPaymentPage({
             >
               おみせにもどる
             </button>
+          </div>
+        </div>
+      ) : null}
+      {exactPaymentFlashBonus != null ? (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+          <div className="flash-good rounded-3xl border-4 border-amber-300 bg-white/95 px-10 py-8 text-center shadow-2xl">
+            <div className="text-4xl font-black tracking-wide text-amber-500">ぴったり！</div>
+            <div className="mt-2 text-3xl font-black text-emerald-600">
+              ボーナス +{exactPaymentFlashBonus}コイン
+            </div>
           </div>
         </div>
       ) : null}
