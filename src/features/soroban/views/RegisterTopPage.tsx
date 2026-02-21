@@ -1,9 +1,8 @@
 import React from "react";
 import registerGameTop from "@/assets/register-game-top.png";
+import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame, SorobanSubnav } from "@/features/soroban/components/SceneFrame";
 import { loadRegisterProgress } from "@/features/soroban/state";
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat("ja-JP").format(value);
 
 type Props = {
   onGoPractice: () => void;
@@ -38,7 +37,10 @@ export function RegisterTopPage({
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
         <div className="absolute right-4 top-4 rounded-xl bg-black/35 px-4 py-2 text-base font-bold text-white backdrop-blur-sm">
-          てもちコイン: {formatNumber(progress.coins)}コイン
+          <span className="inline-flex items-center gap-1">
+            <span>てもちコイン:</span>
+            <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
+          </span>
         </div>
 
         <div className="absolute inset-x-0 bottom-2">

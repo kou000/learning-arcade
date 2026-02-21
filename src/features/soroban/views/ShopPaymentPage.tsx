@@ -5,11 +5,18 @@ import coin100Image from "@/assets/coin/coin-100.png";
 import coin5Image from "@/assets/coin/coin-5.png";
 import coin50Image from "@/assets/coin/coin-50.png";
 import coin500Image from "@/assets/coin/coin-500.png";
+import coinIcon from "@/assets/coin.png";
 import shopPaymentBg from "@/assets/shop-peyment.png";
+import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { pickPurchaseSpeechByItemId } from "@/features/soroban/speech";
 import { loadRegisterProgress, saveRegisterProgress } from "@/features/soroban/state";
+import {
+  buildWalletForPrice,
+  type CoinDenomination,
+  type WalletBreakdown,
+} from "@/features/soroban/wallet";
 
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("ja-JP").format(value);
@@ -34,16 +41,73 @@ const COIN_IMAGE_BY_VALUE: Record<number, string> = Object.fromEntries(
 );
 
 const DRAG_SOURCE_TYPE = "application/x-learning-arcade-source";
-const DRAG_TRAY_INDEX = "application/x-learning-arcade-tray-index";
+const DRAG_TRAY_COIN_ID = "application/x-learning-arcade-tray-coin-id";
+const DRAG_WALLET_COIN_KEY = "application/x-learning-arcade-wallet-coin-key";
+const MAX_VISIBLE_WALLET_COINS_PER_DENOM = 18;
 
-const WALLET_COIN_POSITIONS = [
-  { left: "10%", top: "42%" },
-  { left: "34%", top: "44%" },
-  { left: "58%", top: "46%" },
-  { left: "14%", top: "67%" },
-  { left: "40%", top: "69%" },
-  { left: "66%", top: "71%" },
-] as const;
+type WalletCoinLayoutItem = {
+  key: string;
+  value: number;
+  left: number;
+  top: number;
+  rotate: number;
+  zIndex: number;
+};
+
+type TrayCoin = {
+  id: number;
+  value: number;
+  sourceWalletCoinKey: string | null;
+};
+
+const seededRandom = (seed: number) => {
+  let next = seed >>> 0;
+  next = (next * 1664525 + 1013904223) >>> 0;
+  return next / 0xffffffff;
+};
+
+const createWalletCoinLayout = (
+  walletBreakdown: WalletBreakdown,
+  walletDenominations: readonly number[],
+  tray: readonly TrayCoin[],
+) => {
+  const result: WalletCoinLayoutItem[] = [];
+  const trayBreakdown: WalletBreakdown = { 500: 0, 100: 0, 50: 0, 10: 0, 5: 0, 1: 0 };
+  const movedWalletCoinKeys = new Set(
+    tray
+      .map((coin) => coin.sourceWalletCoinKey)
+      .filter((key): key is string => typeof key === "string" && key.length > 0),
+  );
+  tray.forEach((coin) => {
+    const denom = coin.value as CoinDenomination;
+    trayBreakdown[denom] += 1;
+  });
+  walletDenominations.forEach((value, denomIndex) => {
+    const denom = value as CoinDenomination;
+    const totalCount = (walletBreakdown[denom] ?? 0) + (trayBreakdown[denom] ?? 0);
+    const visibleCapacity = Math.min(totalCount, MAX_VISIBLE_WALLET_COINS_PER_DENOM);
+    for (let slot = 0; slot < visibleCapacity; slot += 1) {
+      const coinKey = `${value}-${slot}`;
+      if (movedWalletCoinKeys.has(coinKey)) continue;
+      const seedBase = value * 1009 + slot * 9176 + denomIndex * 6151;
+      const jitterX = seededRandom(seedBase + 11) * 6 - 3;
+      const jitterY = seededRandom(seedBase + 37) * 6 - 3;
+      const rotate = seededRandom(seedBase + 83) * 12 - 6;
+      const spreadIndex = denomIndex * MAX_VISIBLE_WALLET_COINS_PER_DENOM + slot;
+      const left = 14 + ((spreadIndex * 19) % 62) + jitterX;
+      const top = 20 + ((spreadIndex * 23) % 55) + jitterY;
+      result.push({
+        key: coinKey,
+        value,
+        left: Math.min(80, Math.max(12, left)),
+        top: Math.min(78, Math.max(16, top)),
+        rotate,
+        zIndex: denomIndex * 100 + slot + 1,
+      });
+    }
+  });
+  return result;
+};
 
 function ItemPreview({
   src,
@@ -77,9 +141,14 @@ function ItemPreview({
   );
 }
 
-function CoinChip({
+function WalletCoin({
+  coinKey,
   value,
   image,
+  left,
+  top,
+  rotate,
+  zIndex,
   onDragValueStart,
   onDragValueEnd,
   onPointerValueStart,
@@ -87,13 +156,18 @@ function CoinChip({
   onPointerValueEnd,
   onPointerValueCancel,
 }: {
+  coinKey: string;
   value: number;
   image: string;
-  onDragValueStart: (value: number) => void;
+  left: number;
+  top: number;
+  rotate: number;
+  zIndex: number;
+  onDragValueStart: (value: number, coinKey: string) => void;
   onDragValueEnd: () => void;
-  onPointerValueStart: (value: number, x: number, y: number) => void;
+  onPointerValueStart: (value: number, coinKey: string, x: number, y: number) => void;
   onPointerValueMove: (x: number, y: number) => void;
-  onPointerValueEnd: (value: number, x: number, y: number) => void;
+  onPointerValueEnd: (value: number, coinKey: string, x: number, y: number) => void;
   onPointerValueCancel: () => void;
 }) {
   const [missing, setMissing] = useState(false);
@@ -104,14 +178,15 @@ function CoinChip({
       onDragStart={(e) => {
         e.dataTransfer.setData(DRAG_SOURCE_TYPE, "wallet");
         e.dataTransfer.setData("text/plain", String(value));
-        onDragValueStart(value);
+        e.dataTransfer.setData(DRAG_WALLET_COIN_KEY, coinKey);
+        onDragValueStart(value, coinKey);
       }}
       onDragEnd={onDragValueEnd}
       onPointerDown={(e) => {
         if (e.pointerType === "mouse") return;
         e.preventDefault();
         e.currentTarget.setPointerCapture(e.pointerId);
-        onPointerValueStart(value, e.clientX, e.clientY);
+        onPointerValueStart(value, coinKey, e.clientX, e.clientY);
       }}
       onPointerMove={(e) => {
         if (e.pointerType === "mouse") return;
@@ -119,7 +194,7 @@ function CoinChip({
       }}
       onPointerUp={(e) => {
         if (e.pointerType === "mouse") return;
-        onPointerValueEnd(value, e.clientX, e.clientY);
+        onPointerValueEnd(value, coinKey, e.clientX, e.clientY);
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.releasePointerCapture(e.pointerId);
         }
@@ -131,14 +206,20 @@ function CoinChip({
           e.currentTarget.releasePointerCapture(e.pointerId);
         }
       }}
-      className="grid h-20 w-20 place-items-center rounded-full bg-transparent p-0 shadow-none hover:scale-105"
+      className="absolute h-16 w-16 cursor-grab active:cursor-grabbing"
       title="ドラッグでトレーにいれる"
       role="button"
       aria-label={`${formatNumber(value)}えんをドラッグ`}
-      style={{ touchAction: "none" }}
+      style={{
+        left: `${left}%`,
+        top: `${top}%`,
+        transform: `translate(-50%, -50%) rotate(${rotate.toFixed(1)}deg)`,
+        zIndex,
+        touchAction: "none",
+      }}
     >
       {missing ? (
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-[10px] text-slate-500">
+        <div className="flex h-full w-full items-center justify-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-[10px] text-slate-500">
           がぞうなし
         </div>
       ) : (
@@ -146,7 +227,7 @@ function CoinChip({
           src={image}
           alt={`${formatNumber(value)}えん`}
           onError={() => setMissing(true)}
-          className="h-[4.5rem] w-[4.5rem] object-contain"
+          className="pointer-events-none h-full w-full object-contain drop-shadow-sm"
         />
       )}
     </div>
@@ -159,7 +240,7 @@ export function ShopPaymentPage({
   onGoShop,
 }: ShopPaymentPageProps) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
-  const [tray, setTray] = useState<number[]>([]);
+  const [tray, setTray] = useState<TrayCoin[]>([]);
   const [result, setResult] = useState<string>("");
   const [purchasedItem, setPurchasedItem] = useState<{
     name: string;
@@ -171,6 +252,7 @@ export function ShopPaymentPage({
   const [draggingCoinValue, setDraggingCoinValue] = useState<number | null>(
     null,
   );
+  const [draggingWalletCoinKey, setDraggingWalletCoinKey] = useState<string | null>(null);
   const [pointerDragPreview, setPointerDragPreview] = useState<{
     value: number;
     x: number;
@@ -181,13 +263,15 @@ export function ShopPaymentPage({
   const walletRef = useRef<HTMLDivElement | null>(null);
   const pointerDraggingRef = useRef(false);
   const exactFlashTimerRef = useRef<number | null>(null);
+  const trayCoinIdRef = useRef(1);
+  const returningTrayCoinIdsRef = useRef<Set<number>>(new Set());
 
   const activeItem = useMemo(
     () => SHOP_ITEMS.find((item) => item.id === itemId) ?? null,
     [itemId],
   );
   const trayTotal = useMemo(
-    () => tray.reduce((acc, value) => acc + value, 0),
+    () => tray.reduce((acc, coin) => acc + coin.value, 0),
     [tray],
   );
   const walletCoins = useMemo(() => {
@@ -196,6 +280,28 @@ export function ShopPaymentPage({
     }
     return COINS;
   }, [activeItem]);
+  const walletDenominations = useMemo(
+    () => walletCoins.map((coin) => coin.value),
+    [walletCoins],
+  );
+  const walletCoinImageByValue = useMemo(
+    () => Object.fromEntries(walletCoins.map((coin) => [coin.value, coin.image])) as Record<number, string>,
+    [walletCoins],
+  );
+  const [walletBreakdown, setWalletBreakdown] = useState<WalletBreakdown>(() =>
+    buildWalletForPrice(progress.coins, activeItem?.price ?? 0, walletDenominations),
+  );
+  const walletCoinLayout = useMemo(
+    () => createWalletCoinLayout(walletBreakdown, walletDenominations, tray),
+    [walletBreakdown, walletDenominations, tray],
+  );
+
+  useEffect(() => {
+    setWalletBreakdown(
+      buildWalletForPrice(progress.coins, activeItem?.price ?? 0, walletDenominations),
+    );
+    setTray([]);
+  }, [activeItem?.id, progress.coins, walletDenominations]);
 
   useEffect(() => {
     setResult("");
@@ -211,8 +317,17 @@ export function ShopPaymentPage({
     [],
   );
 
-  const pushCoinToTray = (value: number) => {
-    setTray((prev) => [...prev, value]);
+  const pushCoinToTray = (value: number, sourceWalletCoinKey: string | null) => {
+    const denom = value as CoinDenomination;
+    if ((walletBreakdown[denom] ?? 0) <= 0) {
+      setResult("そのコインは もうないよ");
+      return;
+    }
+    setWalletBreakdown((prev) => ({ ...prev, [denom]: Math.max(0, prev[denom] - 1) }));
+    setTray((prev) => [
+      ...prev,
+      { id: trayCoinIdRef.current++, value, sourceWalletCoinKey },
+    ]);
   };
   const isTrayHighlight = isTrayDragging || draggingCoinValue != null;
 
@@ -230,8 +345,17 @@ export function ShopPaymentPage({
       x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
     );
   };
-  const removeTrayCoinAt = (index: number) => {
-    setTray((prev) => prev.filter((_, i) => i !== index));
+  const removeTrayCoinById = (coinId: number) => {
+    if (returningTrayCoinIdsRef.current.has(coinId)) return;
+    const target = tray.find((item) => item.id === coinId);
+    if (!target) return;
+    returningTrayCoinIdsRef.current.add(coinId);
+    const denom = target.value as CoinDenomination;
+    setTray((prev) => prev.filter((item) => item.id !== coinId));
+    setWalletBreakdown((walletPrev) => ({
+      ...walletPrev,
+      [denom]: walletPrev[denom] + 1,
+    }));
   };
 
   const purchase = () => {
@@ -265,6 +389,10 @@ export function ShopPaymentPage({
       purchasedItemIds: [...latestProgress.purchasedItemIds, activeItem.id],
     });
     setProgress(nextProgress);
+    setTray([]);
+    setWalletBreakdown(
+      buildWalletForPrice(nextProgress.coins, activeItem.price, walletDenominations),
+    );
     setPurchasedItem({
       name: activeItem.name,
       image: activeItem.image,
@@ -298,12 +426,12 @@ export function ShopPaymentPage({
             </button>
             <button
               className="h-12 rounded-xl bg-white/20 px-4 text-sm font-semibold hover:bg-white/30"
-              onClick={onGoShop}
+              onClick={() => onGoShop()}
             >
               ← おみせにもどる
             </button>
             <span className="inline-flex h-8 items-center rounded-full bg-white/70 px-3 py-0.5 text-sm font-bold text-slate-800">
-              てもちコイン: {progress.coins}
+              てもちコイン: <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
             </span>
           </div>
         </div>
@@ -324,66 +452,68 @@ export function ShopPaymentPage({
               e.preventDefault();
               const source = e.dataTransfer.getData(DRAG_SOURCE_TYPE);
               if (source !== "tray") return;
-              const index = Number(e.dataTransfer.getData(DRAG_TRAY_INDEX));
-              if (Number.isInteger(index) && index >= 0) {
-                removeTrayCoinAt(index);
+              const coinId = Number(e.dataTransfer.getData(DRAG_TRAY_COIN_ID));
+              if (Number.isInteger(coinId) && coinId > 0) {
+                removeTrayCoinById(coinId);
               }
               setDraggingCoinValue(null);
+              setDraggingWalletCoinKey(null);
               setPointerDragPreview(null);
               setIsTrayDragging(false);
             }}
           >
-            {walletCoins.map((coin, index) => {
-              const pos = WALLET_COIN_POSITIONS[index] ?? {
-                left: "0%",
-                top: "0%",
-              };
-              return (
-                <div
-                  key={coin.value}
-                  className="absolute"
-                  style={{ left: pos.left, top: pos.top }}
-                >
-                  <CoinChip
-                    value={coin.value}
-                    image={coin.image}
-                    onDragValueStart={setDraggingCoinValue}
-                    onDragValueEnd={() => {
-                      if (pointerDraggingRef.current) return;
-                      setIsTrayDragging(false);
-                      setDraggingCoinValue(null);
-                    }}
-                    onPointerValueStart={(value, x, y) => {
-                      pointerDraggingRef.current = true;
-                      setDraggingCoinValue(value);
-                      setIsTrayDragging(isInsideTray(x, y));
-                      setPointerDragPreview({ value, x, y });
-                    }}
-                    onPointerValueMove={(x, y) => {
-                      setIsTrayDragging(isInsideTray(x, y));
-                      setPointerDragPreview((prev) =>
-                        prev ? { ...prev, x, y } : prev,
-                      );
-                    }}
-                    onPointerValueEnd={(value, x, y) => {
-                      if (isInsideTray(x, y)) {
-                        pushCoinToTray(value);
-                      }
-                      pointerDraggingRef.current = false;
-                      setIsTrayDragging(false);
-                      setDraggingCoinValue(null);
-                      setPointerDragPreview(null);
-                    }}
-                    onPointerValueCancel={() => {
-                      pointerDraggingRef.current = false;
-                      setIsTrayDragging(false);
-                      setDraggingCoinValue(null);
-                      setPointerDragPreview(null);
-                    }}
-                  />
-                </div>
-              );
-            })}
+            {walletCoinLayout.map((coin) => (
+              <WalletCoin
+                key={coin.key}
+                coinKey={coin.key}
+                value={coin.value}
+                image={walletCoinImageByValue[coin.value] ?? COIN_IMAGE_BY_VALUE[coin.value] ?? ""}
+                left={coin.left}
+                top={coin.top}
+                rotate={coin.rotate}
+                zIndex={coin.zIndex}
+                onDragValueStart={(value, coinKey) => {
+                  setDraggingCoinValue(value);
+                  setDraggingWalletCoinKey(coinKey);
+                }}
+                onDragValueEnd={() => {
+                  if (pointerDraggingRef.current) return;
+                  setIsTrayDragging(false);
+                  setDraggingCoinValue(null);
+                  setDraggingWalletCoinKey(null);
+                }}
+                onPointerValueStart={(value, coinKey, x, y) => {
+                  pointerDraggingRef.current = true;
+                  setDraggingCoinValue(value);
+                  setDraggingWalletCoinKey(coinKey);
+                  setIsTrayDragging(isInsideTray(x, y));
+                  setPointerDragPreview({ value, x, y });
+                }}
+                onPointerValueMove={(x, y) => {
+                  setIsTrayDragging(isInsideTray(x, y));
+                  setPointerDragPreview((prev) =>
+                    prev ? { ...prev, x, y } : prev,
+                  );
+                }}
+                onPointerValueEnd={(value, coinKey, x, y) => {
+                  if (isInsideTray(x, y)) {
+                    pushCoinToTray(value, coinKey);
+                  }
+                  pointerDraggingRef.current = false;
+                  setIsTrayDragging(false);
+                  setDraggingCoinValue(null);
+                  setDraggingWalletCoinKey(null);
+                  setPointerDragPreview(null);
+                }}
+                onPointerValueCancel={() => {
+                  pointerDraggingRef.current = false;
+                  setIsTrayDragging(false);
+                  setDraggingCoinValue(null);
+                  setDraggingWalletCoinKey(null);
+                  setPointerDragPreview(null);
+                }}
+              />
+            ))}
           </div>
 
           <div
@@ -404,17 +534,22 @@ export function ShopPaymentPage({
               if (source === "tray") {
                 setIsTrayDragging(false);
                 setDraggingCoinValue(null);
+                setDraggingWalletCoinKey(null);
                 setPointerDragPreview(null);
                 return;
               }
               const dropped = Number(e.dataTransfer.getData("text/plain"));
+              const droppedCoinKey = e.dataTransfer.getData(DRAG_WALLET_COIN_KEY);
               const value =
                 Number.isFinite(dropped) && dropped > 0
                   ? dropped
                   : draggingCoinValue;
-              if (value != null && value > 0) pushCoinToTray(value);
+              if (value != null && value > 0) {
+                pushCoinToTray(value, droppedCoinKey || draggingWalletCoinKey);
+              }
               setIsTrayDragging(false);
               setDraggingCoinValue(null);
+              setDraggingWalletCoinKey(null);
             }}
           >
             <div className="mt-2 max-h-[calc(100%-3.5rem)] overflow-auto rounded-xl bg-white/70 p-2">
@@ -424,19 +559,21 @@ export function ShopPaymentPage({
                     ここにコインをいれてね
                   </div>
                 ) : (
-                  tray.map((coin, i) => (
+                  tray.map((coin) => (
                     <div
-                      key={`${coin}-${i}`}
+                      key={coin.id}
                       className="relative -ml-6 first:ml-0"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData(DRAG_SOURCE_TYPE, "tray");
-                        e.dataTransfer.setData(DRAG_TRAY_INDEX, String(i));
-                        setDraggingCoinValue(coin);
+                        e.dataTransfer.setData(DRAG_TRAY_COIN_ID, String(coin.id));
+                        setDraggingCoinValue(coin.value);
+                        setDraggingWalletCoinKey(null);
                       }}
                       onDragEnd={() => {
                         if (pointerDraggingRef.current) return;
                         setDraggingCoinValue(null);
+                        setDraggingWalletCoinKey(null);
                         setPointerDragPreview(null);
                         setIsTrayDragging(false);
                       }}
@@ -445,10 +582,11 @@ export function ShopPaymentPage({
                         e.preventDefault();
                         e.currentTarget.setPointerCapture(e.pointerId);
                         pointerDraggingRef.current = true;
-                        setDraggingCoinValue(coin);
+                        setDraggingCoinValue(coin.value);
+                        setDraggingWalletCoinKey(null);
                         setIsTrayDragging(isInsideTray(e.clientX, e.clientY));
                         setPointerDragPreview({
-                          value: coin,
+                          value: coin.value,
                           x: e.clientX,
                           y: e.clientY,
                         });
@@ -463,10 +601,11 @@ export function ShopPaymentPage({
                       onPointerUp={(e) => {
                         if (e.pointerType === "mouse") return;
                         if (isInsideWallet(e.clientX, e.clientY)) {
-                          removeTrayCoinAt(i);
+                          removeTrayCoinById(coin.id);
                         }
                         pointerDraggingRef.current = false;
                         setDraggingCoinValue(null);
+                        setDraggingWalletCoinKey(null);
                         setPointerDragPreview(null);
                         setIsTrayDragging(false);
                         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -477,6 +616,7 @@ export function ShopPaymentPage({
                         if (e.pointerType === "mouse") return;
                         pointerDraggingRef.current = false;
                         setDraggingCoinValue(null);
+                        setDraggingWalletCoinKey(null);
                         setPointerDragPreview(null);
                         setIsTrayDragging(false);
                         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -484,13 +624,13 @@ export function ShopPaymentPage({
                         }
                       }}
                       role="button"
-                      aria-label={`${coin}えんをさいふにもどす`}
+                      aria-label={`${coin.value}えんをさいふにもどす`}
                       style={{ touchAction: "none" }}
                     >
-                      {COIN_IMAGE_BY_VALUE[coin] ? (
+                      {COIN_IMAGE_BY_VALUE[coin.value] ? (
                         <img
-                          src={COIN_IMAGE_BY_VALUE[coin]}
-                          alt={`${coin}円`}
+                          src={COIN_IMAGE_BY_VALUE[coin.value]}
+                          alt={`${coin.value}円`}
                           className="h-[4.5rem] w-[4.5rem] object-contain"
                         />
                       ) : null}
@@ -534,7 +674,10 @@ export function ShopPaymentPage({
                     <div className="text-5xl font-black leading-none text-amber-600">
                       {formatNumber(activeItem.price)}
                     </div>
-                    <div className="text-xs font-bold text-amber-700">こいん</div>
+                    <div className="mt-1 inline-flex items-center justify-center gap-1 text-xs font-bold text-amber-700">
+                      <img src={coinIcon} alt="" aria-hidden className="h-5 w-5 object-contain" />
+                      こいん
+                    </div>
                   </div>
                   <ItemPreview src={activeItem.image} alt={activeItem.name} size="panel" />
                 </div>
@@ -557,7 +700,17 @@ export function ShopPaymentPage({
             <div className="flex gap-3">
               <button
                 className="h-14 flex-1 rounded-2xl border border-slate-200 bg-white/90 px-4 text-base font-bold text-slate-700 hover:bg-white"
-                onClick={() => setTray([])}
+                onClick={() => {
+                  setWalletBreakdown((prev) => {
+                    const next = { ...prev };
+                    tray.forEach((coin) => {
+                      const denom = coin.value as CoinDenomination;
+                      next[denom] += 1;
+                    });
+                    return next;
+                  });
+                  setTray([]);
+                }}
               >
                 クリア
               </button>
@@ -579,7 +732,7 @@ export function ShopPaymentPage({
         </div>
       </div>
       {purchasedItem ? (
-        <div className="absolute inset-0 z-40 grid place-items-center bg-slate-900/45 p-4">
+        <div className="absolute inset-0 z-[2000] grid place-items-center bg-slate-900/45 p-4">
           <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-2xl">
             <div className="text-sm font-semibold text-slate-500">
               おかいもの かんりょう！
@@ -592,7 +745,7 @@ export function ShopPaymentPage({
             </div>
             {purchasedItem.bonus > 0 ? (
               <div className="mt-2 text-sm font-bold text-emerald-700">
-                ぴったりしはらいボーナス +{purchasedItem.bonus}コイン
+                ぴったりしはらいボーナス +<CoinValue amount={purchasedItem.bonus} amountClassName="font-bold" unitClassName="font-bold" />
               </div>
             ) : null}
             <div className="mt-4 grid place-items-center">
@@ -616,7 +769,7 @@ export function ShopPaymentPage({
           <div className="flash-good rounded-3xl border-4 border-amber-300 bg-white/95 px-10 py-8 text-center shadow-2xl">
             <div className="text-4xl font-black tracking-wide text-amber-500">ぴったり！</div>
             <div className="mt-2 text-3xl font-black text-emerald-600">
-              ボーナス +{exactPaymentFlashBonus}コイン
+              ボーナス +<CoinValue amount={exactPaymentFlashBonus} amountClassName="font-black" unitClassName="font-black" iconClassName="h-6 w-6" />
             </div>
           </div>
         </div>

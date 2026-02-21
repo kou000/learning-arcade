@@ -5,6 +5,7 @@ import {
   EXAM_BODY_LABELS,
   getAvailableGrades,
 } from "@/domain/specs/kenteiSpec";
+import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { Select } from "@/ui/components/Select";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
@@ -255,6 +256,13 @@ export function RegisterStagePage({
         className="relative h-full text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
+        <div className="absolute right-4 top-4 rounded-xl bg-black/35 px-4 py-2 text-base font-bold text-white backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1">
+            <span>てもちコイン:</span>
+            <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
+          </span>
+        </div>
+
         <div className="pointer-events-none absolute left-1/2 top-[9.2%] z-10 flex w-[56%] -translate-x-1/2 items-center justify-center gap-7 text-center">
           <div
             className="text-4xl font-black text-amber-900/90 drop-shadow-[0_1px_0_rgba(255,245,220,0.75)]"
