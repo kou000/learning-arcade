@@ -595,6 +595,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
   const activeInput = isDivMode ? quotient : answer;
+  const registerDisplayValue = activeInput.length > 0 ? activeInput : "0";
 
   const setActiveInput = (value: string) => {
     clearAnswerFeedback();
@@ -861,6 +862,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
             <div className="self-end rounded-2xl border border-slate-200 bg-white/92 p-4 shadow-sm">
               <div className="text-sm font-bold text-slate-700 text-white">
                 レジ
+              </div>
+              <div className="mt-2 rounded-2xl border-4 border-[#1b1f24] bg-[#2d391b] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),inset_0_-10px_20px_rgba(0,0,0,0.25)]">
+                <div className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#d4e985]/80">
+                  TOTAL
+                </div>
+                <div className="overflow-hidden text-right text-5xl font-black tabular-nums tracking-[0.08em] text-[#f5ffbd] drop-shadow-[0_0_8px_rgba(215,255,131,0.55)] sm:text-6xl">
+                  {registerDisplayValue}
+                </div>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
