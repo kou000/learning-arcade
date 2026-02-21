@@ -34,6 +34,11 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
   const [progress] = useState(() => loadRegisterProgress());
   const [showItems, setShowItems] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [pendingPurchaseItem, setPendingPurchaseItem] = useState<{
+    id: string;
+    name: string;
+    price: number;
+  } | null>(null);
   const [enterMessage] = useState(() => {
     const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
     const query = hash.split("?")[1] ?? "";
@@ -44,6 +49,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
   });
   const [leaveMessage] = useState(() => pickShopSpeech("leave-top"));
   const leaveTimerRef = useRef<number | null>(null);
+  const purchaseTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
@@ -68,17 +74,44 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
         window.clearTimeout(leaveTimerRef.current);
         leaveTimerRef.current = null;
       }
+      if (purchaseTimerRef.current != null) {
+        window.clearTimeout(purchaseTimerRef.current);
+        purchaseTimerRef.current = null;
+      }
     },
     [],
   );
 
   const onGoRegisterWithThanks = () => {
-    if (isLeaving) return;
+    if (isLeaving || pendingPurchaseItem) return;
     setIsLeaving(true);
     leaveTimerRef.current = window.setTimeout(() => {
       onGoRegister();
     }, 900);
   };
+  const onGoPaymentWithSpeech = (item: {
+    id: string;
+    name: string;
+    price: number;
+  }) => {
+    if (isLeaving || pendingPurchaseItem) return;
+    setPendingPurchaseItem(item);
+    purchaseTimerRef.current = window.setTimeout(() => {
+      onGoPayment(item.id);
+    }, 1100);
+  };
+  const purchaseMessage = pendingPurchaseItem
+    ? `${pendingPurchaseItem.name} は ${pendingPurchaseItem.price}こいん だよ！`
+    : "";
+  const viewState:
+    | { mode: "speech"; text: string }
+    | { mode: "items" } = isLeaving
+    ? { mode: "speech", text: leaveMessage }
+    : pendingPurchaseItem
+      ? { mode: "speech", text: purchaseMessage }
+      : !showItems
+        ? { mode: "speech", text: enterMessage }
+        : { mode: "items" };
 
   return (
     <SceneFrame
@@ -90,7 +123,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
             <button
               className="h-12 rounded-xl bg-transparent px-4 text-sm font-semibold hover:bg-white/10"
               onClick={onGoRegisterWithThanks}
-              disabled={isLeaving}
+              disabled={isLeaving || !!pendingPurchaseItem}
             >
               ← ゲームモードTOP
             </button>
@@ -105,13 +138,13 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
         className="relative grid h-full grid-rows-[1fr] gap-3 text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        {!showItems || isLeaving ? (
+        {viewState.mode === "speech" ? (
           <div className="pointer-events-none absolute left-[23%] top-[10%] z-20 w-[min(30rem,48vw)]">
-            <DogSpeechBubble text={isLeaving ? leaveMessage : enterMessage} />
+            <DogSpeechBubble text={viewState.text} />
           </div>
         ) : null}
 
-        {showItems && !isLeaving ? (
+        {viewState.mode === "items" ? (
           <div className="grid min-h-0 content-start gap-3 overflow-y-auto rounded-2xl border border-white/35 bg-white/35 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
             {SHOP_ITEMS.map((item) => {
               const purchased = progress.purchasedItemIds.includes(item.id);
@@ -137,7 +170,13 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
                         : "bg-sky-600 text-white hover:bg-sky-700"
                     }`}
                     disabled={disabled}
-                    onClick={() => onGoPayment(item.id)}
+                    onClick={() =>
+                      onGoPaymentWithSpeech({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                      })
+                    }
                   >
                     {purchased
                       ? "こうにゅうずみ"

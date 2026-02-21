@@ -84,6 +84,30 @@ const PURCHASE_BY_ITEM_ID: Record<string, SpeechPool> = {
     normal: ["こもの せいりが はかどるね！"],
     rare: ["みにさいずで つかいやすそう！"],
   },
+  "red-panda-plush-wave": {
+    normal: ["あらいぐまさん、てをふってる！"],
+    rare: ["にこにこ ぽーずで げんきがでるね！"],
+  },
+  "hamster-plush-striped-shirt": {
+    normal: ["はむすたーさん、しましまが おしゃれ！"],
+    rare: ["まるいおててが とっても かわいい！"],
+  },
+  "rabbit-plush-wave": {
+    normal: ["うさぎさんが こんにちはって してるね！"],
+    rare: ["みどりのえぷろん、すてきだね！"],
+  },
+  "shiba-plush-wave": {
+    normal: ["あかいふくの しばさん、げんきいっぱい！"],
+    rare: ["しばてんの なかまが ふえたね！"],
+  },
+  "sheep-plush-blue-ribbon": {
+    normal: ["もこもこ ひつじさん、いやされるね！"],
+    rare: ["あおいりぼんが ちゃーむぽいんと！"],
+  },
+  "bear-plush-scarf": {
+    normal: ["くまさんの まふらー、あったかそう！"],
+    rare: ["やさしいえがおで ほっとするね！"],
+  },
   "shelf-upper-unlock": {
     normal: ["これで うえのだんも つかえるね！"],
     rare: ["かざる ばしょが ふえて たのしいね！"],
