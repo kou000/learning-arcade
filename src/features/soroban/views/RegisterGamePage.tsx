@@ -244,6 +244,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     ),
   );
   const [problems, setProblems] = useState<Problem[]>(stageProblems);
+  const [problemSourceIndexes, setProblemSourceIndexes] = useState<number[]>(() =>
+    stageProblems.map((_, problemIndex) => problemIndex),
+  );
   const [index, setIndex] = useState(0);
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -276,8 +279,10 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const coinAnimFrameRef = useRef<number | null>(null);
   const coinAnimDelayTimerRef = useRef<number | null>(null);
   const hasStartedCoinAnimRef = useRef(false);
+  const rewardedReviewSourceIndexesRef = useRef<Set<number>>(new Set());
 
   const current = problems[index];
+  const currentSourceIndex = problemSourceIndexes[index] ?? index;
   const mitoriLines = useMemo(
     () =>
       current && playSubject === "mitori" ? parseMitoriLines(current) : [],
@@ -429,6 +434,15 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const onCorrect = () => {
     setStatus("correct");
     if (isReviewMode) {
+      if (!rewardedReviewSourceIndexesRef.current.has(currentSourceIndex)) {
+        rewardedReviewSourceIndexesRef.current.add(currentSourceIndex);
+        setProgress((prevProgress) =>
+          saveRegisterProgress({
+            ...prevProgress,
+            coins: prevProgress.coins + currentReward,
+          }),
+        );
+      }
       const isLastQuestion = index >= problems.length - 1;
       if (isLastQuestion) {
         clearFeedbackTimers();
@@ -574,13 +588,17 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const startReview = () => {
     if (reviewSelection.length === 0) return;
-    const reviewProblems = reviewSelection
-      .map((selectedIndex) => stageProblems[selectedIndex])
-      .filter((problem): problem is Problem => Boolean(problem));
+    const reviewSourceIndexes = reviewSelection.filter(
+      (selectedIndex) => stageProblems[selectedIndex] != null,
+    );
+    const reviewProblems = reviewSourceIndexes.map(
+      (selectedIndex) => stageProblems[selectedIndex],
+    );
     if (reviewProblems.length === 0) return;
 
     clearFeedbackTimers();
     setProblems(reviewProblems);
+    setProblemSourceIndexes(reviewSourceIndexes);
     setIsReviewMode(true);
     setIsReviewSelectorOpen(false);
     setIndex(0);
