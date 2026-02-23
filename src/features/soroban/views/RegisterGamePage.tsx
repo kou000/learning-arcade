@@ -249,7 +249,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [answer, setAnswer] = useState("");
   const [quotient, setQuotient] = useState("");
   const [isReadingPaused, setIsReadingPaused] = useState(false);
-  const [readingSpeed, setReadingSpeed] = useState<number>(1);
+  const [readingSpeed, setReadingSpeed] = useState<number>(playConfig.readingSpeed);
   const [isRoundFinished, setIsRoundFinished] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(
     timeLimitSeconds,
@@ -297,8 +297,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       grade: playGrade,
       subject: playSubject,
       stage: playStage,
+      readingSpeed,
     });
-  }, [playGrade, playSubject, playStage]);
+  }, [playGrade, playSubject, playStage, readingSpeed]);
 
   useEffect(() => {
     if (secondsLeft == null) return;

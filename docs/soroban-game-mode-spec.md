@@ -34,6 +34,7 @@
 - 保存データ:
   - `practiceConfig`（練習/ゲーム共通の出題条件）
   - `registerProgress`（コイン、購入済み、棚、解放進行）
+  - `registerPlayConfig`（ゲームの級/種目/ステージ/読み上げ速度）
 
 ### practiceConfig
 
@@ -128,6 +129,7 @@
   - `src/assets/register-game-bg.png`
 - 読み上げ速度:
   - `0.5x / 1x / 1.5x / 2x / 5x / 10x`
+  - 選択値は `registerPlayConfig.readingSpeed` として保存し、再訪時に復元する
 
 ### 科目ごとの扱い
 

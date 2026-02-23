@@ -36,6 +36,7 @@ export type RegisterPlayConfig = {
   grade: Grade;
   subject: RegisterSubject;
   stage: RegisterStage;
+  readingSpeed: number;
 };
 
 type SorobanSaveData = {
@@ -68,7 +69,16 @@ export const DEFAULT_REGISTER_PLAY_CONFIG: RegisterPlayConfig = {
   grade: REGISTER_START_GRADE,
   subject: "mitori",
   stage: 1,
+  readingSpeed: 1,
 };
+
+function normalizeReadingSpeed(value: unknown): number {
+  const speed = Number(value);
+  if (speed === 0.5 || speed === 1 || speed === 1.5 || speed === 2 || speed === 5 || speed === 10) {
+    return speed;
+  }
+  return DEFAULT_REGISTER_PLAY_CONFIG.readingSpeed;
+}
 
 function normalizePracticeConfig(input: Partial<PracticeConfig> | undefined): PracticeConfig {
   const examBody = input?.examBody === "zenshuren" || input?.examBody === "zenshugakuren"
@@ -159,7 +169,12 @@ function normalizeRegisterPlayConfig(input: Partial<RegisterPlayConfig> | undefi
   const normalizedStage = stage === 1 || stage === 2 || stage === 3 || stage === 4 || stage === 5 || stage === 6
     ? stage
     : 1;
-  return { grade, subject, stage: normalizedStage };
+  return {
+    grade,
+    subject,
+    stage: normalizedStage,
+    readingSpeed: normalizeReadingSpeed(input?.readingSpeed),
+  };
 }
 
 function readAll(): SorobanSaveData {
