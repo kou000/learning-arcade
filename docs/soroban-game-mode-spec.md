@@ -13,6 +13,7 @@
 - `#/soroban/shop` : ショップTOP（`ShopPage`）
 - `#/soroban/shop/payment/:itemId` : 支払い画面（`ShopPaymentPage`）
 - `#/soroban/shelf` : 棚（`ShelfPage`）
+- `#/soroban/snack` : 300円おやつゲーム（`SnackBudgetGamePage`）
 - `#/soroban/admin` : 管理者画面（`RegisterAdminPage`）
 
 ## 2. 出題ロジックの原則
@@ -200,6 +201,19 @@
   - 再読込で現在値を再取得
 - 現在は暫定でパスワードなし
 - 遷移は `#/soroban/admin` を直接開く運用（ゲームTOPには専用ボタンを置かない）
+
+## 5.6 SnackBudgetGamePage（300円おやつゲーム）
+
+ファイル: `src/features/soroban/views/SnackBudgetGamePage.tsx`
+
+- 役割:
+  - スーパーの棚を模した商品カードを表示
+  - 商品カードをドラッグ＆ドロップしてカゴへ追加
+  - カゴ内で個数増減・クリアを実行
+  - 「おかいけい」押下時にのみ合計と判定結果を表示
+- 学習要件:
+  - プレイ中は合計金額・残金額を表示しない（暗算目的）
+  - 会計時に `300円` との差額とオーバー有無を表示する
 
 ## 6. 共通UI
 

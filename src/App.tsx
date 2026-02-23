@@ -8,6 +8,7 @@ import { RegisterAdminPage } from "@/features/soroban/views/RegisterAdminPage";
 import { ShopPage } from "@/features/soroban/views/ShopPage";
 import { ShopPaymentPage } from "@/features/soroban/views/ShopPaymentPage";
 import { ShelfPage } from "@/features/soroban/views/ShelfPage";
+import { SnackBudgetGamePage } from "@/features/soroban/views/SnackBudgetGamePage";
 
 type Route =
   | "home"
@@ -18,6 +19,7 @@ type Route =
   | "soroban-shop"
   | "soroban-shop-payment"
   | "soroban-shelf"
+  | "soroban-snack"
   | "soroban-admin";
 
 function isAdminModeFromEnv(): boolean {
@@ -40,6 +42,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/shop") return "soroban-shop";
   if (h.startsWith("soroban/shop/payment/")) return "soroban-shop-payment";
   if (h === "soroban/shelf") return "soroban-shelf";
+  if (h === "soroban/snack") return "soroban-snack";
   if (h === "soroban/admin") return "soroban-admin";
   return "home";
 }
@@ -81,6 +84,7 @@ export default function App() {
     window.location.hash = `/soroban/shop/payment/${encodeURIComponent(itemId)}`;
   };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
+  const goSnack = () => { window.location.hash = "/soroban/snack"; };
   const shopPaymentItemId = getShopPaymentItemIdFromHash();
 
   return (
@@ -97,7 +101,7 @@ export default function App() {
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
       ) : null}
       {route === "soroban-register" ? (
-        <RegisterTopPage onGoPractice={goSoroban} onGoRegisterStage={goRegisterStage} onGoShop={goShop} onGoShelf={goShelf} />
+        <RegisterTopPage onGoPractice={goSoroban} onGoRegisterStage={goRegisterStage} onGoShop={goShop} onGoShelf={goShelf} onGoSnack={goSnack} />
       ) : null}
       {route === "soroban-register-stage" ? (
         <RegisterStagePage onGoRegisterTop={goRegister} onGoRegisterPlay={goRegisterPlay} onGoShop={goShop} onGoShelf={goShelf} />
@@ -120,6 +124,9 @@ export default function App() {
       ) : null}
       {route === "soroban-shelf" ? (
         <ShelfPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
+      ) : null}
+      {route === "soroban-snack" ? (
+        <SnackBudgetGamePage onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} onGoSnack={goSnack} />
       ) : null}
       {route === "soroban-admin" ? (
         <RegisterAdminPage onGoRegister={goRegister} />

@@ -9,6 +9,7 @@ type Props = {
   onGoRegisterStage: () => void;
   onGoShop: () => void;
   onGoShelf: () => void;
+  onGoSnack: () => void;
 };
 
 export function RegisterTopPage({
@@ -16,6 +17,7 @@ export function RegisterTopPage({
   onGoRegisterStage,
   onGoShop,
   onGoShelf,
+  onGoSnack,
 }: Props) {
   const progress = loadRegisterProgress();
 
@@ -49,6 +51,7 @@ export function RegisterTopPage({
             onGoRegister={onGoRegisterStage}
             onGoShop={onGoShop}
             onGoShelf={onGoShelf}
+            onGoSnack={onGoSnack}
             large
           />
         </div>
