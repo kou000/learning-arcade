@@ -93,6 +93,8 @@ export function SorobanSubnav({
 
 type FrameProps = {
   backgroundImage?: string;
+  backgroundImageClassName?: string;
+  backgroundImageStyle?: React.CSSProperties;
   fullscreenBackground?: boolean;
   outsideTopLeft?: React.ReactNode;
   children: React.ReactNode;
@@ -100,6 +102,8 @@ type FrameProps = {
 
 export function SceneFrame({
   backgroundImage,
+  backgroundImageClassName,
+  backgroundImageStyle,
   fullscreenBackground = false,
   outsideTopLeft,
   children,
@@ -125,7 +129,8 @@ export function SceneFrame({
                   src={backgroundImage}
                   alt="はいけい"
                   onError={() => setHasImageError(true)}
-                  className={`w-full ${useFullscreen ? "h-full object-cover object-top" : "h-auto object-cover"}`}
+                  className={`w-full ${useFullscreen ? "h-full object-cover object-top" : "h-auto object-cover"} ${backgroundImageClassName ?? ""}`}
+                  style={backgroundImageStyle}
                 />
               ) : (
                 <div

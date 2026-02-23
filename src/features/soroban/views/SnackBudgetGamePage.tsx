@@ -1,46 +1,125 @@
-import React, { useMemo, useState } from "react";
-import { SceneFrame, SorobanSubnav } from "@/features/soroban/components/SceneFrame";
-import registerGameTop from "@/assets/register-game-top.png";
+import React, { useMemo, useRef, useState } from "react";
+import { SceneFrame } from "@/features/soroban/components/SceneFrame";
+import snackShelf from "@/assets/snack_shelf.png";
+import basketImage from "@/assets/basket.png";
+import { SNACK_SEEDS } from "@/features/soroban/snackCatalog";
 
 type Snack = {
   id: string;
   name: string;
   price: number;
-  category: "あまい" | "しょっぱい" | "ドリンク";
+  image: string;
 };
 
 type CartItem = {
   snack: Snack;
   quantity: number;
 };
+type ShelfArea = "left" | "center" | "right";
+type SnackLayout = {
+  top: string;
+  left: string;
+  width: string;
+};
+type ShelfSnack = Snack;
+type ShelfSlot = {
+  layout: SnackLayout;
+  snack: ShelfSnack | null;
+};
 
 const TARGET_YEN = 300;
-
-const SNACKS: Snack[] = [
-  { id: "umaibo", name: "うまいぼう", price: 15, category: "しょっぱい" },
-  { id: "pocky", name: "ぽっきー", price: 168, category: "あまい" },
-  { id: "choco", name: "ちょこ", price: 98, category: "あまい" },
-  { id: "gum", name: "がむ", price: 48, category: "あまい" },
-  { id: "potato", name: "ぽてとちっぷす", price: 158, category: "しょっぱい" },
-  { id: "jelly", name: "ぜりー", price: 88, category: "あまい" },
-  { id: "juice", name: "じゅーす", price: 128, category: "ドリンク" },
-  { id: "cookie", name: "くっきー", price: 118, category: "あまい" },
-  { id: "senbei", name: "せんべい", price: 108, category: "しょっぱい" },
-];
+const SHELF_VISIBLE_COUNT = 6;
 
 const SNACK_DRAG_TYPE = "text/snack-id";
+const SNACK_LAYOUT_SLOTS: SnackLayout[] = [
+  { top: "8%", left: "10%", width: "18%" },
+  { top: "8%", left: "31%", width: "18%" },
+  { top: "8%", left: "52%", width: "18%" },
+  { top: "60%", left: "10%", width: "18%" },
+  { top: "60%", left: "31%", width: "18%" },
+  { top: "60%", left: "52%", width: "18%" },
+];
+const SHELF_AREAS: Array<{
+  id: ShelfArea;
+  label: string;
+  left: string;
+  width: string;
+}> = [
+  { id: "left", label: "ひだりの たな", left: "6%", width: "28%" },
+  { id: "center", label: "まんなかの たな", left: "36%", width: "28%" },
+  { id: "right", label: "みぎの たな", left: "65%", width: "28%" },
+];
+const SHELF_AREA_ORDER: ShelfArea[] = ["left", "center", "right"];
+const FOCUS_STYLE: Record<"full" | ShelfArea, React.CSSProperties> = {
+  full: { transform: "scale(1) translateX(0%) translateY(0%)" },
+  left: { transform: "scale(2.5) translateX(26%) translateY(-18%)" },
+  center: { transform: "scale(2.5) translateX(-4%) translateY(-18%)" },
+  right: { transform: "scale(2.5) translateX(-30%) translateY(-18%)" },
+};
+const shuffle = <T,>(items: readonly T[]): T[] => {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+const randomSnackPrice = (basePrice: number) => {
+  const delta = (Math.floor(Math.random() * 9) - 4) * 10;
+  return Math.max(50, basePrice + delta);
+};
+
+const generateShelfSlotsByArea = (
+  priceBySeedId: Record<string, number>,
+): Record<ShelfArea, ShelfSlot[]> => {
+  const shuffledSeeds = shuffle(SNACK_SEEDS);
+  let seedIndex = 0;
+  const buildSlots = () =>
+    shuffle(SNACK_LAYOUT_SLOTS).map((layout) => {
+      const seed = shuffledSeeds[seedIndex];
+      seedIndex += 1;
+      if (!seed) return { layout, snack: null };
+      return {
+        layout,
+        snack: {
+          id: seed.id,
+          name: seed.name,
+          image: seed.image,
+          price: priceBySeedId[seed.id] ?? seed.basePrice,
+        },
+      };
+    });
+  return {
+    left: buildSlots(),
+    center: buildSlots(),
+    right: buildSlots(),
+  };
+};
 
 function scoreResult(total: number): { rank: string; comment: string } {
   const diff = Math.abs(TARGET_YEN - total);
   const over = total > TARGET_YEN;
   if (diff === 0) return { rank: "S", comment: "ぴったり！ すごい！" };
-  if (diff <= 5) return { rank: over ? "B" : "A", comment: over ? "おしい！ ちょっと こえた" : "おしい！ あとすこし" };
+  if (diff <= 5)
+    return {
+      rank: over ? "B" : "A",
+      comment: over ? "おしい！ ちょっと こえた" : "おしい！ あとすこし",
+    };
   if (diff <= 15) return { rank: over ? "C" : "B", comment: "かなり ちかい！" };
-  if (diff <= 30) return { rank: over ? "D" : "C", comment: "つぎは もっと ちかづけよう" };
-  return { rank: over ? "E" : "D", comment: over ? "こえすぎちゃった" : "まだ えらべるよ" };
+  if (diff <= 30)
+    return { rank: over ? "D" : "C", comment: "つぎは もっと ちかづけよう" };
+  return {
+    rank: over ? "E" : "D",
+    comment: over ? "こえすぎちゃった" : "まだ えらべるよ",
+  };
 }
 
-function CartList({ cart, onIncrease, onDecrease }: {
+function CartList({
+  cart,
+  onIncrease,
+  onDecrease,
+}: {
   cart: CartItem[];
   onIncrease: (snackId: string) => void;
   onDecrease: (snackId: string) => void;
@@ -48,7 +127,7 @@ function CartList({ cart, onIncrease, onDecrease }: {
   if (cart.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-white/85 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-        ここに おかしを いれてね
+        まだなにもはいってないよ
       </div>
     );
   }
@@ -56,17 +135,30 @@ function CartList({ cart, onIncrease, onDecrease }: {
   return (
     <div className="grid gap-2">
       {cart.map(({ snack, quantity }) => (
-        <div key={snack.id} className="grid grid-cols-[1fr_auto] gap-2 rounded-xl border border-slate-200 bg-white/90 p-3">
+        <div
+          key={snack.id}
+          className="grid grid-cols-[1fr_auto] gap-2 rounded-xl border border-slate-200 bg-white/90 p-3"
+        >
           <div>
             <div className="font-bold text-slate-800">{snack.name}</div>
-            <div className="text-xs text-slate-600">{snack.price}えん × {quantity}こ</div>
+            <div className="text-xs text-slate-600">
+              {snack.price}えん × {quantity}こ
+            </div>
           </div>
           <div className="flex items-center gap-1">
-            <button className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50" onClick={() => onDecrease(snack.id)}>
+            <button
+              className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50"
+              onClick={() => onDecrease(snack.id)}
+            >
               －
             </button>
-            <span className="min-w-6 text-center text-sm font-bold text-slate-700">{quantity}</span>
-            <button className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50" onClick={() => onIncrease(snack.id)}>
+            <span className="min-w-6 text-center text-sm font-bold text-slate-700">
+              {quantity}
+            </span>
+            <button
+              className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50"
+              onClick={() => onIncrease(snack.id)}
+            >
               ＋
             </button>
           </div>
@@ -83,15 +175,76 @@ type Props = {
   onGoSnack: () => void;
 };
 
-export function SnackBudgetGamePage({ onGoRegister, onGoShop, onGoShelf, onGoSnack }: Props) {
+export function SnackBudgetGamePage(props: Props) {
+  const { onGoRegister } = props;
+  const [shelfSlotsByArea] = useState<Record<ShelfArea, ShelfSlot[]>>(() => {
+    const priceBySeedId = Object.fromEntries(
+      SNACK_SEEDS.map((seed) => [seed.id, randomSnackPrice(seed.basePrice)]),
+    );
+    return generateShelfSlotsByArea(priceBySeedId);
+  });
   const [cartMap, setCartMap] = useState<Record<string, number>>({});
   const [checkoutTotal, setCheckoutTotal] = useState<number | null>(null);
   const [draggingSnackId, setDraggingSnackId] = useState<string | null>(null);
+  const [pointerDraggingSnackId, setPointerDraggingSnackId] = useState<
+    string | null
+  >(null);
+  const [pointerDragPreview, setPointerDragPreview] = useState<{
+    snackId: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const [basketActive, setBasketActive] = useState(false);
+  const [imageErrorMap, setImageErrorMap] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [basketImageError, setBasketImageError] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<ShelfArea | null>(null);
+  const basketDropRef = useRef<HTMLDivElement | null>(null);
+  const activeShelfSlots = selectedArea ? shelfSlotsByArea[selectedArea] : [];
+  const allShelfSnacks = useMemo(
+    () =>
+      (Object.values(shelfSlotsByArea) as ShelfSlot[][])
+        .flat()
+        .map((slot) => slot.snack)
+        .filter((snack): snack is ShelfSnack => snack !== null)
+        .reduce<ShelfSnack[]>((acc, snack) => {
+          if (acc.some((item) => item.id === snack.id)) return acc;
+          acc.push(snack);
+          return acc;
+        }, []),
+    [shelfSlotsByArea],
+  );
 
-  const cart = useMemo(() => SNACKS
-    .filter((snack) => (cartMap[snack.id] ?? 0) > 0)
-    .map((snack) => ({ snack, quantity: cartMap[snack.id] ?? 0 })), [cartMap]);
+  const cart = useMemo(
+    () =>
+      allShelfSnacks
+        .filter((snack) => (cartMap[snack.id] ?? 0) > 0)
+        .map((snack) => ({
+          snack,
+          quantity: cartMap[snack.id] ?? 0,
+        })),
+    [allShelfSnacks, cartMap],
+  );
+  const snackById = useMemo(
+    () => Object.fromEntries(allShelfSnacks.map((snack) => [snack.id, snack])),
+    [allShelfSnacks],
+  );
+  const selectedAreaStyle = selectedArea
+    ? FOCUS_STYLE[selectedArea]
+    : FOCUS_STYLE.full;
+  const isShelfFocused = selectedArea !== null;
+  const moveShelfArea = (direction: -1 | 1) => {
+    setSelectedArea((prev) => {
+      if (!prev) return prev;
+      const currentIndex = SHELF_AREA_ORDER.indexOf(prev);
+      if (currentIndex < 0) return prev;
+      const nextIndex =
+        (currentIndex + direction + SHELF_AREA_ORDER.length) %
+        SHELF_AREA_ORDER.length;
+      return SHELF_AREA_ORDER[nextIndex];
+    });
+  };
 
   const addSnack = (snackId: string) => {
     setCartMap((prev) => ({ ...prev, [snackId]: (prev[snackId] ?? 0) + 1 }));
@@ -117,118 +270,342 @@ export function SnackBudgetGamePage({ onGoRegister, onGoShop, onGoShelf, onGoSna
   };
 
   const doCheckout = () => {
-    const total = cart.reduce((sum, item) => sum + item.snack.price * item.quantity, 0);
+    const total = cart.reduce(
+      (sum, item) => sum + item.snack.price * item.quantity,
+      0,
+    );
     setCheckoutTotal(total);
   };
 
-  const checkoutResult = checkoutTotal == null
-    ? null
-    : {
-      ...scoreResult(checkoutTotal),
-      diff: Math.abs(TARGET_YEN - checkoutTotal),
-      over: checkoutTotal > TARGET_YEN,
-    };
+  const checkoutResult =
+    checkoutTotal == null
+      ? null
+      : {
+          ...scoreResult(checkoutTotal),
+          diff: Math.abs(TARGET_YEN - checkoutTotal),
+          over: checkoutTotal > TARGET_YEN,
+        };
+  const activeDraggingSnackId = draggingSnackId ?? pointerDraggingSnackId;
+  const showBasketDrop = isShelfFocused && activeDraggingSnackId !== null;
+  const isInsideBasketDrop = (x: number, y: number) => {
+    const rect = basketDropRef.current?.getBoundingClientRect();
+    if (!rect) return false;
+    return (
+      x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+    );
+  };
+  const handleDropToBasket = (e: React.DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    const snackId =
+      e.dataTransfer.getData(SNACK_DRAG_TYPE) || activeDraggingSnackId;
+    if (snackId) addSnack(snackId);
+    setBasketActive(false);
+    setDraggingSnackId(null);
+    setPointerDraggingSnackId(null);
+    setPointerDragPreview(null);
+  };
 
   return (
     <SceneFrame
-      backgroundImage={registerGameTop}
+      backgroundImage={snackShelf}
+      backgroundImageStyle={selectedAreaStyle}
+      backgroundImageClassName="origin-top transition-transform duration-500 ease-out will-change-transform"
       fullscreenBackground
       outsideTopLeft={
-        <button className="rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10" onClick={onGoRegister}>
+        <button
+          className="rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"
+          onClick={onGoRegister}
+        >
           ← ゲームモードTOP
         </button>
       }
     >
-      <div className="grid h-full grid-rows-[1fr_auto] gap-3 p-3 sm:p-4" style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}>
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[1.4fr_1fr]">
-          <section className="grid min-h-0 grid-rows-[auto_1fr] rounded-2xl border border-white/45 bg-white/35 p-3 shadow-sm backdrop-blur-sm">
-            <div className="mb-2 rounded-xl bg-white/80 px-3 py-2 text-sm font-bold text-slate-700">
-              たなから おかしを かごへ どらっぐ！
-            </div>
-            <div className="grid min-h-0 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
-              {SNACKS.map((snack) => (
-                <article
-                  key={snack.id}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.effectAllowed = "copy";
-                    e.dataTransfer.setData(SNACK_DRAG_TYPE, snack.id);
-                    setDraggingSnackId(snack.id);
-                  }}
-                  onDragEnd={() => setDraggingSnackId(null)}
-                  className={`cursor-grab rounded-xl border p-3 ${draggingSnackId === snack.id ? "border-sky-300 bg-sky-50/90" : "border-slate-200 bg-white/90"}`}
+      <div
+        className="relative h-full p-3 sm:p-4"
+        style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
+      >
+        <div className="rounded-xl bg-white/85 px-3 py-2 text-sm font-bold text-slate-700 shadow-sm backdrop-blur-sm sm:w-fit">
+          {isShelfFocused
+            ? "たなから えらんで かごへ どらっぐ"
+            : "たなを えらんでね"}
+        </div>
+        <div className="relative mt-3 h-[calc(100%-12.5rem)] min-h-[440px] rounded-2xl">
+          {!selectedArea
+            ? SHELF_AREAS.map((area) => (
+                <button
+                  key={area.id}
+                  onClick={() => setSelectedArea(area.id)}
+                  className="absolute top-[8%] z-10 h-[95%] bg-white/5 transition hover:bg-white/15"
+                  style={{ left: area.left, width: area.width }}
                 >
-                  <div className="text-sm font-bold text-slate-800">{snack.name}</div>
-                  <div className="mt-1 text-xs text-slate-500">{snack.category}</div>
-                  <div className="mt-2 inline-flex rounded-lg bg-amber-100 px-2 py-1 text-sm font-black text-amber-800">{snack.price}えん</div>
-                  <button
-                    className="mt-2 w-full rounded-lg border border-slate-200 bg-white py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-                    onClick={() => addSnack(snack.id)}
+                  <span className="rounded-lg bg-slate-900/65 px-2 py-1 text-xs font-bold text-white">
+                    {area.label}
+                  </span>
+                </button>
+              ))
+            : null}
+
+          {selectedArea ? (
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
+              <button
+                className="rounded-lg bg-white/85 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-white"
+                onClick={() => moveShelfArea(-1)}
+              >
+                ひだり
+              </button>
+              <button
+                className="rounded-lg bg-white/85 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-white"
+                onClick={() => moveShelfArea(1)}
+              >
+                みぎ
+              </button>
+              <button
+                className="rounded-lg bg-white/85 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-white"
+                onClick={() => setSelectedArea(null)}
+              >
+                もどる
+              </button>
+            </div>
+          ) : null}
+
+          {isShelfFocused
+            ? activeShelfSlots.map((slot, slotIndex) => {
+                const snack = slot.snack;
+                if (!snack) {
+                  return (
+                    <article
+                      key={`empty-${selectedArea ?? "none"}-${slotIndex}`}
+                      className="absolute select-none"
+                      style={{
+                        top: slot.layout.top,
+                        left: slot.layout.left,
+                        width: slot.layout.width,
+                      }}
+                    >
+                      <div className="rounded-xl bg-white/55 p-2 shadow-lg backdrop-blur-sm">
+                        <div className="flex h-36 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/80 text-center text-xs font-bold text-slate-500">
+                          しょうひんなし
+                        </div>
+                        <div className="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-center text-xs font-black text-slate-500">
+                          ---
+                        </div>
+                      </div>
+                    </article>
+                  );
+                }
+                const isBroken = imageErrorMap[snack.id];
+                return (
+                  <article
+                    key={snack.id}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = "copy";
+                      e.dataTransfer.setData("text/plain", snack.id);
+                      e.dataTransfer.setData(SNACK_DRAG_TYPE, snack.id);
+                      setDraggingSnackId(snack.id);
+                      setPointerDragPreview(null);
+                    }}
+                    onDragEnd={() => {
+                      setDraggingSnackId(null);
+                      setPointerDraggingSnackId(null);
+                      setBasketActive(false);
+                      setPointerDragPreview(null);
+                    }}
+                    onPointerDown={(e) => {
+                      if (e.pointerType === "mouse") return;
+                      e.preventDefault();
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      setPointerDraggingSnackId(snack.id);
+                      setBasketActive(isInsideBasketDrop(e.clientX, e.clientY));
+                      setPointerDragPreview({
+                        snackId: snack.id,
+                        x: e.clientX,
+                        y: e.clientY,
+                      });
+                    }}
+                    onPointerMove={(e) => {
+                      if (e.pointerType === "mouse") return;
+                      if (!pointerDraggingSnackId) return;
+                      setBasketActive(isInsideBasketDrop(e.clientX, e.clientY));
+                      setPointerDragPreview((prev) =>
+                        prev
+                          ? { ...prev, x: e.clientX, y: e.clientY }
+                          : { snackId: snack.id, x: e.clientX, y: e.clientY },
+                      );
+                    }}
+                    onPointerUp={(e) => {
+                      if (e.pointerType === "mouse") return;
+                      if (
+                        pointerDraggingSnackId &&
+                        isInsideBasketDrop(e.clientX, e.clientY)
+                      ) {
+                        addSnack(pointerDraggingSnackId);
+                      }
+                      setPointerDraggingSnackId(null);
+                      setBasketActive(false);
+                      setPointerDragPreview(null);
+                      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                        e.currentTarget.releasePointerCapture(e.pointerId);
+                      }
+                    }}
+                    onPointerCancel={(e) => {
+                      if (e.pointerType === "mouse") return;
+                      setPointerDraggingSnackId(null);
+                      setBasketActive(false);
+                      setPointerDragPreview(null);
+                      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                        e.currentTarget.releasePointerCapture(e.pointerId);
+                      }
+                    }}
+                    className={`absolute cursor-grab select-none transition ${activeDraggingSnackId === snack.id ? "scale-105 opacity-80" : "opacity-100"}`}
+                    style={{
+                      top: slot.layout.top,
+                      left: slot.layout.left,
+                      width: slot.layout.width,
+                      touchAction: "none",
+                    }}
                   >
-                    かごに いれる
-                  </button>
-                </article>
-              ))}
-            </div>
-          </section>
+                    <div className="rounded-xl bg-white/60 p-2 shadow-lg backdrop-blur-sm">
+                      {isBroken ? (
+                        <div className="flex h-36 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/80 text-center text-xs font-bold text-slate-500">
+                          がぞう
+                        </div>
+                      ) : (
+                        <div className="h-36 w-full rounded-lg bg-white/80 p-1">
+                          <img
+                            src={snack.image}
+                            alt={snack.name}
+                            onError={() =>
+                              setImageErrorMap((prev) => ({
+                                ...prev,
+                                [snack.id]: true,
+                              }))
+                            }
+                            className="h-full w-full rounded-lg object-contain shadow-sm"
+                          />
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-amber-100 px-2 py-1 text-xs font-black text-amber-900">
+                        <span className="min-w-0 flex-1 break-words leading-tight">
+                          {snack.name}
+                        </span>
+                        <span className="shrink-0 whitespace-nowrap">
+                          {snack.price}えん
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })
+            : null}
 
-          <section
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "copy";
-              setBasketActive(true);
-            }}
-            onDragLeave={() => setBasketActive(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              const snackId = e.dataTransfer.getData(SNACK_DRAG_TYPE) || draggingSnackId;
-              if (snackId) addSnack(snackId);
-              setBasketActive(false);
-              setDraggingSnackId(null);
-            }}
-            className={`grid min-h-0 grid-rows-[auto_1fr_auto] rounded-2xl border p-3 shadow-sm backdrop-blur-sm ${basketActive ? "border-sky-300 bg-sky-100/65" : "border-white/45 bg-white/35"}`}
-          >
-            <div className="rounded-xl bg-white/80 px-3 py-2 text-sm font-bold text-slate-700">かご（ごうけいは おかいけいまで ひみつ）</div>
-            <div className="mt-2 min-h-0 overflow-y-auto">
-              <CartList cart={cart} onIncrease={addSnack} onDecrease={removeSnack} />
-            </div>
-            <div className="mt-3 grid gap-2">
-              <button className="rounded-xl bg-emerald-600 px-4 py-3 text-base font-black text-white hover:bg-emerald-700" onClick={doCheckout}>
-                おかいけい
-              </button>
-              <button className="rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" onClick={clearCart}>
-                かごを からにする
-              </button>
-            </div>
-          </section>
-        </div>
-
-        <div className="grid gap-2 rounded-2xl border border-white/45 bg-white/50 p-3 text-slate-800 backdrop-blur-sm sm:grid-cols-[1fr_auto] sm:items-center">
-          <div>
-            <div className="text-sm font-bold">もくひょう: 300えんに できるだけ ちかづけよう</div>
-            {checkoutResult ? (
-              <div className="mt-1 text-sm font-semibold">
-                ごうけい {checkoutTotal}えん / さがく {checkoutResult.diff}えん {checkoutResult.over ? "（300えんオーバー）" : ""}
-                <span className="ml-2 inline-flex rounded-full bg-sky-100 px-2 py-0.5 font-black text-sky-700">らんく {checkoutResult.rank}</span>
-                <span className="ml-2">{checkoutResult.comment}</span>
+          {isShelfFocused ? (
+            <section className="absolute bottom-3 right-3 z-10 grid w-[min(92vw,266px)] grid-rows-[auto_1fr_auto] rounded-2xl border border-white/45 bg-white/70 p-3 shadow-xl backdrop-blur-sm">
+              <div className="rounded-xl bg-white/85 px-3 py-2 text-sm font-bold text-slate-700">
+                かご
               </div>
-            ) : (
-              <div className="mt-1 text-sm font-semibold text-slate-600">おかいけいすると けっかが でるよ</div>
-            )}
-          </div>
-          <div className="text-right text-xs text-slate-600">※ プレイちゅうは ごうけいきんがくを ひょうじしません</div>
+              <div className="mt-2 min-h-[120px] max-h-[170px] overflow-y-auto">
+                <CartList
+                  cart={cart}
+                  onIncrease={addSnack}
+                  onDecrease={removeSnack}
+                />
+              </div>
+              <div className="mt-2 grid gap-2">
+                <button
+                  className="rounded-xl bg-emerald-600 px-4 py-3 text-base font-black text-white hover:bg-emerald-700"
+                  onClick={doCheckout}
+                >
+                  おかいけい
+                </button>
+                <button
+                  className="rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  onClick={clearCart}
+                >
+                  かごを からにする
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {isShelfFocused ? (
+            <div
+              ref={basketDropRef}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "copy";
+                setBasketActive(true);
+              }}
+              onDragLeave={() => setBasketActive(false)}
+              onDrop={handleDropToBasket}
+              className={`pointer-events-auto absolute bottom-[-4.5rem] left-1/2 z-30 -translate-x-1/2 transition-all duration-300 ${showBasketDrop ? "translate-y-0 opacity-100" : "translate-y-24 opacity-0 pointer-events-none"}`}
+            >
+              <div className="text-center text-xs font-bold text-white drop-shadow-md">
+                ここに おとして ついか
+              </div>
+              {basketImageError ? (
+                <div
+                  className={`mt-1 flex h-32 w-52 items-center justify-center rounded-xl border-2 border-dashed bg-white/85 text-xs font-bold text-slate-600 ${basketActive ? "border-sky-400" : "border-slate-300"}`}
+                >
+                  かごがぞう
+                </div>
+              ) : (
+                <img
+                  src={basketImage}
+                  alt="かご"
+                  onError={() => setBasketImageError(true)}
+                  className={`mt-1 h-32 w-auto select-none drop-shadow-2xl transition-transform duration-200 ${basketActive ? "scale-105" : "scale-100"}`}
+                />
+              )}
+            </div>
+          ) : null}
+          {pointerDragPreview ? (
+            <div
+              className="pointer-events-none fixed z-[70] -translate-x-1/2 -translate-y-1/2"
+              style={{ left: pointerDragPreview.x, top: pointerDragPreview.y }}
+              aria-hidden
+            >
+              {snackById[pointerDragPreview.snackId]?.image ? (
+                <img
+                  src={snackById[pointerDragPreview.snackId].image}
+                  alt=""
+                  className="h-20 w-20 rounded-lg object-contain drop-shadow-xl"
+                />
+              ) : (
+                <div className="rounded-lg bg-white/90 px-2 py-1 text-xs font-bold text-slate-700 shadow">
+                  {snackById[pointerDragPreview.snackId]?.name ?? "おかし"}
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
 
-        <div className="absolute inset-x-0 bottom-2">
-          <SorobanSubnav
-            current="snack"
-            onGoRegister={onGoRegister}
-            onGoShop={onGoShop}
-            onGoShelf={onGoShelf}
-            onGoSnack={onGoSnack}
-            large
-          />
-        </div>
+        {!isShelfFocused ? (
+          <div className="mt-3 grid gap-2 rounded-2xl border border-white/45 bg-white/50 p-3 text-slate-800 backdrop-blur-sm sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <div className="text-sm font-bold">
+                もくひょう: 300えんに できるだけ ちかづけよう
+              </div>
+              {checkoutResult ? (
+                <div className="mt-1 text-sm font-semibold">
+                  ごうけい {checkoutTotal}えん / さがく {checkoutResult.diff}
+                  えん {checkoutResult.over ? "（300えんオーバー）" : ""}
+                  <span className="ml-2 inline-flex rounded-full bg-sky-100 px-2 py-0.5 font-black text-sky-700">
+                    らんく {checkoutResult.rank}
+                  </span>
+                  <span className="ml-2">{checkoutResult.comment}</span>
+                </div>
+              ) : (
+                <div className="mt-1 text-sm font-semibold text-slate-600">
+                  おかいけいすると けっかが でるよ
+                </div>
+              )}
+            </div>
+            <div className="text-right text-xs text-slate-600">
+              ※ プレイちゅうは ごうけいきんがくを ひょうじしません
+            </div>
+          </div>
+        ) : null}
       </div>
     </SceneFrame>
   );
