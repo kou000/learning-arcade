@@ -280,6 +280,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const coinAnimDelayTimerRef = useRef<number | null>(null);
   const hasStartedCoinAnimRef = useRef(false);
   const rewardedReviewSourceIndexesRef = useRef<Set<number>>(new Set());
+  const hasAwardedReviewClearBonusRef = useRef(false);
 
   const current = problems[index];
   const currentSourceIndex = problemSourceIndexes[index] ?? index;
@@ -445,11 +446,29 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       }
       const isLastQuestion = index >= problems.length - 1;
       if (isLastQuestion) {
+        const canGetReviewClearBonus =
+          skippedIndexes.length === 0 && !hasAwardedReviewClearBonusRef.current;
+        const reviewClearBonus = Math.floor(stageClearReward(playStage) / 2);
+
+        if (canGetReviewClearBonus && reviewClearBonus > 0) {
+          hasAwardedReviewClearBonusRef.current = true;
+          setProgress((prevProgress) =>
+            saveRegisterProgress({
+              ...prevProgress,
+              coins: prevProgress.coins + reviewClearBonus,
+            }),
+          );
+        }
+
         clearFeedbackTimers();
         setDogReply("ふくしゅうおつかれさま！");
         thankYouTimer.current = window.setTimeout(() => {
           setDogReply(
-            "ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！",
+            canGetReviewClearBonus && reviewClearBonus > 0
+              ? `ふくしゅうがおわったよ。
+ほうしゅう +${reviewClearBonus} コイン！
+もういちど もんだいをえらべるよ！`
+              : "ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！",
           );
           setIsRoundFinished(true);
         }, 700);
