@@ -244,6 +244,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     ),
   );
   const [problems, setProblems] = useState<Problem[]>(stageProblems);
+  const [problemSourceIndexes, setProblemSourceIndexes] = useState<number[]>(
+    () => stageProblems.map((_, problemIndex) => problemIndex),
+  );
   const [index, setIndex] = useState(0);
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -276,8 +279,12 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const coinAnimFrameRef = useRef<number | null>(null);
   const coinAnimDelayTimerRef = useRef<number | null>(null);
   const hasStartedCoinAnimRef = useRef(false);
+  const rewardedReviewSourceIndexesRef = useRef<Set<number>>(new Set());
+  const reviewTargetSourceIndexesRef = useRef<Set<number> | null>(null);
+  const hasAwardedReviewClearBonusRef = useRef(false);
 
   const current = problems[index];
+  const currentSourceIndex = problemSourceIndexes[index] ?? index;
   const mitoriLines = useMemo(
     () =>
       current && playSubject === "mitori" ? parseMitoriLines(current) : [],
@@ -400,6 +407,18 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const onTimeoutFail = () => {
     clearFeedbackTimers();
+    const remainingIndexes = Array.from(
+      { length: Math.max(0, problems.length - index) },
+      (_, offset) => index + offset,
+    );
+    setSkippedIndexes((prev) => {
+      if (remainingIndexes.length === 0) return prev;
+      const merged = new Set(prev);
+      for (const problemIndex of remainingIndexes) {
+        merged.add(problemIndex);
+      }
+      return Array.from(merged).sort((a, b) => a - b);
+    });
     setStatus("wrong");
     const correctCount = Math.max(0, index - wrongQuestionsCount);
     setDogReply(
@@ -430,13 +449,46 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const onCorrect = () => {
     setStatus("correct");
     if (isReviewMode) {
+      if (!rewardedReviewSourceIndexesRef.current.has(currentSourceIndex)) {
+        rewardedReviewSourceIndexesRef.current.add(currentSourceIndex);
+        setProgress((prevProgress) =>
+          saveRegisterProgress({
+            ...prevProgress,
+            coins: prevProgress.coins + currentReward,
+          }),
+        );
+      }
       const isLastQuestion = index >= problems.length - 1;
       if (isLastQuestion) {
+        const reviewTargets = reviewTargetSourceIndexesRef.current;
+        const hasSolvedAllReviewTargets =
+          reviewTargets != null &&
+          reviewTargets.size > 0 &&
+          Array.from(reviewTargets).every((sourceIndex) =>
+            rewardedReviewSourceIndexesRef.current.has(sourceIndex),
+          );
+        const canGetReviewClearBonus =
+          hasSolvedAllReviewTargets && !hasAwardedReviewClearBonusRef.current;
+        const reviewClearBonus = Math.floor(stageClearReward(playStage) / 2);
+
+        if (canGetReviewClearBonus && reviewClearBonus > 0) {
+          hasAwardedReviewClearBonusRef.current = true;
+          setProgress((prevProgress) =>
+            saveRegisterProgress({
+              ...prevProgress,
+              coins: prevProgress.coins + reviewClearBonus,
+            }),
+          );
+        }
+
         clearFeedbackTimers();
         setDogReply("ふくしゅうおつかれさま！");
         thankYouTimer.current = window.setTimeout(() => {
           setDogReply(
-            "ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！",
+            canGetReviewClearBonus && reviewClearBonus > 0
+              ? `ぜんぶ とけたね！ ごほうびで コインを すこし もらえたよ！
+もういちど もんだいをえらべるよ！`
+              : "ふくしゅうがおわったよ。\nもういちど もんだいをえらべるよ！",
           );
           setIsRoundFinished(true);
         }, 700);
@@ -575,15 +627,29 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const startReview = () => {
     if (reviewSelection.length === 0) return;
-    const reviewProblems = reviewSelection
-      .map((selectedIndex) => stageProblems[selectedIndex])
-      .filter((problem): problem is Problem => Boolean(problem));
+    if (reviewTargetSourceIndexesRef.current == null) {
+      reviewTargetSourceIndexesRef.current = new Set([
+        ...mistakeIndexes,
+        ...skippedIndexes,
+      ]);
+    }
+    const reviewSourceIndexes = reviewSelection.filter(
+      (selectedIndex) => stageProblems[selectedIndex] != null,
+    );
+    const reviewProblems = reviewSourceIndexes.map(
+      (selectedIndex) => stageProblems[selectedIndex],
+    );
     if (reviewProblems.length === 0) return;
 
     clearFeedbackTimers();
     setProblems(reviewProblems);
+    setProblemSourceIndexes(reviewSourceIndexes);
     setIsReviewMode(true);
     setIsReviewSelectorOpen(false);
+    roundStartCoinsRef.current = progress.coins;
+    hasStartedCoinAnimRef.current = false;
+    setAnimatedCoins(progress.coins);
+    setIsCoinAnimating(false);
     setIndex(0);
     setWrongQuestionsCount(0);
     setMistakeIndexes([]);
@@ -698,8 +764,10 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
   const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
-  const showCoinGainPanel =
-    isRoundFinished && !isReviewMode && Boolean(dogReply);
+  const showCoinGainPanel = isRoundFinished && Boolean(dogReply);
+  const reviewTargetSourceIndexes =
+    reviewTargetSourceIndexesRef.current ??
+    new Set([...mistakeIndexes, ...skippedIndexes]);
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
   const activeInput = isDivMode ? quotient : answer;
   const registerDisplayValue = activeInput.length > 0 ? activeInput : "0";
@@ -998,13 +1066,24 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
             {!isDialogMode ? (
               <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
-                  onClick={onTellAmount}
-                  disabled={!receiptReady || isRoundFinished}
-                >
-                  {isDivMode ? "ひとりぶんをつたえる" : "きんがくをつたえる"}
-                </button>
+                <div className="grid gap-2">
+                  <button
+                    className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
+                    onClick={onTellAmount}
+                    disabled={!receiptReady || isRoundFinished}
+                  >
+                    {isDivMode ? "ひとりぶんをつたえる" : "きんがくをつたえる"}
+                  </button>
+                  {isAdminMode ? (
+                    <button
+                      className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={onTimeoutFail}
+                      disabled={isRoundFinished}
+                    >
+                      じかんぎれにする
+                    </button>
+                  ) : null}
+                </div>
                 {isAdminMode ? (
                   <button
                     className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100"
@@ -1097,7 +1176,8 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
               <span
                 className="text-7xl font-extrabold tracking-wide text-amber-300 font-[var(--pop-font)]"
                 style={{
-                  textShadow: "0 2px 0 rgba(25,45,35,0.45), 0 6px 10px rgba(0,0,0,0.25)",
+                  textShadow:
+                    "0 2px 0 rgba(25,45,35,0.45), 0 6px 10px rgba(0,0,0,0.25)",
                 }}
               >
                 せいかい
@@ -1184,8 +1264,25 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     className="mt-1"
                   />
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold text-slate-500">
-                      {problemIndex + 1}もんめ
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                      <span>{problemIndex + 1}もんめ</span>
+                      {reviewTargetSourceIndexes.has(problemIndex) ? (
+                        rewardedReviewSourceIndexesRef.current.has(
+                          problemIndex,
+                        ) ? (
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                            ふくしゅうでせいかいできた
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">
+                            まだせいかいしてない
+                          </span>
+                        )
+                      ) : (
+                        <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-700">
+                          せいかい
+                        </span>
+                      )}
                     </div>
                     <div className="whitespace-pre-wrap break-words text-sm text-slate-800">
                       {problem.question}
