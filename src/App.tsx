@@ -9,6 +9,8 @@ import { ShopPage } from "@/features/soroban/views/ShopPage";
 import { ShopPaymentPage } from "@/features/soroban/views/ShopPaymentPage";
 import { ShelfPage } from "@/features/soroban/views/ShelfPage";
 import { SnackBudgetGamePage } from "@/features/soroban/views/SnackBudgetGamePage";
+import { SnackBudgetResultPage } from "@/features/soroban/views/SnackBudgetResultPage";
+import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage";
 
 type Route =
   | "home"
@@ -19,7 +21,9 @@ type Route =
   | "soroban-shop"
   | "soroban-shop-payment"
   | "soroban-shelf"
+  | "soroban-snack-top"
   | "soroban-snack"
+  | "soroban-snack-result"
   | "soroban-admin";
 
 function isAdminModeFromEnv(): boolean {
@@ -42,7 +46,9 @@ function getRouteFromHash(): Route {
   if (h === "soroban/shop") return "soroban-shop";
   if (h.startsWith("soroban/shop/payment/")) return "soroban-shop-payment";
   if (h === "soroban/shelf") return "soroban-shelf";
+  if (h === "soroban/snack/top") return "soroban-snack-top";
   if (h === "soroban/snack") return "soroban-snack";
+  if (h === "soroban/snack/result") return "soroban-snack-result";
   if (h === "soroban/admin") return "soroban-admin";
   return "home";
 }
@@ -57,6 +63,53 @@ function getShopPaymentItemIdFromHash(): string | null {
     return decodeURIComponent(raw);
   } catch {
     return raw;
+  }
+}
+
+function getSnackResultTotalFromHash(): number | null {
+  const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
+  const [path, query = ""] = hash.split("?");
+  if (path !== "soroban/snack/result") return null;
+  const params = new URLSearchParams(query);
+  const raw = params.get("total");
+  if (!raw) return null;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
+type SnackResultItem = {
+  id: string;
+  price: number;
+  quantity: number;
+};
+
+function getSnackResultItemsFromHash(): SnackResultItem[] {
+  const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
+  const [path, query = ""] = hash.split("?");
+  if (path !== "soroban/snack/result") return [];
+  const params = new URLSearchParams(query);
+  const raw = params.get("items");
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => ({
+        id: String(item?.id ?? ""),
+        price: Number(item?.price ?? 0),
+        quantity: Number(item?.quantity ?? 0),
+      }))
+      .filter(
+        (item) =>
+          item.id.length > 0 &&
+          Number.isFinite(item.price) &&
+          item.price > 0 &&
+          Number.isFinite(item.quantity) &&
+          item.quantity > 0,
+      );
+  } catch {
+    return [];
   }
 }
 
@@ -84,8 +137,20 @@ export default function App() {
     window.location.hash = `/soroban/shop/payment/${encodeURIComponent(itemId)}`;
   };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
+  const goSnackTop = () => { window.location.hash = "/soroban/snack/top"; };
   const goSnack = () => { window.location.hash = "/soroban/snack"; };
+  const goSnackResult = (payload: {
+    total: number;
+    items: Array<{ id: string; price: number; quantity: number }>;
+  }) => {
+    const params = new URLSearchParams();
+    params.set("total", String(payload.total));
+    params.set("items", JSON.stringify(payload.items));
+    window.location.hash = `/soroban/snack/result?${params.toString()}`;
+  };
   const shopPaymentItemId = getShopPaymentItemIdFromHash();
+  const snackResultTotal = getSnackResultTotalFromHash();
+  const snackResultItems = getSnackResultItemsFromHash();
 
   return (
     <div className="relative min-h-screen">
@@ -101,7 +166,7 @@ export default function App() {
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
       ) : null}
       {route === "soroban-register" ? (
-        <RegisterTopPage onGoPractice={goSoroban} onGoRegisterStage={goRegisterStage} onGoShop={goShop} onGoShelf={goShelf} onGoSnack={goSnack} />
+        <RegisterTopPage onGoPractice={goSoroban} onGoRegisterStage={goRegisterStage} onGoShop={goShop} onGoShelf={goShelf} onGoSnack={goSnackTop} />
       ) : null}
       {route === "soroban-register-stage" ? (
         <RegisterStagePage onGoRegisterTop={goRegister} onGoRegisterPlay={goRegisterPlay} onGoShop={goShop} onGoShelf={goShelf} />
@@ -125,8 +190,25 @@ export default function App() {
       {route === "soroban-shelf" ? (
         <ShelfPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
       ) : null}
+      {route === "soroban-snack-top" ? (
+        <SnackBudgetTopPage onGoRegister={goRegister} onGoSnackPlay={goSnack} />
+      ) : null}
       {route === "soroban-snack" ? (
-        <SnackBudgetGamePage onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} onGoSnack={goSnack} />
+        <SnackBudgetGamePage
+          onGoRegister={goRegister}
+          onGoShop={goShop}
+          onGoShelf={goShelf}
+          onGoSnack={goSnack}
+          onGoSnackResult={goSnackResult}
+        />
+      ) : null}
+      {route === "soroban-snack-result" ? (
+        <SnackBudgetResultPage
+          total={snackResultTotal}
+          items={snackResultItems}
+          onGoSnack={goSnack}
+          onGoRegister={goRegister}
+        />
       ) : null}
       {route === "soroban-admin" ? (
         <RegisterAdminPage onGoRegister={goRegister} />

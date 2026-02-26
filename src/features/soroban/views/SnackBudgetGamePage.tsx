@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import snackShelf from "@/assets/snack_shelf.png";
 import basketImage from "@/assets/basket.png";
+import snackMascot from "@/assets/snack-mascot.png";
 import { SNACK_SEEDS } from "@/features/soroban/snackCatalog";
 
 type Snack = {
@@ -66,8 +67,22 @@ const shuffle = <T,>(items: readonly T[]): T[] => {
 };
 
 const randomSnackPrice = (basePrice: number) => {
-  const delta = (Math.floor(Math.random() * 9) - 4) * 10;
-  return Math.max(50, basePrice + delta);
+  const swing = Math.round((basePrice * 0.15) / 10) * 10;
+  const steps = swing / 10;
+  const delta = (Math.floor(Math.random() * (steps * 2 + 1)) - steps) * 10;
+  return Math.max(10, basePrice + delta);
+};
+
+const canReachExactTotal = (prices: number[], target: number): boolean => {
+  const normalized = Array.from(
+    new Set(prices.filter((price) => Number.isFinite(price) && price > 0)),
+  );
+  const dp = Array.from({ length: target + 1 }, () => false);
+  dp[0] = true;
+  for (let sum = 1; sum <= target; sum += 1) {
+    dp[sum] = normalized.some((price) => sum - price >= 0 && dp[sum - price]);
+  }
+  return dp[target];
 };
 
 const generateShelfSlotsByArea = (
@@ -97,32 +112,12 @@ const generateShelfSlotsByArea = (
   };
 };
 
-function scoreResult(total: number): { rank: string; comment: string } {
-  const diff = Math.abs(TARGET_YEN - total);
-  const over = total > TARGET_YEN;
-  if (diff === 0) return { rank: "S", comment: "ぴったり！ すごい！" };
-  if (diff <= 5)
-    return {
-      rank: over ? "B" : "A",
-      comment: over ? "おしい！ ちょっと こえた" : "おしい！ あとすこし",
-    };
-  if (diff <= 15) return { rank: over ? "C" : "B", comment: "かなり ちかい！" };
-  if (diff <= 30)
-    return { rank: over ? "D" : "C", comment: "つぎは もっと ちかづけよう" };
-  return {
-    rank: over ? "E" : "D",
-    comment: over ? "こえすぎちゃった" : "まだ えらべるよ",
-  };
-}
-
 function CartList({
   cart,
-  onIncrease,
-  onDecrease,
+  onRemove,
 }: {
   cart: CartItem[];
-  onIncrease: (snackId: string) => void;
-  onDecrease: (snackId: string) => void;
+  onRemove: (snackId: string) => void;
 }) {
   if (cart.length === 0) {
     return (
@@ -145,21 +140,12 @@ function CartList({
               {snack.price}えん × {quantity}こ
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center">
             <button
-              className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50"
-              onClick={() => onDecrease(snack.id)}
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 hover:bg-rose-100"
+              onClick={() => onRemove(snack.id)}
             >
-              －
-            </button>
-            <span className="min-w-6 text-center text-sm font-bold text-slate-700">
-              {quantity}
-            </span>
-            <button
-              className="h-8 w-8 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50"
-              onClick={() => onIncrease(snack.id)}
-            >
-              ＋
+              けす
             </button>
           </div>
         </div>
@@ -173,18 +159,44 @@ type Props = {
   onGoShop: () => void;
   onGoShelf: () => void;
   onGoSnack: () => void;
+  onGoSnackResult: (payload: {
+    total: number;
+    items: Array<{ id: string; price: number; quantity: number }>;
+  }) => void;
 };
 
 export function SnackBudgetGamePage(props: Props) {
-  const { onGoRegister } = props;
+  const { onGoRegister, onGoSnackResult } = props;
   const [shelfSlotsByArea] = useState<Record<ShelfArea, ShelfSlot[]>>(() => {
     const priceBySeedId = Object.fromEntries(
       SNACK_SEEDS.map((seed) => [seed.id, randomSnackPrice(seed.basePrice)]),
     );
-    return generateShelfSlotsByArea(priceBySeedId);
+    const generated = generateShelfSlotsByArea(priceBySeedId);
+    const displayedSnacks = Object.values(generated)
+      .flat()
+      .map((slot) => slot.snack)
+      .filter((snack): snack is ShelfSnack => snack !== null);
+    const displayedPrices = displayedSnacks.map((snack) => snack.price);
+    if (!canReachExactTotal(displayedPrices, TARGET_YEN)) {
+      const fallback = displayedSnacks[0];
+      if (fallback) {
+        const adjustedPrice = 100;
+        return Object.fromEntries(
+          Object.entries(generated).map(([area, slots]) => [
+            area,
+            slots.map((slot) =>
+              slot.snack?.id === fallback.id
+                ? { ...slot, snack: { ...slot.snack, price: adjustedPrice } }
+                : slot,
+            ),
+          ]),
+        ) as Record<ShelfArea, ShelfSlot[]>;
+      }
+    }
+    return generated;
   });
   const [cartMap, setCartMap] = useState<Record<string, number>>({});
-  const [checkoutTotal, setCheckoutTotal] = useState<number | null>(null);
+  const [cartOrder, setCartOrder] = useState<string[]>([]);
   const [draggingSnackId, setDraggingSnackId] = useState<string | null>(null);
   const [pointerDraggingSnackId, setPointerDraggingSnackId] = useState<
     string | null
@@ -216,19 +228,21 @@ export function SnackBudgetGamePage(props: Props) {
     [shelfSlotsByArea],
   );
 
+  const snackById = useMemo(
+    () => Object.fromEntries(allShelfSnacks.map((snack) => [snack.id, snack])),
+    [allShelfSnacks],
+  );
   const cart = useMemo(
     () =>
-      allShelfSnacks
+      cartOrder
+        .map((snackId) => snackById[snackId])
+        .filter((snack): snack is ShelfSnack => Boolean(snack))
         .filter((snack) => (cartMap[snack.id] ?? 0) > 0)
         .map((snack) => ({
           snack,
           quantity: cartMap[snack.id] ?? 0,
         })),
-    [allShelfSnacks, cartMap],
-  );
-  const snackById = useMemo(
-    () => Object.fromEntries(allShelfSnacks.map((snack) => [snack.id, snack])),
-    [allShelfSnacks],
+    [cartMap, cartOrder, snackById],
   );
   const selectedAreaStyle = selectedArea
     ? FOCUS_STYLE[selectedArea]
@@ -247,26 +261,28 @@ export function SnackBudgetGamePage(props: Props) {
   };
 
   const addSnack = (snackId: string) => {
-    setCartMap((prev) => ({ ...prev, [snackId]: (prev[snackId] ?? 0) + 1 }));
-    setCheckoutTotal(null);
+    setCartMap((prev) => {
+      const nextQty = (prev[snackId] ?? 0) + 1;
+      return { ...prev, [snackId]: nextQty };
+    });
+    setCartOrder((prev) =>
+      prev.includes(snackId) ? prev : [...prev, snackId],
+    );
   };
 
   const removeSnack = (snackId: string) => {
     setCartMap((prev) => {
-      const current = prev[snackId] ?? 0;
-      if (current <= 1) {
-        const next = { ...prev };
-        delete next[snackId];
-        return next;
-      }
-      return { ...prev, [snackId]: current - 1 };
+      if (!(snackId in prev)) return prev;
+      const next = { ...prev };
+      delete next[snackId];
+      return next;
     });
-    setCheckoutTotal(null);
+    setCartOrder((prev) => prev.filter((id) => id !== snackId));
   };
 
   const clearCart = () => {
     setCartMap({});
-    setCheckoutTotal(null);
+    setCartOrder([]);
   };
 
   const doCheckout = () => {
@@ -274,17 +290,16 @@ export function SnackBudgetGamePage(props: Props) {
       (sum, item) => sum + item.snack.price * item.quantity,
       0,
     );
-    setCheckoutTotal(total);
+    onGoSnackResult({
+      total,
+      items: cart.map((item) => ({
+        id: item.snack.id,
+        price: item.snack.price,
+        quantity: item.quantity,
+      })),
+    });
   };
 
-  const checkoutResult =
-    checkoutTotal == null
-      ? null
-      : {
-          ...scoreResult(checkoutTotal),
-          diff: Math.abs(TARGET_YEN - checkoutTotal),
-          over: checkoutTotal > TARGET_YEN,
-        };
   const activeDraggingSnackId = draggingSnackId ?? pointerDraggingSnackId;
   const showBasketDrop = isShelfFocused && activeDraggingSnackId !== null;
   const isInsideBasketDrop = (x: number, y: number) => {
@@ -324,29 +339,14 @@ export function SnackBudgetGamePage(props: Props) {
         className="relative h-full p-3 sm:p-4"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        <div className="rounded-xl bg-white/85 px-3 py-2 text-sm font-bold text-slate-700 shadow-sm backdrop-blur-sm sm:w-fit">
-          {isShelfFocused
-            ? "たなから えらんで かごへ どらっぐ"
-            : "たなを えらんでね"}
-        </div>
-        <div className="relative mt-3 h-[calc(100%-12.5rem)] min-h-[440px] rounded-2xl">
-          {!selectedArea
-            ? SHELF_AREAS.map((area) => (
-                <button
-                  key={area.id}
-                  onClick={() => setSelectedArea(area.id)}
-                  className="absolute top-[8%] z-10 h-[95%] bg-white/5 transition hover:bg-white/15"
-                  style={{ left: area.left, width: area.width }}
-                >
-                  <span className="rounded-lg bg-slate-900/65 px-2 py-1 text-xs font-bold text-white">
-                    {area.label}
-                  </span>
-                </button>
-              ))
-            : null}
-
+        <div className="flex items-center justify-between gap-2">
+          <div className="rounded-xl bg-white/85 px-3 py-2 text-sm font-bold text-slate-700 shadow-sm backdrop-blur-sm sm:w-fit">
+            {isShelfFocused
+              ? "たなから えらんで かごへ どらっぐ"
+              : "たなを えらんでね"}
+          </div>
           {selectedArea ? (
-            <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <button
                 className="rounded-lg bg-white/85 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-white"
                 onClick={() => moveShelfArea(-1)}
@@ -367,6 +367,22 @@ export function SnackBudgetGamePage(props: Props) {
               </button>
             </div>
           ) : null}
+        </div>
+        <div className="relative mt-3 h-[calc(100%-12.5rem)] min-h-[440px] rounded-2xl">
+          {!selectedArea
+            ? SHELF_AREAS.map((area) => (
+                <button
+                  key={area.id}
+                  onClick={() => setSelectedArea(area.id)}
+                  className="absolute top-[8%] z-10 h-[95%] bg-white/5 transition hover:bg-white/15"
+                  style={{ left: area.left, width: area.width }}
+                >
+                  <span className="rounded-lg bg-slate-900/65 px-2 py-1 text-xs font-bold text-white">
+                    {area.label}
+                  </span>
+                </button>
+              ))
+            : null}
 
           {isShelfFocused
             ? activeShelfSlots.map((slot, slotIndex) => {
@@ -500,16 +516,12 @@ export function SnackBudgetGamePage(props: Props) {
             : null}
 
           {isShelfFocused ? (
-            <section className="absolute bottom-3 right-3 z-10 grid w-[min(92vw,266px)] grid-rows-[auto_1fr_auto] rounded-2xl border border-white/45 bg-white/70 p-3 shadow-xl backdrop-blur-sm">
+            <section className="absolute right-3 top-[8%] z-10 grid w-[min(92vw,266px)] grid-rows-[auto_1fr_auto] rounded-2xl border border-white/45 bg-white/70 p-3 shadow-xl backdrop-blur-sm">
               <div className="rounded-xl bg-white/85 px-3 py-2 text-sm font-bold text-slate-700">
                 かご
               </div>
-              <div className="mt-2 min-h-[120px] max-h-[170px] overflow-y-auto">
-                <CartList
-                  cart={cart}
-                  onIncrease={addSnack}
-                  onDecrease={removeSnack}
-                />
+              <div className="mt-2 min-h-[170px] max-h-[300px] overflow-y-auto">
+                <CartList cart={cart} onRemove={removeSnack} />
               </div>
               <div className="mt-2 grid gap-2">
                 <button
@@ -581,29 +593,19 @@ export function SnackBudgetGamePage(props: Props) {
         </div>
 
         {!isShelfFocused ? (
-          <div className="mt-3 grid gap-2 rounded-2xl border border-white/45 bg-white/50 p-3 text-slate-800 backdrop-blur-sm sm:grid-cols-[1fr_auto] sm:items-center">
-            <div>
-              <div className="text-sm font-bold">
-                もくひょう: 300えんに できるだけ ちかづけよう
+          <div className="pointer-events-none absolute bottom-3 left-20 z-20 flex items-start gap-2">
+            <div className="relative max-w-[24rem] rounded-[1.5rem] border-2 border-amber-200 bg-gradient-to-b from-white to-amber-50/95 px-5 py-4 text-sm font-bold leading-relaxed text-slate-700 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+              <div className="whitespace-pre-line">
+                300えんを こえないように おかしをえらぼう！
               </div>
-              {checkoutResult ? (
-                <div className="mt-1 text-sm font-semibold">
-                  ごうけい {checkoutTotal}えん / さがく {checkoutResult.diff}
-                  えん {checkoutResult.over ? "（300えんオーバー）" : ""}
-                  <span className="ml-2 inline-flex rounded-full bg-sky-100 px-2 py-0.5 font-black text-sky-700">
-                    らんく {checkoutResult.rank}
-                  </span>
-                  <span className="ml-2">{checkoutResult.comment}</span>
-                </div>
-              ) : (
-                <div className="mt-1 text-sm font-semibold text-slate-600">
-                  おかいけいすると けっかが でるよ
-                </div>
-              )}
+              <div className="absolute bottom-3 -right-3 h-5 w-5 rounded-full border-2 border-amber-200 bg-white/95" />
+              <div className="absolute bottom-0 -right-6 h-3 w-3 rounded-full border-2 border-amber-200 bg-white/95" />
             </div>
-            <div className="text-right text-xs text-slate-600">
-              ※ プレイちゅうは ごうけいきんがくを ひょうじしません
-            </div>
+            <img
+              src={snackMascot}
+              alt="おかしマスコット"
+              className="h-40 w-auto drop-shadow-2xl"
+            />
           </div>
         ) : null}
       </div>

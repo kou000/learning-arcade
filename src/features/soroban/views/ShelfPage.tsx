@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import shelfBg from "@/assets/shelf.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
+import { SNACK_PLACEABLE_ITEMS } from "@/features/soroban/snackCatalog";
 import {
   loadRegisterProgress,
   saveRegisterProgress,
@@ -61,15 +62,19 @@ export function ShelfPage({
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeSlotIndex, setActiveSlotIndex] = useState<number | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const shelfItems = useMemo(
+    () => [...SHOP_ITEMS, ...SNACK_PLACEABLE_ITEMS],
+    [],
+  );
 
   const purchasedItems = useMemo(
     () =>
-      SHOP_ITEMS.filter(
+      shelfItems.filter(
         (item) =>
           progress.purchasedItemIds.includes(item.id) &&
           item.placeable !== false,
       ),
-    [progress.purchasedItemIds],
+    [progress.purchasedItemIds, shelfItems],
   );
   const shelfCols = Math.max(1, progress.shelfCols);
   const slotCount = shelfCols * SHELF_ROWS;
@@ -177,7 +182,7 @@ export function ShelfPage({
   const activeSlotItem =
     activeSlotItemId == null
       ? null
-      : (SHOP_ITEMS.find((item) => item.id === activeSlotItemId) ?? null);
+      : (shelfItems.find((item) => item.id === activeSlotItemId) ?? null);
 
   const isRowUnlocked = (rowIndex: number) => {
     const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
@@ -223,7 +228,7 @@ export function ShelfPage({
                     {Array.from({ length: shelfCols }, (_, colIndex) => {
                       const idx = rowIndex * shelfCols + colIndex;
                       const itemId = shelfSlots[idx];
-                      const item = SHOP_ITEMS.find((x) => x.id === itemId);
+                      const item = shelfItems.find((x) => x.id === itemId);
                       const isActiveSlot =
                         isEditMode && isPickerOpen && activeSlotIndex === idx;
 

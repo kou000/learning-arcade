@@ -55,7 +55,9 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `/#/soroban/shop` : `ShopPage`
 - `/#/soroban/shop/payment/:itemId` : `ShopPaymentPage`
 - `/#/soroban/shelf` : `ShelfPage`
+- `/#/soroban/snack/top` : `SnackBudgetTopPage`
 - `/#/soroban/snack` : `SnackBudgetGamePage`
+- `/#/soroban/snack/result` : `SnackBudgetResultPage`
 - `/#/soroban/admin` : `RegisterAdminPage`
 
 補足:

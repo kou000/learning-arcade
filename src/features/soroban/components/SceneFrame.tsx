@@ -68,12 +68,14 @@ export function SorobanSubnav({
     { key: "shop", label: "ショップ", onClick: onGoShop },
     { key: "shelf", label: "たな", onClick: onGoShelf },
     ...(onGoSnack
-      ? [{ key: "snack" as const, label: "300えんおやつ", onClick: onGoSnack }]
+      ? [{ key: "snack" as const, label: "あんざんゲーム", onClick: onGoSnack }]
       : []),
   ];
 
   return (
-    <div className={`grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm ${onGoSnack ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+    <div
+      className={`grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm ${onGoSnack ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}
+    >
       {tabs.map((tab) => (
         <button
           key={tab.key}

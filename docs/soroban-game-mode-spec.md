@@ -13,7 +13,9 @@
 - `#/soroban/shop` : ショップTOP（`ShopPage`）
 - `#/soroban/shop/payment/:itemId` : 支払い画面（`ShopPaymentPage`）
 - `#/soroban/shelf` : 棚（`ShelfPage`）
+- `#/soroban/snack/top` : 300円おやつゲームTOP（`SnackBudgetTopPage`）
 - `#/soroban/snack` : 300円おやつゲーム（`SnackBudgetGamePage`）
+- `#/soroban/snack/result` : 300円おやつゲーム結果（`SnackBudgetResultPage`）
 - `#/soroban/admin` : 管理者画面（`RegisterAdminPage`）
 
 ## 2. 出題ロジックの原則
@@ -202,7 +204,17 @@
 - 現在は暫定でパスワードなし
 - 遷移は `#/soroban/admin` を直接開く運用（ゲームTOPには専用ボタンを置かない）
 
-## 5.6 SnackBudgetGamePage（300円おやつゲーム）
+## 5.6 SnackBudgetTopPage（300円おやつゲームTOP）
+
+ファイル: `src/features/soroban/views/SnackBudgetTopPage.tsx`
+
+- 役割:
+  - ゲームモードTOPから遷移する導入画面
+  - 「ゲームスタート」で `#/soroban/snack` に遷移
+- 背景画像:
+  - `src/assets/snack-game-top.png`
+
+## 5.7 SnackBudgetGamePage（300円おやつゲーム）
 
 ファイル: `src/features/soroban/views/SnackBudgetGamePage.tsx`
 
@@ -210,10 +222,28 @@
   - スーパーの棚を模した商品カードを表示
   - 商品カードをドラッグ＆ドロップしてカゴへ追加
   - カゴ内で個数増減・クリアを実行
-  - 「おかいけい」押下時にのみ合計と判定結果を表示
+  - 「おかいけい」押下で結果画面（`#/soroban/snack/result`）へ遷移
 - 学習要件:
   - プレイ中は合計金額・残金額を表示しない（暗算目的）
-  - 会計時に `300円` との差額とオーバー有無を表示する
+  - 会計時に `300円` との差額とオーバー有無を結果画面で表示する
+  - 毎回、表示される商品の価格構成の中で `300円` ぴったりの組み合わせが少なくとも1つ存在するようにする
+
+## 5.8 SnackBudgetResultPage（300円おやつ結果）
+
+ファイル: `src/features/soroban/views/SnackBudgetResultPage.tsx`
+
+- 役割:
+  - `SnackBudgetGamePage` から受け取った会計合計を表示
+  - しばいぬの吹き出しで会計読み上げを段階表示
+    - 「おかいけいします！」
+    - 購入した商品と単価・個数を順番に表示
+    - 「ごうけいは・・・」
+    - 「〇〇えんです！」
+    - 結果判定コメント
+  - ランク `A` / `B` の時は、購入したおかしの中から1つを報酬として選べる
+  - 報酬でもらったおかしIDは `registerProgress.purchasedItemIds` に保存し、棚に配置可能
+- 背景画像:
+  - `src/assets/shop-top.png`（ショップ画面と同じ背景）
 
 ## 6. 共通UI
 
