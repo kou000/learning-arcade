@@ -43,10 +43,11 @@ export function SorobanModeNav({
 }
 
 type NavProps = {
-  current: "register" | "shop" | "shelf";
+  current: "register" | "shop" | "shelf" | "snack";
   onGoRegister: () => void;
   onGoShop: () => void;
   onGoShelf: () => void;
+  onGoSnack?: () => void;
   large?: boolean;
 };
 
@@ -55,6 +56,7 @@ export function SorobanSubnav({
   onGoRegister,
   onGoShop,
   onGoShelf,
+  onGoSnack,
   large = false,
 }: NavProps) {
   const tabs: Array<{
@@ -65,10 +67,15 @@ export function SorobanSubnav({
     { key: "register", label: "レジゲーム", onClick: onGoRegister },
     { key: "shop", label: "ショップ", onClick: onGoShop },
     { key: "shelf", label: "たな", onClick: onGoShelf },
+    ...(onGoSnack
+      ? [{ key: "snack" as const, label: "あんざんゲーム", onClick: onGoSnack }]
+      : []),
   ];
 
   return (
-    <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-3">
+    <div
+      className={`grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm ${onGoSnack ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}
+    >
       {tabs.map((tab) => (
         <button
           key={tab.key}
@@ -88,6 +95,8 @@ export function SorobanSubnav({
 
 type FrameProps = {
   backgroundImage?: string;
+  backgroundImageClassName?: string;
+  backgroundImageStyle?: React.CSSProperties;
   fullscreenBackground?: boolean;
   outsideTopLeft?: React.ReactNode;
   children: React.ReactNode;
@@ -95,6 +104,8 @@ type FrameProps = {
 
 export function SceneFrame({
   backgroundImage,
+  backgroundImageClassName,
+  backgroundImageStyle,
   fullscreenBackground = false,
   outsideTopLeft,
   children,
@@ -120,7 +131,8 @@ export function SceneFrame({
                   src={backgroundImage}
                   alt="はいけい"
                   onError={() => setHasImageError(true)}
-                  className={`w-full ${useFullscreen ? "h-full object-cover object-top" : "h-auto object-cover"}`}
+                  className={`w-full ${useFullscreen ? "h-full object-cover object-top" : "h-auto object-cover"} ${backgroundImageClassName ?? ""}`}
+                  style={backgroundImageStyle}
                 />
               ) : (
                 <div

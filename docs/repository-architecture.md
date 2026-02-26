@@ -55,6 +55,9 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `/#/soroban/shop` : `ShopPage`
 - `/#/soroban/shop/payment/:itemId` : `ShopPaymentPage`
 - `/#/soroban/shelf` : `ShelfPage`
+- `/#/soroban/snack/top` : `SnackBudgetTopPage`
+- `/#/soroban/snack` : `SnackBudgetGamePage`
+- `/#/soroban/snack/result` : `SnackBudgetResultPage`
 - `/#/soroban/admin` : `RegisterAdminPage`
 
 補足:
@@ -103,6 +106,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `ShopPage` : 報酬ショップTOP（商品一覧）
 - `ShopPaymentPage` : 支払い画面（商品ごと）
 - `ShelfPage` : 棚スロット配置（タップ起点モーダルで購入済みグッズを配置）
+- `SnackBudgetGamePage` : 300円おやつゲーム（棚の商品をドラッグ＆ドロップでカゴに入れ、お会計時に結果判定）
 - `RegisterAdminPage` : セーブデータ編集（管理者画面）
 - `SceneFrame` : ゲーム系共通フレーム
 - `catalog.ts` : ショップ商品定義
