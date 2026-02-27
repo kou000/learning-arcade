@@ -20,7 +20,7 @@ function scoreResult(total: number): { rank: string; comment: string } {
   if (diff <= 10) return { rank: "B", comment: "おしい！ あとすこし！" };
   if (diff <= 30) return { rank: "C", comment: "かなり ちかい！" };
   if (diff <= 50) return { rank: "D", comment: "つぎは もっと ちかづけよう" };
-  return { rank: "E", comment: "まだ えらべるよ" };
+  return { rank: "E", comment: "つぎは もうすこし えらんでみよう！" };
 }
 
 type Props = {

@@ -302,6 +302,9 @@ export function SnackBudgetGamePage(props: Props) {
 
   const activeDraggingSnackId = draggingSnackId ?? pointerDraggingSnackId;
   const showBasketDrop = isShelfFocused && activeDraggingSnackId !== null;
+  const basketGuideSpeech = basketActive
+    ? "そのまま おとしてね！"
+    : "かごに いれてね！";
   const isInsideBasketDrop = (x: number, y: number) => {
     const rect = basketDropRef.current?.getBoundingClientRect();
     if (!rect) return false;
@@ -552,9 +555,6 @@ export function SnackBudgetGamePage(props: Props) {
               onDrop={handleDropToBasket}
               className={`pointer-events-auto absolute bottom-[-4.5rem] left-1/2 z-30 -translate-x-1/2 transition-all duration-300 ${showBasketDrop ? "translate-y-0 opacity-100" : "translate-y-24 opacity-0 pointer-events-none"}`}
             >
-              <div className="text-center text-xs font-bold text-white drop-shadow-md">
-                ここに おとして ついか
-              </div>
               {basketImageError ? (
                 <div
                   className={`mt-1 flex h-32 w-52 items-center justify-center rounded-xl border-2 border-dashed bg-white/85 text-xs font-bold text-slate-600 ${basketActive ? "border-sky-400" : "border-slate-300"}`}
@@ -569,6 +569,16 @@ export function SnackBudgetGamePage(props: Props) {
                   className={`mt-1 h-32 w-auto select-none drop-shadow-2xl transition-transform duration-200 ${basketActive ? "scale-105" : "scale-100"}`}
                 />
               )}
+              <div className="mt-1 flex items-end justify-center gap-2">
+                <img
+                  src={snackMascot}
+                  alt="おかしマスコット"
+                  className="h-24 w-auto select-none drop-shadow-xl"
+                />
+                <div className="mb-6 rounded-full border border-amber-200 bg-white/95 px-4 py-1 text-center text-xs font-black text-amber-900 shadow">
+                  {basketGuideSpeech}
+                </div>
+              </div>
             </div>
           ) : null}
           {pointerDragPreview ? (
