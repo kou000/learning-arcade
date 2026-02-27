@@ -408,7 +408,7 @@ export function ShopPaymentPage({
       exactFlashTimerRef.current = window.setTimeout(() => {
         setExactPaymentFlashBonus(null);
         exactFlashTimerRef.current = null;
-      }, 1400);
+      }, 2200);
     }
   };
 
@@ -773,11 +773,11 @@ export function ShopPaymentPage({
               alt="ぴったりせいかい"
               className="h-52 w-52 rounded-full bg-white object-cover shadow-sm"
             />
-            <div className="rounded-2xl bg-white/92 px-7 py-5 text-center shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
+            <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-b from-amber-50 to-white px-7 py-5 text-center shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
               <div
-                className="text-6xl font-extrabold tracking-wide text-amber-300 font-[var(--pop-font)]"
+                className="text-6xl font-extrabold tracking-wide text-amber-700 font-[var(--pop-font)]"
                 style={{
-                  textShadow: "0 2px 0 rgba(25,45,35,0.45), 0 6px 10px rgba(0,0,0,0.25)",
+                  textShadow: "0 2px 0 rgba(255,255,255,0.65), 0 4px 8px rgba(120,53,15,0.22)",
                 }}
               >
                 ぴったりせいかい！
