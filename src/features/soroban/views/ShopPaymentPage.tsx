@@ -45,6 +45,7 @@ const DRAG_SOURCE_TYPE = "application/x-learning-arcade-source";
 const DRAG_TRAY_COIN_ID = "application/x-learning-arcade-tray-coin-id";
 const DRAG_WALLET_COIN_KEY = "application/x-learning-arcade-wallet-coin-key";
 const MAX_VISIBLE_WALLET_COINS_PER_DENOM = 18;
+const DRAG_PREVIEW_Z_INDEX = 50000;
 
 type WalletCoinLayoutItem = {
   key: string;
@@ -156,6 +157,7 @@ function WalletCoin({
   onPointerValueMove,
   onPointerValueEnd,
   onPointerValueCancel,
+  isDragging,
 }: {
   coinKey: string;
   value: number;
@@ -170,6 +172,7 @@ function WalletCoin({
   onPointerValueMove: (x: number, y: number) => void;
   onPointerValueEnd: (value: number, coinKey: string, x: number, y: number) => void;
   onPointerValueCancel: () => void;
+  isDragging: boolean;
 }) {
   const [missing, setMissing] = useState(false);
 
@@ -180,6 +183,11 @@ function WalletCoin({
         e.dataTransfer.setData(DRAG_SOURCE_TYPE, "wallet");
         e.dataTransfer.setData("text/plain", String(value));
         e.dataTransfer.setData(DRAG_WALLET_COIN_KEY, coinKey);
+        e.dataTransfer.setDragImage(
+          e.currentTarget,
+          e.currentTarget.clientWidth / 2,
+          e.currentTarget.clientHeight / 2,
+        );
         onDragValueStart(value, coinKey);
       }}
       onDragEnd={onDragValueEnd}
@@ -207,7 +215,9 @@ function WalletCoin({
           e.currentTarget.releasePointerCapture(e.pointerId);
         }
       }}
-      className="absolute h-16 w-16 cursor-grab active:cursor-grabbing"
+      className={`absolute h-16 w-16 cursor-grab active:cursor-grabbing ${
+        isDragging ? "opacity-0" : ""
+      }`}
       title="ドラッグでトレーにいれる"
       role="button"
       aria-label={`${formatNumber(value)}えんをドラッグ`}
@@ -254,6 +264,7 @@ export function ShopPaymentPage({
     null,
   );
   const [draggingWalletCoinKey, setDraggingWalletCoinKey] = useState<string | null>(null);
+  const [draggingTrayCoinId, setDraggingTrayCoinId] = useState<number | null>(null);
   const [pointerDragPreview, setPointerDragPreview] = useState<{
     value: number;
     x: number;
@@ -292,15 +303,31 @@ export function ShopPaymentPage({
   const [walletBreakdown, setWalletBreakdown] = useState<WalletBreakdown>(() =>
     buildWalletForPrice(progress.coins, activeItem?.price ?? 0, walletDenominations),
   );
+  const [walletCoinOverrides, setWalletCoinOverrides] = useState<
+    Record<string, Pick<WalletCoinLayoutItem, "left" | "top" | "zIndex">>
+  >({});
+  const walletCoinTopZIndexRef = useRef(10_000);
   const walletCoinLayout = useMemo(
-    () => createWalletCoinLayout(walletBreakdown, walletDenominations, tray),
-    [walletBreakdown, walletDenominations, tray],
+    () =>
+      createWalletCoinLayout(walletBreakdown, walletDenominations, tray).map((coin) => {
+        const override = walletCoinOverrides[coin.key];
+        if (!override) return coin;
+        return {
+          ...coin,
+          left: override.left,
+          top: override.top,
+          zIndex: override.zIndex,
+        };
+      }),
+    [walletBreakdown, walletDenominations, tray, walletCoinOverrides],
   );
 
   useEffect(() => {
     setWalletBreakdown(
       buildWalletForPrice(progress.coins, activeItem?.price ?? 0, walletDenominations),
     );
+    setWalletCoinOverrides({});
+    walletCoinTopZIndexRef.current = 10_000;
     setTray([]);
   }, [activeItem?.id, progress.coins, walletDenominations]);
 
@@ -356,6 +383,24 @@ export function ShopPaymentPage({
     setWalletBreakdown((walletPrev) => ({
       ...walletPrev,
       [denom]: walletPrev[denom] + 1,
+    }));
+  };
+
+  const moveWalletCoin = (coinKey: string, clientX: number, clientY: number) => {
+    const rect = walletRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+    const leftRatio = ((clientX - rect.left) / rect.width) * 100;
+    const topRatio = ((clientY - rect.top) / rect.height) * 100;
+    const left = Math.min(90, Math.max(8, leftRatio));
+    const top = Math.min(88, Math.max(12, topRatio));
+    walletCoinTopZIndexRef.current += 1;
+    setWalletCoinOverrides((prev) => ({
+      ...prev,
+      [coinKey]: {
+        left,
+        top,
+        zIndex: walletCoinTopZIndexRef.current,
+      },
     }));
   };
 
@@ -452,13 +497,21 @@ export function ShopPaymentPage({
             onDrop={(e) => {
               e.preventDefault();
               const source = e.dataTransfer.getData(DRAG_SOURCE_TYPE);
-              if (source !== "tray") return;
-              const coinId = Number(e.dataTransfer.getData(DRAG_TRAY_COIN_ID));
-              if (Number.isInteger(coinId) && coinId > 0) {
-                removeTrayCoinById(coinId);
+              if (source === "tray") {
+                const coinId = Number(e.dataTransfer.getData(DRAG_TRAY_COIN_ID));
+                if (Number.isInteger(coinId) && coinId > 0) {
+                  removeTrayCoinById(coinId);
+                }
+              }
+              if (source === "wallet") {
+                const coinKey = e.dataTransfer.getData(DRAG_WALLET_COIN_KEY);
+                if (coinKey) {
+                  moveWalletCoin(coinKey, e.clientX, e.clientY);
+                }
               }
               setDraggingCoinValue(null);
               setDraggingWalletCoinKey(null);
+              setDraggingTrayCoinId(null);
               setPointerDragPreview(null);
               setIsTrayDragging(false);
             }}
@@ -476,17 +529,20 @@ export function ShopPaymentPage({
                 onDragValueStart={(value, coinKey) => {
                   setDraggingCoinValue(value);
                   setDraggingWalletCoinKey(coinKey);
+                  setDraggingTrayCoinId(null);
                 }}
                 onDragValueEnd={() => {
                   if (pointerDraggingRef.current) return;
                   setIsTrayDragging(false);
                   setDraggingCoinValue(null);
                   setDraggingWalletCoinKey(null);
+                  setDraggingTrayCoinId(null);
                 }}
                 onPointerValueStart={(value, coinKey, x, y) => {
                   pointerDraggingRef.current = true;
                   setDraggingCoinValue(value);
                   setDraggingWalletCoinKey(coinKey);
+                  setDraggingTrayCoinId(null);
                   setIsTrayDragging(isInsideTray(x, y));
                   setPointerDragPreview({ value, x, y });
                 }}
@@ -499,11 +555,14 @@ export function ShopPaymentPage({
                 onPointerValueEnd={(value, coinKey, x, y) => {
                   if (isInsideTray(x, y)) {
                     pushCoinToTray(value, coinKey);
+                  } else if (isInsideWallet(x, y)) {
+                    moveWalletCoin(coinKey, x, y);
                   }
                   pointerDraggingRef.current = false;
                   setIsTrayDragging(false);
                   setDraggingCoinValue(null);
                   setDraggingWalletCoinKey(null);
+                  setDraggingTrayCoinId(null);
                   setPointerDragPreview(null);
                 }}
                 onPointerValueCancel={() => {
@@ -511,8 +570,10 @@ export function ShopPaymentPage({
                   setIsTrayDragging(false);
                   setDraggingCoinValue(null);
                   setDraggingWalletCoinKey(null);
+                  setDraggingTrayCoinId(null);
                   setPointerDragPreview(null);
                 }}
+                isDragging={draggingWalletCoinKey === coin.key}
               />
             ))}
           </div>
@@ -536,6 +597,7 @@ export function ShopPaymentPage({
                 setIsTrayDragging(false);
                 setDraggingCoinValue(null);
                 setDraggingWalletCoinKey(null);
+                setDraggingTrayCoinId(null);
                 setPointerDragPreview(null);
                 return;
               }
@@ -551,6 +613,7 @@ export function ShopPaymentPage({
               setIsTrayDragging(false);
               setDraggingCoinValue(null);
               setDraggingWalletCoinKey(null);
+              setDraggingTrayCoinId(null);
             }}
           >
             <div className="mt-2 max-h-[calc(100%-3.5rem)] overflow-auto rounded-xl bg-white/70 p-2">
@@ -568,13 +631,20 @@ export function ShopPaymentPage({
                       onDragStart={(e) => {
                         e.dataTransfer.setData(DRAG_SOURCE_TYPE, "tray");
                         e.dataTransfer.setData(DRAG_TRAY_COIN_ID, String(coin.id));
+                        e.dataTransfer.setDragImage(
+                          e.currentTarget,
+                          e.currentTarget.clientWidth / 2,
+                          e.currentTarget.clientHeight / 2,
+                        );
                         setDraggingCoinValue(coin.value);
                         setDraggingWalletCoinKey(null);
+                        setDraggingTrayCoinId(coin.id);
                       }}
                       onDragEnd={() => {
                         if (pointerDraggingRef.current) return;
                         setDraggingCoinValue(null);
                         setDraggingWalletCoinKey(null);
+                        setDraggingTrayCoinId(null);
                         setPointerDragPreview(null);
                         setIsTrayDragging(false);
                       }}
@@ -585,6 +655,7 @@ export function ShopPaymentPage({
                         pointerDraggingRef.current = true;
                         setDraggingCoinValue(coin.value);
                         setDraggingWalletCoinKey(null);
+                        setDraggingTrayCoinId(coin.id);
                         setIsTrayDragging(isInsideTray(e.clientX, e.clientY));
                         setPointerDragPreview({
                           value: coin.value,
@@ -607,6 +678,7 @@ export function ShopPaymentPage({
                         pointerDraggingRef.current = false;
                         setDraggingCoinValue(null);
                         setDraggingWalletCoinKey(null);
+                        setDraggingTrayCoinId(null);
                         setPointerDragPreview(null);
                         setIsTrayDragging(false);
                         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -618,6 +690,7 @@ export function ShopPaymentPage({
                         pointerDraggingRef.current = false;
                         setDraggingCoinValue(null);
                         setDraggingWalletCoinKey(null);
+                        setDraggingTrayCoinId(null);
                         setPointerDragPreview(null);
                         setIsTrayDragging(false);
                         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -626,7 +699,10 @@ export function ShopPaymentPage({
                       }}
                       role="button"
                       aria-label={`${coin.value}えんをさいふにもどす`}
-                      style={{ touchAction: "none" }}
+                      style={{
+                        touchAction: "none",
+                        opacity: draggingTrayCoinId === coin.id ? 0 : 1,
+                      }}
                     >
                       {COIN_IMAGE_BY_VALUE[coin.value] ? (
                         <img
@@ -643,8 +719,12 @@ export function ShopPaymentPage({
           </div>
           {pointerDragPreview ? (
             <div
-              className="pointer-events-none fixed z-[70] -translate-x-1/2 -translate-y-1/2"
-              style={{ left: pointerDragPreview.x, top: pointerDragPreview.y }}
+              className="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: pointerDragPreview.x,
+                top: pointerDragPreview.y,
+                zIndex: DRAG_PREVIEW_Z_INDEX,
+              }}
               aria-hidden
             >
               {COIN_IMAGE_BY_VALUE[pointerDragPreview.value] ? (
