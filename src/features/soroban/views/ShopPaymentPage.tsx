@@ -6,6 +6,7 @@ import coin5Image from "@/assets/coin/coin-5.png";
 import coin50Image from "@/assets/coin/coin-50.png";
 import coin500Image from "@/assets/coin/coin-500.png";
 import coinIcon from "@/assets/coin.png";
+import arkSuccess from "@/assets/ark_success.png";
 import shopPaymentBg from "@/assets/shop-peyment.png";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
@@ -407,7 +408,7 @@ export function ShopPaymentPage({
       exactFlashTimerRef.current = window.setTimeout(() => {
         setExactPaymentFlashBonus(null);
         exactFlashTimerRef.current = null;
-      }, 1400);
+      }, 2200);
     }
   };
 
@@ -765,11 +766,25 @@ export function ShopPaymentPage({
         </div>
       ) : null}
       {exactPaymentFlashBonus != null ? (
-        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
-          <div className="flash-good rounded-3xl border-4 border-amber-300 bg-white/95 px-10 py-8 text-center shadow-2xl">
-            <div className="text-4xl font-black tracking-wide text-amber-500">ぴったり！</div>
-            <div className="mt-2 text-3xl font-black text-emerald-600">
-              ボーナス +<CoinValue amount={exactPaymentFlashBonus} amountClassName="font-black" unitClassName="font-black" iconClassName="h-6 w-6" />
+        <div className="pointer-events-none fixed inset-0 z-[2100] flex items-center justify-center bg-slate-900/35 backdrop-blur-[1px]">
+          <div className="flash-good flex items-center gap-8">
+            <img
+              src={arkSuccess}
+              alt="ぴったりせいかい"
+              className="h-52 w-52 rounded-full bg-white object-cover shadow-sm"
+            />
+            <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-b from-amber-50 to-white px-7 py-5 text-center shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
+              <div
+                className="text-6xl font-extrabold tracking-wide text-amber-700 font-[var(--pop-font)]"
+                style={{
+                  textShadow: "0 2px 0 rgba(255,255,255,0.65), 0 4px 8px rgba(120,53,15,0.22)",
+                }}
+              >
+                ぴったりせいかい！
+              </div>
+              <div className="mt-2 text-3xl font-black text-emerald-600">
+                ボーナス +<CoinValue amount={exactPaymentFlashBonus} amountClassName="font-black" unitClassName="font-black" iconClassName="h-6 w-6" />
+              </div>
             </div>
           </div>
         </div>
