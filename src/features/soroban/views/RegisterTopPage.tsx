@@ -10,6 +10,7 @@ type Props = {
   onGoShop: () => void;
   onGoShelf: () => void;
   onGoSnack: () => void;
+  onGoSnackBadges: () => void;
 };
 
 export function RegisterTopPage({
@@ -18,6 +19,7 @@ export function RegisterTopPage({
   onGoShop,
   onGoShelf,
   onGoSnack,
+  onGoSnackBadges,
 }: Props) {
   const progress = loadRegisterProgress();
 
@@ -38,11 +40,19 @@ export function RegisterTopPage({
         className="relative h-full text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        <div className="absolute right-4 top-4 rounded-xl bg-black/35 px-4 py-2 text-base font-bold text-white backdrop-blur-sm">
-          <span className="inline-flex items-center gap-1">
-            <span>てもちコイン:</span>
-            <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
-          </span>
+        <div className="absolute right-4 top-4 grid gap-2">
+          <div className="rounded-xl bg-black/35 px-4 py-2 text-base font-bold text-white backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1">
+              <span>てもちコイン:</span>
+              <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
+            </span>
+          </div>
+          <button
+            className="rounded-xl border border-sky-200 bg-sky-50/95 px-4 py-2 text-sm font-black text-sky-700 hover:bg-sky-100"
+            onClick={onGoSnackBadges}
+          >
+            バッジずかん
+          </button>
         </div>
 
         <div className="absolute inset-x-0 bottom-2">

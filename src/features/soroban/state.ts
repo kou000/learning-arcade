@@ -1,6 +1,7 @@
 import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
 import { getAvailableGrades, getGradeSpec } from "@/domain/specs/kenteiSpec";
 import type { PracticeMode } from "@/features/practice/types";
+import { toBestSnackBadgeIds } from "@/features/soroban/snackBadges";
 
 export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
 const REGISTER_EXAM_BODY: ExamBody = "zenshugakuren";
@@ -24,6 +25,7 @@ export type PracticeConfig = {
 export type RegisterProgress = {
   coins: number;
   purchasedItemIds: string[];
+  badgeIds: string[];
   shelfRows: number;
   shelfCols: number;
   shelfSlots: Array<string | null>;
@@ -57,6 +59,7 @@ export const DEFAULT_PRACTICE_CONFIG: PracticeConfig = {
 export const DEFAULT_REGISTER_PROGRESS: RegisterProgress = {
   coins: 0,
   purchasedItemIds: [],
+  badgeIds: [],
   shelfRows: 2,
   shelfCols: 4,
   shelfSlots: Array.from({ length: 8 }, () => null),
@@ -146,6 +149,15 @@ function normalizeRegisterProgress(input: Partial<RegisterProgress> | undefined)
   return {
     coins: Math.max(0, Math.floor(input?.coins ?? DEFAULT_REGISTER_PROGRESS.coins)),
     purchasedItemIds: Array.from(new Set((input?.purchasedItemIds ?? []).filter((id): id is string => typeof id === "string"))),
+    badgeIds: toBestSnackBadgeIds(
+      Array.from(
+        new Set(
+          (input?.badgeIds ?? []).filter(
+            (id): id is string => typeof id === "string",
+          ),
+        ),
+      ),
+    ),
     shelfRows: rows,
     shelfCols: cols,
     shelfSlots: Array.from({ length: size }, (_, idx) => {

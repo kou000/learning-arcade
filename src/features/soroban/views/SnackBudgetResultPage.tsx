@@ -6,13 +6,22 @@ import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SNACK_SEEDS } from "@/features/soroban/snackCatalog";
 import {
+  buildSnackBadgeId,
+  difficultyLabel,
+  getBestRankByDifficulty,
+  rankScore,
+  type SnackDifficulty,
+  type SnackRank,
+  toBestSnackBadgeIds,
+} from "@/features/soroban/snackBadges";
+import {
   loadRegisterProgress,
   saveRegisterProgress,
 } from "@/features/soroban/state";
 
 const TARGET_YEN = 300;
 
-function scoreResult(total: number): { rank: string; comment: string } {
+function scoreResult(total: number): { rank: SnackRank; comment: string } {
   const diff = Math.abs(TARGET_YEN - total);
   const over = total > TARGET_YEN;
   if (over) return { rank: "F", comment: "300えんを こえちゃった！" };
@@ -25,6 +34,7 @@ function scoreResult(total: number): { rank: string; comment: string } {
 
 type Props = {
   total: number | null;
+  difficulty: SnackDifficulty;
   items: Array<{ id: string; price: number; quantity: number }>;
   onGoSnack: () => void;
   onGoRegister: () => void;
@@ -32,6 +42,7 @@ type Props = {
 
 export function SnackBudgetResultPage({
   total,
+  difficulty,
   items,
   onGoSnack,
   onGoRegister,
@@ -98,7 +109,8 @@ export function SnackBudgetResultPage({
 
   const speech = speechLines[Math.min(speechIndex, speechLines.length - 1)];
   const isFinished = speechIndex >= speechLines.length - 1;
-  const canGetReward = result?.rank === "A" || result?.rank === "B";
+  const canGetReward =
+    result?.rank === "A" || result?.rank === "B" || result?.rank === "C";
   const rewardCandidates = useMemo(
     () =>
       items.reduce<Array<{ id: string; name: string; image: string | null }>>(
@@ -127,6 +139,32 @@ export function SnackBudgetResultPage({
   >({});
   const [rewardMessage, setRewardMessage] = useState<string>("");
   const [postRewardSpeech, setPostRewardSpeech] = useState<string | null>(null);
+  const [badgeMessage, setBadgeMessage] = useState<string>("");
+  const awardedBadgeIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isFinished || !result) return;
+    const badgeId = buildSnackBadgeId(difficulty, result.rank);
+    if (awardedBadgeIdRef.current === badgeId) return;
+    awardedBadgeIdRef.current = badgeId;
+    const current = loadRegisterProgress();
+    const badgeName = `${difficultyLabel(difficulty)} ランク${result.rank}`;
+    const bestRankByDifficulty = getBestRankByDifficulty(current.badgeIds);
+    const currentBestRank = bestRankByDifficulty[difficulty];
+    const canUpgrade =
+      !currentBestRank || rankScore(result.rank) > rankScore(currentBestRank);
+    if (canUpgrade) {
+      saveRegisterProgress({
+        ...current,
+        badgeIds: toBestSnackBadgeIds([...current.badgeIds, badgeId]),
+      });
+    }
+    setBadgeMessage(
+      canUpgrade
+        ? `バッジ「${badgeName}」を かくとく！`
+        : `このなんいどは ランク${currentBestRank}を もってるよ！`,
+    );
+  }, [difficulty, isFinished, result]);
 
   useEffect(() => {
     if (!isFinished || hasResultPopupShownRef.current) return;
@@ -193,9 +231,18 @@ export function SnackBudgetResultPage({
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          {rewardMessage ? (
-            <div className="mr-auto rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs font-bold text-emerald-700">
-              {rewardMessage}
+          {rewardMessage || badgeMessage ? (
+            <div className="mr-auto grid gap-2">
+              {rewardMessage ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs font-bold text-emerald-700">
+                  {rewardMessage}
+                </div>
+              ) : null}
+              {badgeMessage ? (
+                <div className="rounded-xl border border-sky-200 bg-sky-50/90 px-3 py-2 text-xs font-bold text-sky-700">
+                  {badgeMessage}
+                </div>
+              ) : null}
             </div>
           ) : null}
           <button

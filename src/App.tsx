@@ -11,6 +11,7 @@ import { ShelfPage } from "@/features/soroban/views/ShelfPage";
 import { SnackBudgetGamePage } from "@/features/soroban/views/SnackBudgetGamePage";
 import { SnackBudgetResultPage } from "@/features/soroban/views/SnackBudgetResultPage";
 import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage";
+import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage";
 
 type Route =
   | "home"
@@ -23,6 +24,7 @@ type Route =
   | "soroban-shelf"
   | "soroban-snack-top"
   | "soroban-snack"
+  | "soroban-badges"
   | "soroban-snack-result"
   | "soroban-admin";
 
@@ -46,6 +48,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/shop") return "soroban-shop";
   if (h.startsWith("soroban/shop/payment/")) return "soroban-shop-payment";
   if (h === "soroban/shelf") return "soroban-shelf";
+  if (h === "soroban/badges") return "soroban-badges";
   if (h === "soroban/snack/top") return "soroban-snack-top";
   if (h === "soroban/snack") return "soroban-snack";
   if (h === "soroban/snack/result") return "soroban-snack-result";
@@ -66,6 +69,17 @@ function getShopPaymentItemIdFromHash(): string | null {
   }
 }
 
+
+function getSnackDifficultyFromHash(): "easy" | "normal" | "hard" {
+  const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
+  const [path, query = ""] = hash.split("?");
+  if (path !== "soroban/snack") return "easy";
+  const params = new URLSearchParams(query);
+  const raw = params.get("difficulty");
+  if (raw === "normal" || raw === "hard") return raw;
+  return "easy";
+}
+
 function getSnackResultTotalFromHash(): number | null {
   const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
   const [path, query = ""] = hash.split("?");
@@ -83,6 +97,16 @@ type SnackResultItem = {
   price: number;
   quantity: number;
 };
+
+function getSnackResultDifficultyFromHash(): "easy" | "normal" | "hard" {
+  const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
+  const [path, query = ""] = hash.split("?");
+  if (path !== "soroban/snack/result") return "easy";
+  const params = new URLSearchParams(query);
+  const raw = params.get("difficulty");
+  if (raw === "normal" || raw === "hard") return raw;
+  return "easy";
+}
 
 function getSnackResultItemsFromHash(): SnackResultItem[] {
   const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
@@ -138,19 +162,29 @@ export default function App() {
   };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
   const goSnackTop = () => { window.location.hash = "/soroban/snack/top"; };
-  const goSnack = () => { window.location.hash = "/soroban/snack"; };
+  const goSnackBadges = () => { window.location.hash = "/soroban/badges"; };
+  const goSnack = (difficulty: "easy" | "normal" | "hard" = "easy") => {
+    const params = new URLSearchParams();
+    if (difficulty !== "easy") params.set("difficulty", difficulty);
+    const query = params.toString();
+    window.location.hash = query ? `/soroban/snack?${query}` : "/soroban/snack";
+  };
   const goSnackResult = (payload: {
     total: number;
+    difficulty: "easy" | "normal" | "hard";
     items: Array<{ id: string; price: number; quantity: number }>;
   }) => {
     const params = new URLSearchParams();
     params.set("total", String(payload.total));
+    params.set("difficulty", payload.difficulty);
     params.set("items", JSON.stringify(payload.items));
     window.location.hash = `/soroban/snack/result?${params.toString()}`;
   };
   const shopPaymentItemId = getShopPaymentItemIdFromHash();
+  const snackDifficulty = getSnackDifficultyFromHash();
   const snackResultTotal = getSnackResultTotalFromHash();
   const snackResultItems = getSnackResultItemsFromHash();
+  const snackResultDifficulty = getSnackResultDifficultyFromHash();
 
   return (
     <div className="relative min-h-screen">
@@ -166,7 +200,14 @@ export default function App() {
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
       ) : null}
       {route === "soroban-register" ? (
-        <RegisterTopPage onGoPractice={goSoroban} onGoRegisterStage={goRegisterStage} onGoShop={goShop} onGoShelf={goShelf} onGoSnack={goSnackTop} />
+        <RegisterTopPage
+          onGoPractice={goSoroban}
+          onGoRegisterStage={goRegisterStage}
+          onGoShop={goShop}
+          onGoShelf={goShelf}
+          onGoSnack={goSnackTop}
+          onGoSnackBadges={goSnackBadges}
+        />
       ) : null}
       {route === "soroban-register-stage" ? (
         <RegisterStagePage onGoRegisterTop={goRegister} onGoRegisterPlay={goRegisterPlay} onGoShop={goShop} onGoShelf={goShelf} />
@@ -199,14 +240,19 @@ export default function App() {
           onGoShop={goShop}
           onGoShelf={goShelf}
           onGoSnack={goSnack}
+          difficulty={snackDifficulty}
           onGoSnackResult={goSnackResult}
         />
+      ) : null}
+      {route === "soroban-badges" ? (
+        <SnackBadgeBookPage onGoRegister={goRegister} />
       ) : null}
       {route === "soroban-snack-result" ? (
         <SnackBudgetResultPage
           total={snackResultTotal}
+          difficulty={snackResultDifficulty}
           items={snackResultItems}
-          onGoSnack={goSnack}
+          onGoSnack={() => goSnack(snackResultDifficulty)}
           onGoRegister={goRegister}
         />
       ) : null}

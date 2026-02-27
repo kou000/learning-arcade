@@ -13,6 +13,7 @@
 - `#/soroban/shop` : ショップTOP（`ShopPage`）
 - `#/soroban/shop/payment/:itemId` : 支払い画面（`ShopPaymentPage`）
 - `#/soroban/shelf` : 棚（`ShelfPage`）
+- `#/soroban/badges` : バッジ図鑑（`SnackBadgeBookPage`）
 - `#/soroban/snack/top` : 300円おやつゲームTOP（`SnackBudgetTopPage`）
 - `#/soroban/snack` : 300円おやつゲーム（`SnackBudgetGamePage`）
 - `#/soroban/snack/result` : 300円おやつゲーム結果（`SnackBudgetResultPage`）
@@ -48,6 +49,7 @@
 
 - `coins`
 - `purchasedItemIds`
+- `badgeIds`（ゲーム内バッジ。難易度ごとに最高ランク1つのみ保持）
 - `shelfRows`, `shelfCols`, `shelfSlots`
 - `unlockedGrades`
 - `unlockedStageByGrade`（`0:みとり`, `1:かけ`, `2:わり`）
@@ -214,7 +216,7 @@
 
 - 役割:
   - ゲームモードTOPから遷移する導入画面
-  - 「ゲームスタート」で `#/soroban/snack` に遷移
+  - 「ゲームスタート」で難易度（かんたん/ふつう/むずかしい）を選択して `#/soroban/snack?difficulty=...` に遷移
 - 背景画像:
   - `src/assets/snack-game-top.png`
 
@@ -230,7 +232,11 @@
 - 学習要件:
   - プレイ中は合計金額・残金額を表示しない（暗算目的）
   - 会計時に `300円` との差額とオーバー有無を結果画面で表示する
-  - 毎回、表示される商品の価格構成の中で `300円` ぴったりの組み合わせが少なくとも1つ存在するようにする
+  - 毎回、表示される商品の価格構成の中で `300円` ぴったりの組み合わせが少なくとも1つ存在するようにする（ふつう/むずかしいの「同じお菓子1個まで」制約でも成立すること）
+  - 難易度仕様:
+    - かんたん: 同じお菓子を複数個選択できる（従来どおり）
+    - ふつう: 同じお菓子は1個まで
+    - むずかしい: 同じお菓子は1個まで + 価格の一の位が0でない商品が増える
 
 ## 5.8 SnackBudgetResultPage（300円おやつ結果）
 
@@ -244,10 +250,24 @@
     - 「ごうけいは・・・」
     - 「〇〇えんです！」
     - 結果判定コメント
-  - ランク `A` / `B` の時は、購入したおかしの中から1つを報酬として選べる
+  - ランク `A` / `B` / `C` の時は、購入したおかしの中から1つを報酬として選べる
   - 報酬でもらったおかしIDは `registerProgress.purchasedItemIds` に保存し、棚に配置可能
+  - 結果表示が最後まで進んだ時に、`難易度 × ランク` のバッジを付与する
+    - バッジID形式: `snack:<difficulty>:rank:<rank>`
+    - 保存先: `registerProgress.badgeIds`
+    - 同じ難易度では最高ランク1つのみ保持する（例: `B` 保持中に `A` を獲得したら `A` のみ保持）
 - 背景画像:
   - `src/assets/shop-top.png`（ショップ画面と同じ背景）
+
+## 5.9 SnackBadgeBookPage（バッジ図鑑）
+
+ファイル: `src/features/soroban/views/SnackBadgeBookPage.tsx`
+
+- 役割:
+  - `registerProgress.badgeIds` を読み込み、獲得バッジを一覧表示
+  - 現在は「あんざんゲーム（300円おやつゲーム）」で獲得したバッジを表示
+  - 難易度（かんたん/ふつう/むずかしい）ごとの保持ランクを表示
+  - 同難易度で複数ランクを保持しない仕様を可視化する
 
 ## 6. 共通UI
 

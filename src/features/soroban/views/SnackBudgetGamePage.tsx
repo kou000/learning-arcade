@@ -28,6 +28,8 @@ type ShelfSlot = {
   snack: ShelfSnack | null;
 };
 
+type SnackDifficulty = "easy" | "normal" | "hard";
+
 const TARGET_YEN = 300;
 const SHELF_VISIBLE_COUNT = 6;
 
@@ -66,23 +68,63 @@ const shuffle = <T,>(items: readonly T[]): T[] => {
   return arr;
 };
 
-const randomSnackPrice = (basePrice: number) => {
+const randomSnackPrice = (basePrice: number, difficulty: SnackDifficulty) => {
+  if (difficulty === "hard") {
+    const swing = Math.max(1, Math.round(basePrice * 0.2));
+    const delta = Math.floor(Math.random() * (swing * 2 + 1)) - swing;
+    return Math.max(10, basePrice + delta);
+  }
   const swing = Math.round((basePrice * 0.15) / 10) * 10;
   const steps = swing / 10;
   const delta = (Math.floor(Math.random() * (steps * 2 + 1)) - steps) * 10;
   return Math.max(10, basePrice + delta);
 };
 
-const canReachExactTotal = (prices: number[], target: number): boolean => {
+const canReachExactTotal = (
+  prices: number[],
+  target: number,
+  difficulty: SnackDifficulty,
+): boolean => {
   const normalized = Array.from(
     new Set(prices.filter((price) => Number.isFinite(price) && price > 0)),
   );
+
+  if (difficulty === "easy") {
+    const dp = Array.from({ length: target + 1 }, () => false);
+    dp[0] = true;
+    for (let sum = 1; sum <= target; sum += 1) {
+      dp[sum] = normalized.some((price) => sum - price >= 0 && dp[sum - price]);
+    }
+    return dp[target];
+  }
+
   const dp = Array.from({ length: target + 1 }, () => false);
   dp[0] = true;
-  for (let sum = 1; sum <= target; sum += 1) {
-    dp[sum] = normalized.some((price) => sum - price >= 0 && dp[sum - price]);
+  for (const price of normalized) {
+    for (let sum = target; sum >= price; sum -= 1) {
+      if (dp[sum - price]) dp[sum] = true;
+    }
   }
   return dp[target];
+};
+
+const pickGuaranteedComboPrices = (
+  difficulty: SnackDifficulty,
+): [number, number, number] => {
+  const normalCandidates: Array<[number, number, number]> = [
+    [90, 100, 110],
+    [80, 100, 120],
+    [70, 110, 120],
+    [60, 110, 130],
+  ];
+  const hardCandidates: Array<[number, number, number]> = [
+    [87, 103, 110],
+    [94, 99, 107],
+    [88, 97, 115],
+    [91, 104, 105],
+  ];
+  const pool = difficulty === "hard" ? hardCandidates : normalCandidates;
+  return pool[Math.floor(Math.random() * pool.length)] ?? pool[0];
 };
 
 const generateShelfSlotsByArea = (
@@ -159,17 +201,22 @@ type Props = {
   onGoShop: () => void;
   onGoShelf: () => void;
   onGoSnack: () => void;
+  difficulty: SnackDifficulty;
   onGoSnackResult: (payload: {
     total: number;
+    difficulty: SnackDifficulty;
     items: Array<{ id: string; price: number; quantity: number }>;
   }) => void;
 };
 
 export function SnackBudgetGamePage(props: Props) {
-  const { onGoRegister, onGoSnackResult } = props;
-  const [shelfSlotsByArea] = useState<Record<ShelfArea, ShelfSlot[]>>(() => {
+  const { onGoRegister, onGoSnackResult, difficulty } = props;
+  const shelfSlotsByArea = useMemo<Record<ShelfArea, ShelfSlot[]>>(() => {
     const priceBySeedId = Object.fromEntries(
-      SNACK_SEEDS.map((seed) => [seed.id, randomSnackPrice(seed.basePrice)]),
+      SNACK_SEEDS.map((seed) => [
+        seed.id,
+        randomSnackPrice(seed.basePrice, difficulty),
+      ]),
     );
     const generated = generateShelfSlotsByArea(priceBySeedId);
     const displayedSnacks = Object.values(generated)
@@ -177,16 +224,28 @@ export function SnackBudgetGamePage(props: Props) {
       .map((slot) => slot.snack)
       .filter((snack): snack is ShelfSnack => snack !== null);
     const displayedPrices = displayedSnacks.map((snack) => snack.price);
-    if (!canReachExactTotal(displayedPrices, TARGET_YEN)) {
-      const fallback = displayedSnacks[0];
-      if (fallback) {
-        const adjustedPrice = 100;
+    if (!canReachExactTotal(displayedPrices, TARGET_YEN, difficulty)) {
+      const fallbackIds = displayedSnacks.slice(0, 3).map((snack) => snack.id);
+      if (fallbackIds.length >= 3) {
+        const guaranteedPrices = shuffle(pickGuaranteedComboPrices(difficulty));
+        const priceByFallbackId = Object.fromEntries(
+          fallbackIds.map((id, idx) => [
+            id,
+            guaranteedPrices[idx] ?? guaranteedPrices[0],
+          ]),
+        );
         return Object.fromEntries(
           Object.entries(generated).map(([area, slots]) => [
             area,
             slots.map((slot) =>
-              slot.snack?.id === fallback.id
-                ? { ...slot, snack: { ...slot.snack, price: adjustedPrice } }
+              slot.snack != null && slot.snack.id in priceByFallbackId
+                ? {
+                    ...slot,
+                    snack: {
+                      ...slot.snack,
+                      price: priceByFallbackId[slot.snack.id],
+                    },
+                  }
                 : slot,
             ),
           ]),
@@ -194,7 +253,7 @@ export function SnackBudgetGamePage(props: Props) {
       }
     }
     return generated;
-  });
+  }, [difficulty]);
   const [cartMap, setCartMap] = useState<Record<string, number>>({});
   const [cartOrder, setCartOrder] = useState<string[]>([]);
   const [draggingSnackId, setDraggingSnackId] = useState<string | null>(null);
@@ -262,7 +321,9 @@ export function SnackBudgetGamePage(props: Props) {
 
   const addSnack = (snackId: string) => {
     setCartMap((prev) => {
-      const nextQty = (prev[snackId] ?? 0) + 1;
+      const currentQty = prev[snackId] ?? 0;
+      const nextQty =
+        difficulty === "easy" ? currentQty + 1 : Math.min(1, currentQty + 1);
       return { ...prev, [snackId]: nextQty };
     });
     setCartOrder((prev) =>
@@ -292,6 +353,7 @@ export function SnackBudgetGamePage(props: Props) {
     );
     onGoSnackResult({
       total,
+      difficulty,
       items: cart.map((item) => ({
         id: item.snack.id,
         price: item.snack.price,
@@ -413,11 +475,17 @@ export function SnackBudgetGamePage(props: Props) {
                   );
                 }
                 const isBroken = imageErrorMap[snack.id];
+                const isSoldOut =
+                  difficulty !== "easy" && (cartMap[snack.id] ?? 0) >= 1;
                 return (
                   <article
                     key={snack.id}
-                    draggable
+                    draggable={!isSoldOut}
                     onDragStart={(e) => {
+                      if (isSoldOut) {
+                        e.preventDefault();
+                        return;
+                      }
                       e.dataTransfer.effectAllowed = "copy";
                       e.dataTransfer.setData("text/plain", snack.id);
                       e.dataTransfer.setData(SNACK_DRAG_TYPE, snack.id);
@@ -432,6 +500,7 @@ export function SnackBudgetGamePage(props: Props) {
                     }}
                     onPointerDown={(e) => {
                       if (e.pointerType === "mouse") return;
+                      if (isSoldOut) return;
                       e.preventDefault();
                       e.currentTarget.setPointerCapture(e.pointerId);
                       setPointerDraggingSnackId(snack.id);
@@ -476,7 +545,7 @@ export function SnackBudgetGamePage(props: Props) {
                         e.currentTarget.releasePointerCapture(e.pointerId);
                       }
                     }}
-                    className={`absolute cursor-grab select-none transition ${activeDraggingSnackId === snack.id ? "scale-105 opacity-80" : "opacity-100"}`}
+                    className={`absolute select-none transition ${isSoldOut ? "cursor-not-allowed" : "cursor-grab"} ${activeDraggingSnackId === snack.id ? "scale-105 opacity-80" : "opacity-100"}`}
                     style={{
                       top: slot.layout.top,
                       left: slot.layout.left,
@@ -484,13 +553,22 @@ export function SnackBudgetGamePage(props: Props) {
                       touchAction: "none",
                     }}
                   >
-                    <div className="rounded-xl bg-white/60 p-2 shadow-lg backdrop-blur-sm">
+                    <div
+                      className={`rounded-xl bg-white/60 p-2 shadow-lg backdrop-blur-sm ${isSoldOut ? "opacity-85" : ""}`}
+                    >
                       {isBroken ? (
-                        <div className="flex h-36 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/80 text-center text-xs font-bold text-slate-500">
-                          がぞう
+                        <div className="relative flex h-36 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/80 text-center text-xs font-bold text-slate-500">
+                          <span>がぞう</span>
+                          {isSoldOut ? (
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-slate-900/40">
+                              <span className="rounded-full border border-red-200 bg-red-600/95 px-4 py-1 text-sm font-black text-white shadow">
+                                うりきれ
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
                       ) : (
-                        <div className="h-36 w-full rounded-lg bg-white/80 p-1">
+                        <div className="relative h-36 w-full rounded-lg bg-white/80 p-1">
                           <img
                             src={snack.image}
                             alt={snack.name}
@@ -502,6 +580,13 @@ export function SnackBudgetGamePage(props: Props) {
                             }
                             className="h-full w-full rounded-lg object-contain shadow-sm"
                           />
+                          {isSoldOut ? (
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-slate-900/40">
+                              <span className="rounded-full border border-red-200 bg-red-600/95 px-4 py-1 text-sm font-black text-white shadow">
+                                うりきれ
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                       <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-amber-100 px-2 py-1 text-xs font-black text-amber-900">
