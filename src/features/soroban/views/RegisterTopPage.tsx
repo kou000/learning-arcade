@@ -1,7 +1,7 @@
 import React from "react";
 import registerGameTop from "@/assets/register-game-top.png";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
-import { SceneFrame, SorobanSubnav } from "@/features/soroban/components/SceneFrame";
+import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { loadRegisterProgress } from "@/features/soroban/state";
 
 type Props = {
@@ -40,30 +40,50 @@ export function RegisterTopPage({
         className="relative h-full text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        <div className="absolute right-4 top-4 grid gap-2">
+        <div className="absolute right-4 top-4">
           <div className="rounded-xl bg-black/35 px-4 py-2 text-base font-bold text-white backdrop-blur-sm">
             <span className="inline-flex items-center gap-1">
               <span>てもちコイン:</span>
               <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
             </span>
           </div>
-          <button
-            className="rounded-xl border border-sky-200 bg-sky-50/95 px-4 py-2 text-sm font-black text-sky-700 hover:bg-sky-100"
-            onClick={onGoSnackBadges}
-          >
-            バッジずかん
-          </button>
         </div>
 
-        <div className="absolute inset-x-0 bottom-2">
-          <SorobanSubnav
-            current="register"
-            onGoRegister={onGoRegisterStage}
-            onGoShop={onGoShop}
-            onGoShelf={onGoShelf}
-            onGoSnack={onGoSnack}
-            large
-          />
+        <div className="absolute inset-x-0 bottom-2 px-3">
+          <div className="mb-2 flex justify-center">
+            <button
+              className="rounded-2xl bg-sky-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-sky-700"
+              onClick={onGoRegisterStage}
+            >
+              レジゲームスタート
+            </button>
+          </div>
+          <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-4">
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoShop}
+            >
+              ショップ
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoShelf}
+            >
+              たな
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoSnack}
+            >
+              あんざんゲーム
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoSnackBadges}
+            >
+              バッジずかん
+            </button>
+          </div>
         </div>
       </div>
     </SceneFrame>

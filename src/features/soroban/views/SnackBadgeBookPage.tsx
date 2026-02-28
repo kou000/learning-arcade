@@ -1,9 +1,13 @@
 import React, { useMemo } from "react";
 import registerGameTop from "@/assets/register-game-top.png";
+import snackBadgeBronze from "@/assets/badge/snack-bronze.png";
+import snackBadgeSilver from "@/assets/badge/snack-silver.png";
+import snackBadgeGold from "@/assets/badge/snack-gold.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
   difficultyLabel,
   getBestRankByDifficulty,
+  type SnackRank,
   type SnackDifficulty,
 } from "@/features/soroban/snackBadges";
 import { loadRegisterProgress } from "@/features/soroban/state";
@@ -36,38 +40,17 @@ function gameBadgeLabel(difficulty: SnackDifficulty): string {
   return `あんざんゲーム ${difficultyLabel(difficulty)}`;
 }
 
-function medalGradientByRank(rank: string | undefined): string {
-  if (rank === "A") return "from-amber-300 via-yellow-300 to-amber-500";
-  if (rank === "B") return "from-slate-200 via-zinc-100 to-slate-400";
-  if (rank === "C") return "from-amber-700 via-amber-500 to-orange-700";
-  if (rank === "D") return "from-indigo-300 via-indigo-200 to-indigo-500";
-  if (rank === "E") return "from-emerald-300 via-emerald-200 to-emerald-500";
-  if (rank === "F") return "from-rose-300 via-rose-200 to-rose-500";
-  return "from-slate-300 via-slate-200 to-slate-400";
-}
-
-function medalRingByRank(rank: string | undefined): string {
-  if (rank === "A") return "border-amber-100";
-  if (rank === "B") return "border-slate-100";
-  if (rank === "C") return "border-orange-200";
-  if (rank === "D") return "border-indigo-100";
-  if (rank === "E") return "border-emerald-100";
-  if (rank === "F") return "border-rose-100";
-  return "border-slate-100";
-}
-
-function ribbonGradientByRank(rank: string | undefined): string {
-  if (rank === "A") return "from-amber-500 to-yellow-600";
-  if (rank === "B") return "from-slate-500 to-zinc-600";
-  if (rank === "C") return "from-amber-700 to-orange-800";
-  if (rank === "D") return "from-indigo-500 to-indigo-700";
-  if (rank === "E") return "from-emerald-500 to-emerald-700";
-  if (rank === "F") return "from-rose-500 to-rose-700";
-  return "from-slate-500 to-slate-700";
+function badgeImageByRank(rank: SnackRank): string {
+  if (rank === "A") return snackBadgeGold;
+  if (rank === "B") return snackBadgeSilver;
+  return snackBadgeBronze;
 }
 
 export function SnackBadgeBookPage({ onGoRegister }: Props) {
   const progress = loadRegisterProgress();
+  const [badgeImageErrorMap, setBadgeImageErrorMap] = React.useState<
+    Partial<Record<SnackDifficulty, boolean>>
+  >({});
   const bestByDifficulty = useMemo(
     () => getBestRankByDifficulty(progress.badgeIds),
     [progress.badgeIds],
@@ -102,8 +85,8 @@ export function SnackBadgeBookPage({ onGoRegister }: Props) {
             {DIFFICULTIES.map((difficulty) => {
               const bestRank = bestByDifficulty[difficulty];
               const theme = badgeTheme(difficulty);
-              const isGlossyMedal =
-                bestRank === "A" || bestRank === "B" || bestRank === "C";
+              const badgeImage = bestRank ? badgeImageByRank(bestRank) : null;
+              const isImageBroken = badgeImageErrorMap[difficulty] === true;
               return (
                 <section
                   key={difficulty}
@@ -123,52 +106,23 @@ export function SnackBadgeBookPage({ onGoRegister }: Props) {
                     {bestRank ? (
                       <div className="grid place-items-center rounded-lg bg-white/75 px-3 py-4">
                         <div className="relative h-40 w-32">
-                          <div className="absolute left-1/2 top-[5.1rem] z-0 flex -translate-x-1/2 gap-2">
-                            <div
-                              className={`h-14 w-7 bg-gradient-to-b ${ribbonGradientByRank(bestRank)}`}
-                              style={{
-                                clipPath:
-                                  "polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%)",
-                              }}
+                          {badgeImage && !isImageBroken ? (
+                            <img
+                              src={badgeImage}
+                              alt={`${gameBadgeLabel(difficulty)} ランク${bestRank}`}
+                              className="absolute left-1/2 top-0 h-40 w-32 -translate-x-1/2 object-contain"
+                              onError={() =>
+                                setBadgeImageErrorMap((prev) => ({
+                                  ...prev,
+                                  [difficulty]: true,
+                                }))
+                              }
                             />
-                            <div
-                              className={`h-14 w-7 bg-gradient-to-b ${ribbonGradientByRank(bestRank)}`}
-                              style={{
-                                clipPath:
-                                  "polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%)",
-                              }}
-                            />
-                          </div>
-                          <div
-                            className={`absolute left-1/2 top-[4.7rem] z-[1] h-5 w-10 -translate-x-1/2 rounded-md bg-gradient-to-b ${ribbonGradientByRank(bestRank)}`}
-                          />
-                          <div
-                            className={`absolute left-1/2 top-0 z-10 h-28 w-28 -translate-x-1/2 rounded-full border-4 border-white bg-gradient-to-br ${medalGradientByRank(bestRank)} shadow-[0_8px_20px_rgba(0,0,0,0.18)]`}
-                          />
-                          {isGlossyMedal ? (
-                            <>
-                              <div className="pointer-events-none absolute left-1/2 top-[5px] z-[12] h-[102px] w-[102px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_32%_28%,rgba(255,255,255,0.32),rgba(255,255,255,0.08)_42%,rgba(0,0,0,0.06)_100%)]" />
-                              <div
-                                className="pointer-events-none absolute left-[44%] top-2 z-20 h-9 w-14 -translate-x-1/2 -rotate-[20deg] rounded-full"
-                                style={{
-                                  background:
-                                    "linear-gradient(125deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.38) 46%, rgba(255,255,255,0.03) 82%, rgba(255,255,255,0) 100%)",
-                                  filter: "blur(0.5px)",
-                                }}
-                              />
-                              <div
-                                className="pointer-events-none absolute left-[43%] top-[1.9rem] z-20 h-2.5 w-6 -translate-x-1/2 -rotate-[20deg] rounded-full bg-white/22"
-                                style={{ filter: "blur(0.6px)" }}
-                              />
-                              <div
-                                className={`pointer-events-none absolute left-1/2 top-[6px] z-20 h-[100px] w-[100px] -translate-x-1/2 rounded-full border ${medalRingByRank(bestRank)} opacity-80`}
-                              />
-                              <div className="pointer-events-none absolute left-1/2 top-[10px] z-20 h-[92px] w-[92px] -translate-x-1/2 rounded-full shadow-[inset_0_5px_10px_rgba(255,255,255,0.30),inset_0_-12px_16px_rgba(0,0,0,0.17)]" />
-                            </>
-                          ) : null}
-                          <div className="absolute left-1/2 top-0 z-30 grid h-28 w-28 -translate-x-1/2 place-items-center text-4xl font-black text-white drop-shadow">
-                            {bestRank}
-                          </div>
+                          ) : (
+                            <div className="grid h-40 w-32 place-items-center rounded-lg border-4 border-dashed border-slate-300 bg-slate-100 text-4xl font-black text-slate-400">
+                              {bestRank}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : (

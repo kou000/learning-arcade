@@ -48,6 +48,7 @@ type NavProps = {
   onGoShop: () => void;
   onGoShelf: () => void;
   onGoSnack?: () => void;
+  onGoSnackBadges?: () => void;
   large?: boolean;
 };
 
@@ -57,10 +58,11 @@ export function SorobanSubnav({
   onGoShop,
   onGoShelf,
   onGoSnack,
+  onGoSnackBadges,
   large = false,
 }: NavProps) {
   const tabs: Array<{
-    key: NavProps["current"];
+    key: NavProps["current"] | "badges";
     label: string;
     onClick: () => void;
   }> = [
@@ -70,12 +72,18 @@ export function SorobanSubnav({
     ...(onGoSnack
       ? [{ key: "snack" as const, label: "あんざんゲーム", onClick: onGoSnack }]
       : []),
+    ...(onGoSnackBadges
+      ? [{ key: "badges" as const, label: "バッジずかん", onClick: onGoSnackBadges }]
+      : []),
   ];
+  const colsClass = onGoSnackBadges
+    ? "sm:grid-cols-5"
+    : onGoSnack
+      ? "sm:grid-cols-4"
+      : "sm:grid-cols-3";
 
   return (
-    <div
-      className={`grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm ${onGoSnack ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}
-    >
+    <div className={`grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm ${colsClass}`}>
       {tabs.map((tab) => (
         <button
           key={tab.key}

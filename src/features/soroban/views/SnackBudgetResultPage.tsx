@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import shopTopBg from "@/assets/shop-top.png";
 import arkSuccess from "@/assets/ark_success.png";
 import arfBad from "@/assets/arf_bad.png";
+import snackBadgeBronze from "@/assets/badge/snack-bronze.png";
+import snackBadgeSilver from "@/assets/badge/snack-silver.png";
+import snackBadgeGold from "@/assets/badge/snack-gold.png";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SNACK_SEEDS } from "@/features/soroban/snackCatalog";
@@ -39,6 +42,26 @@ type Props = {
   onGoSnack: () => void;
   onGoRegister: () => void;
 };
+
+function badgeImageByRank(rank: SnackRank): string {
+  if (rank === "A") return snackBadgeGold;
+  if (rank === "B") return snackBadgeSilver;
+  return snackBadgeBronze;
+}
+
+const BADGE_CONFETTI = [
+  { left: 6, color: "bg-rose-300", delay: 0 },
+  { left: 14, color: "bg-amber-300", delay: 220 },
+  { left: 22, color: "bg-sky-300", delay: 420 },
+  { left: 31, color: "bg-emerald-300", delay: 640 },
+  { left: 40, color: "bg-violet-300", delay: 900 },
+  { left: 50, color: "bg-yellow-300", delay: 1080 },
+  { left: 60, color: "bg-cyan-300", delay: 1260 },
+  { left: 69, color: "bg-pink-300", delay: 1500 },
+  { left: 77, color: "bg-lime-300", delay: 1720 },
+  { left: 86, color: "bg-orange-300", delay: 1920 },
+  { left: 94, color: "bg-blue-300", delay: 2140 },
+];
 
 export function SnackBudgetResultPage({
   total,
@@ -129,6 +152,7 @@ export function SnackBudgetResultPage({
   );
   const [rewardItemId, setRewardItemId] = useState<string | null>(null);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   const [isResultPopupOpen, setIsResultPopupOpen] = useState(false);
   const hasResultPopupShownRef = useRef(false);
   const [ownedRewardIds, setOwnedRewardIds] = useState<string[]>(
@@ -140,7 +164,24 @@ export function SnackBudgetResultPage({
   const [rewardMessage, setRewardMessage] = useState<string>("");
   const [postRewardSpeech, setPostRewardSpeech] = useState<string | null>(null);
   const [badgeMessage, setBadgeMessage] = useState<string>("");
+  const [badgeModal, setBadgeModal] = useState<{
+    name: string;
+    rank: SnackRank;
+    image: string;
+  } | null>(null);
+  const [badgeImageBroken, setBadgeImageBroken] = useState(false);
   const awardedBadgeIdRef = useRef<string | null>(null);
+  const badgeModalRef = useRef<{
+    name: string;
+    rank: SnackRank;
+    image: string;
+  } | null>(null);
+  const canGetRewardRef = useRef(false);
+  const rewardItemIdRef = useRef<string | null>(null);
+
+  badgeModalRef.current = badgeModal;
+  canGetRewardRef.current = canGetReward;
+  rewardItemIdRef.current = rewardItemId;
 
   useEffect(() => {
     if (!isFinished || !result) return;
@@ -158,6 +199,12 @@ export function SnackBudgetResultPage({
         ...current,
         badgeIds: toBestSnackBadgeIds([...current.badgeIds, badgeId]),
       });
+      setBadgeModal({
+        name: badgeName,
+        rank: result.rank,
+        image: badgeImageByRank(result.rank),
+      });
+      setBadgeImageBroken(false);
     }
     setBadgeMessage(
       canUpgrade
@@ -168,17 +215,28 @@ export function SnackBudgetResultPage({
 
   useEffect(() => {
     if (!isFinished || hasResultPopupShownRef.current) return;
-    if (canGetReward && rewardItemId != null) return;
+    if (canGetRewardRef.current && rewardItemIdRef.current != null) return;
     hasResultPopupShownRef.current = true;
     setIsResultPopupOpen(true);
     const timeoutId = window.setTimeout(() => {
       setIsResultPopupOpen(false);
-      if (canGetReward && rewardItemId == null) {
+      if (badgeModalRef.current) {
+        setIsBadgeModalOpen(true);
+        return;
+      }
+      if (canGetRewardRef.current && rewardItemIdRef.current == null) {
         setIsRewardModalOpen(true);
       }
     }, 1800);
     return () => window.clearTimeout(timeoutId);
-  }, [canGetReward, isFinished, rewardItemId]);
+  }, [isFinished]);
+
+  const closeBadgeModal = () => {
+    setIsBadgeModalOpen(false);
+    if (canGetReward && rewardItemId == null) {
+      setIsRewardModalOpen(true);
+    }
+  };
 
   const claimReward = (item: { id: string; name: string }) => {
     if (!canGetReward || rewardItemId != null) return;
@@ -301,6 +359,62 @@ export function SnackBudgetResultPage({
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      ) : null}
+      {isBadgeModalOpen && isFinished && badgeModal ? (
+        <div className="absolute inset-0 z-[65] grid place-items-center bg-slate-900/45 p-4">
+          <div className="badge-modal-pop relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-200/80 bg-gradient-to-b from-amber-50 via-white to-sky-50 p-5 shadow-[0_24px_50px_rgba(15,23,42,0.38)]">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.45)_0%,_rgba(251,191,36,0)_70%)]" />
+            {BADGE_CONFETTI.map((piece) => (
+              <span
+                key={`${piece.left}-${piece.delay}`}
+                className={`badge-confetti pointer-events-none absolute top-2 h-2.5 w-2.5 rounded-sm ${piece.color}`}
+                style={
+                  {
+                    left: `${piece.left}%`,
+                    "--delay": `${piece.delay}ms`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+
+            <div className="relative text-center text-xl font-black tracking-wide text-amber-700">
+              バッジをゲットしたよ!
+            </div>
+            <div className="mt-1 text-center text-xs font-black text-slate-600">
+              {badgeModal.name}
+            </div>
+            <div className="mt-4 grid place-items-center">
+              {!badgeImageBroken ? (
+                <div className="badge-float relative">
+                  <img
+                    src={badgeModal.image}
+                    alt={`${badgeModal.name} ランク${badgeModal.rank}`}
+                    className="h-52 w-40 object-contain drop-shadow-[0_14px_14px_rgba(0,0,0,0.22)]"
+                    onError={() => setBadgeImageBroken(true)}
+                  />
+                  <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+                    <div className="badge-shine absolute -left-10 top-0 h-full w-12 bg-white/65 blur-[1px]" />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid h-52 w-40 place-items-center rounded-xl border-4 border-dashed border-slate-300 bg-slate-100 text-5xl font-black text-slate-400">
+                  {badgeModal.rank}
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-center">
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
+                ランク {badgeModal.rank}
+              </span>
+            </div>
+            <button
+              className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 py-2 text-sm font-black text-white shadow-[0_8px_18px_rgba(16,185,129,0.35)] hover:from-emerald-700 hover:to-cyan-700"
+              onClick={closeBadgeModal}
+            >
+              とじる
+            </button>
           </div>
         </div>
       ) : null}
