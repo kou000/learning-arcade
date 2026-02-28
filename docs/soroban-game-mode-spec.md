@@ -209,7 +209,6 @@
   - 再読込で現在値を再取得
   - 現在のlocalStorage JSONをクリップボードへコピー
 - TOP画面の「admin」ボタン押下時にパスワード入力を要求する
-- パスワードは `1990`（コード上はSHA-256ハッシュで保持）
 - 認証成功時のみ `#/soroban/admin` へ遷移できる
 
 ## 5.6 SnackBudgetTopPage（300円おやつゲームTOP）
