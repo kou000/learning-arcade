@@ -2,9 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
-import { SHOP_ITEMS } from "@/features/soroban/catalog";
+import { SHOP_ITEMS, type ShopItem } from "@/features/soroban/catalog";
 import { pickShopSpeech } from "@/features/soroban/speech";
-import { loadRegisterProgress } from "@/features/soroban/state";
+import {
+  loadRegisterProgress,
+  loadShopLastOpenedOn,
+  saveShopLastOpenedOn,
+} from "@/features/soroban/state";
 import shopTopBg from "@/assets/shop-top.png";
 
 type ShopPageProps = {
@@ -31,8 +35,23 @@ function ItemPreview({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function formatLocalDateOnly(now: Date): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${date}`;
+}
+
+function isShopItemNew(item: ShopItem, lastOpenedOn: string | null): boolean {
+  if (!item.addedOn || !lastOpenedOn) return false;
+  return item.addedOn > lastOpenedOn;
+}
+
 export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
   const [progress] = useState(() => loadRegisterProgress());
+  const [shopLastOpenedOn] = useState<string | null>(
+    () => loadShopLastOpenedOn(),
+  );
   const [showItems, setShowItems] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [pendingPurchaseItem, setPendingPurchaseItem] = useState<{
@@ -53,6 +72,8 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
   const purchaseTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    saveShopLastOpenedOn(formatLocalDateOnly(new Date()));
+
     const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
     const [path, query = ""] = hash.split("?");
     const params = new URLSearchParams(query);
@@ -151,13 +172,21 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
               const purchased = progress.purchasedItemIds.includes(item.id);
               const insufficientCoins = progress.coins < item.price;
               const disabled = purchased || insufficientCoins;
+              const newItem = isShopItemNew(item, shopLastOpenedOn);
               return (
                 <div
                   key={item.id}
                   className="grid gap-2 rounded-xl border border-white/50 bg-white/55 p-3 backdrop-blur-[1px]"
                 >
                   <ItemPreview src={item.image} alt={item.name} />
-                  <div className="font-bold text-slate-800">{item.name}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-bold text-slate-800">{item.name}</div>
+                    {newItem ? (
+                      <span className="inline-flex items-center rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide text-white">
+                        New
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="text-sm text-slate-600">
                     {item.description}
                   </div>

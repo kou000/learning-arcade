@@ -45,6 +45,7 @@ type SorobanSaveData = {
   practiceConfig: PracticeConfig;
   registerProgress: RegisterProgress;
   registerPlayConfig: RegisterPlayConfig;
+  shopLastOpenedOn: string | null;
 };
 
 export const DEFAULT_PRACTICE_CONFIG: PracticeConfig = {
@@ -189,12 +190,18 @@ function normalizeRegisterPlayConfig(input: Partial<RegisterPlayConfig> | undefi
   };
 }
 
+function normalizeDateOnly(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
 function readAll(): SorobanSaveData {
   if (typeof window === "undefined") {
     return {
       practiceConfig: DEFAULT_PRACTICE_CONFIG,
       registerProgress: DEFAULT_REGISTER_PROGRESS,
       registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
+      shopLastOpenedOn: null,
     };
   }
 
@@ -205,19 +212,26 @@ function readAll(): SorobanSaveData {
         practiceConfig: DEFAULT_PRACTICE_CONFIG,
         registerProgress: DEFAULT_REGISTER_PROGRESS,
         registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
+        shopLastOpenedOn: null,
       };
     }
-    const parsed = JSON.parse(raw) as Partial<SorobanSaveData>;
+    const parsed = JSON.parse(raw) as Partial<SorobanSaveData> & {
+      shopFirstOpenedOn?: unknown;
+    };
     return {
       practiceConfig: normalizePracticeConfig(parsed.practiceConfig),
       registerProgress: normalizeRegisterProgress(parsed.registerProgress),
       registerPlayConfig: normalizeRegisterPlayConfig(parsed.registerPlayConfig),
+      shopLastOpenedOn: normalizeDateOnly(
+        parsed.shopLastOpenedOn ?? parsed.shopFirstOpenedOn,
+      ),
     };
   } catch {
     return {
       practiceConfig: DEFAULT_PRACTICE_CONFIG,
       registerProgress: DEFAULT_REGISTER_PROGRESS,
       registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
+      shopLastOpenedOn: null,
     };
   }
 }
@@ -258,6 +272,18 @@ export function saveRegisterPlayConfig(input: Partial<RegisterPlayConfig>): Regi
   const next = normalizeRegisterPlayConfig({ ...current.registerPlayConfig, ...input });
   writeAll({ ...current, registerPlayConfig: next });
   return next;
+}
+
+export function loadShopLastOpenedOn(): string | null {
+  return readAll().shopLastOpenedOn;
+}
+
+export function saveShopLastOpenedOn(dateOn: string): string | null {
+  const current = readAll();
+  const normalized = normalizeDateOnly(dateOn);
+  if (!normalized) return current.shopLastOpenedOn;
+  writeAll({ ...current, shopLastOpenedOn: normalized });
+  return normalized;
 }
 
 function stageFromSubject(subject: RegisterSubject): number {

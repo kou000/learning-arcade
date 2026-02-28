@@ -160,6 +160,8 @@
 
 - 固定商品配列は `src/features/soroban/catalog.ts`
 - `ShopPage` は商品一覧のみを担当し、商品選択で `#/soroban/shop/payment/:itemId` へ遷移
+- 商品定義（`catalog.ts`）は `addedOn`（`YYYY-MM-DD`）を持てる
+- ショップを直近で開いた日（`shopLastOpenedOn`）を `learning-arcade:soroban-state` に保持し、`addedOn > shopLastOpenedOn` の商品に `New` ラベルを表示する
 - `ShopPage` は画面遷移直後に犬の吹き出しで「いらっしゃいませ！」を表示してから商品一覧を表示する
 - `ShopPage` でゲームTOPへ戻る時は、犬の吹き出しで「ありがとうございました！」を表示してから遷移する
 - 購入成功後に一覧へ戻る際は、犬の吹き出しで「おかいあげありがとうございます！」を表示してから商品一覧を表示する
