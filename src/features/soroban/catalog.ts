@@ -125,7 +125,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: "shelf-upper-unlock",
     name: "たな１だんめかいほう",
-    price: 999,
+    price: 399,
     image: shelfUnlockImage,
     description: "たなの １だんめを つかえるようにする。",
     placeable: false,
