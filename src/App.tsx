@@ -139,6 +139,7 @@ function getSnackResultItemsFromHash(): SnackResultItem[] {
 
 export default function App() {
   const [route, setRoute] = useState<Route>(() => getRouteFromHash());
+  const [isRefreshingCache, setIsRefreshingCache] = useState(false);
   const isAdminMode = isAdminModeFromEnv();
 
   useEffect(() => {
@@ -186,6 +187,25 @@ export default function App() {
   const snackResultItems = getSnackResultItemsFromHash();
   const snackResultDifficulty = getSnackResultDifficultyFromHash();
 
+  const refreshCacheAndReload = async () => {
+    if (isRefreshingCache) return;
+    setIsRefreshingCache(true);
+
+    try {
+      if ("caches" in window) {
+        const keys = await window.caches.keys();
+        await Promise.all(keys.map((key) => window.caches.delete(key)));
+      }
+
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+    } finally {
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       {isAdminMode ? (
@@ -194,6 +214,16 @@ export default function App() {
             ADMIN MODE
           </span>
         </header>
+      ) : null}
+      {route === "home" ? (
+        <button
+          type="button"
+          onClick={refreshCacheAndReload}
+          disabled={isRefreshingCache}
+          className="fixed bottom-4 right-4 z-50 rounded-xl border border-slate-300 bg-white/95 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-white disabled:cursor-wait disabled:opacity-70"
+        >
+          {isRefreshingCache ? "更新中..." : "キャッシュ更新"}
+        </button>
       ) : null}
       {route === "home" ? <ArcadeHome onStartSoroban={goSoroban} /> : null}
       {route === "soroban" ? (

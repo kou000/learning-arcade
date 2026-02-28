@@ -10,13 +10,14 @@
 - スタイリング: Tailwind CSS（`src/styles/index.css` で共通CSSも定義）
 - ルーティング: 外部ライブラリなし（`window.location.hash` を手動パース）
 - 状態保存: `localStorage`（一部機能）
+- PWA: `public/manifest.webmanifest` + `public/sw.js`（Service Workerでオフライン再訪問を補助）
 
 ## 2. ディレクトリ構成
 
 ```text
 src/
   App.tsx                # ルーティングと画面切替の中心
-  main.tsx               # Reactエントリポイント
+  main.tsx               # Reactエントリポイント（Service Worker登録含む）
   assets/                # 画像アセット
   styles/
     index.css            # Tailwind読込 + 共通アニメーション/変数
@@ -29,6 +30,7 @@ src/
     soroban/             # ゲームモード（views/, components/ + 保存状態）
   ui/
     components/          # 汎用UI部品（Button, Selectなど）
+public/                  # PWA配信ファイル（manifest, service worker, icon）
 docs/                    # 実装向けドキュメント（ビルド非対象）
 ```
 
@@ -157,7 +159,14 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
   - 印刷時ルール
   - 正誤演出アニメーション（`flash-good`, `flash-bad`）
 
-## 10. ビルド・実行
+## 10. PWA/オフライン
+
+- `src/main.tsx` で `navigator.serviceWorker.register("/sw.js")` を実行。
+- `public/sw.js` ではアプリシェル（`/`, `/index.html`, manifest, icon）を事前キャッシュ。
+- ナビゲーション要求はネットワーク優先、失敗時はキャッシュした `index.html` を返す。
+- 同一オリジンの静的アセットはキャッシュ優先で再利用。
+
+## 11. ビルド・実行
 
 `package.json` scripts:
 
@@ -167,7 +176,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `npm run preview` : ビルド確認
 - `npm run typecheck` : 型検査
 
-## 11. 変更時のガイドライン（AI向け）
+## 12. 変更時のガイドライン（AI向け）
 
 1. 出題仕様変更は `domain/specs` と `domain/generator` を起点に行う。
 2. 画面挙動変更は `features/*` に閉じる。
@@ -175,7 +184,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 4. ルート追加時は `App.tsx` の `Route` 型と hash パーサを同時更新する。
 5. 変更後は最低 `npm run build` を実行して破壊的変更を検知する。
 
-## 12. 関連ドキュメント
+## 13. 関連ドキュメント
 
 - `docs/soroban-game-mode-spec.md`
 - `docs/soroban-practice-mode-spec.md`
