@@ -4,6 +4,7 @@ import type { PracticeMode } from "@/features/practice/types";
 import { toBestSnackBadgeIds } from "@/features/soroban/snackBadges";
 
 export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
+const SHOP_LAST_OPENED_ON_FALLBACK = "2026-02-27";
 const REGISTER_EXAM_BODY: ExamBody = "zenshugakuren";
 const REGISTER_GRADE_ORDER: Grade[] = [...getAvailableGrades(REGISTER_EXAM_BODY)].sort((a, b) => b - a);
 const REGISTER_START_GRADE: Grade = REGISTER_GRADE_ORDER[0] ?? 8;
@@ -274,8 +275,8 @@ export function saveRegisterPlayConfig(input: Partial<RegisterPlayConfig>): Regi
   return next;
 }
 
-export function loadShopLastOpenedOn(): string | null {
-  return readAll().shopLastOpenedOn;
+export function loadShopLastOpenedOn(): string {
+  return readAll().shopLastOpenedOn ?? SHOP_LAST_OPENED_ON_FALLBACK;
 }
 
 export function saveShopLastOpenedOn(dateOn: string): string | null {

@@ -32,7 +32,7 @@ export type ShopItem = {
   image: string;
   description: string;
   placeable?: boolean;
-  addedOn?: string;
+  addedOn: string;
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
@@ -42,6 +42,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 120,
     image: shibaPlushImage,
     description: "にこにこ しばいぬの ぬいぐるみ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "penguin-plush",
@@ -49,6 +50,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 180,
     image: penguinPlushImage,
     description: "あおい ぺんぎんの ぬいぐるみ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "toy-car",
@@ -56,6 +58,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 260,
     image: toyCarImage,
     description: "オレンジいろの かわいい くるま。",
+    addedOn: "2026-02-01",
   },
   {
     id: "star-keychain",
@@ -63,6 +66,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 340,
     image: starKeychainImage,
     description: "しばいぬつきの きらきら ちゃーむ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "ark-pouch",
@@ -70,6 +74,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 420,
     image: arkPouchImage,
     description: "あーくろごいりの おおきめ ぽーち。",
+    addedOn: "2026-02-01",
   },
   {
     id: "ark-bag",
@@ -77,6 +82,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 280,
     image: arkBagImage,
     description: "あーくろごいりの かるい ばっぐ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "ark-cup",
@@ -84,6 +90,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 320,
     image: arkCupImage,
     description: "あーくろごいりの まぐかっぷ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "ark-porch",
@@ -91,6 +98,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 360,
     image: arkPorchImage,
     description: "こものが はいる みにぽーち。",
+    addedOn: "2026-02-01",
   },
   {
     id: "red-panda-plush-wave",
@@ -98,6 +106,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 220,
     image: redPandaPlushWaveImage,
     description: "きいろのふくで てをふる ぬいぐるみ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "hamster-plush-striped-shirt",
@@ -105,6 +114,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 240,
     image: hamsterPlushStripedShirtImage,
     description: "しましまふくが かわいい ぬいぐるみ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "rabbit-plush-wave",
@@ -112,6 +122,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 260,
     image: rabbitPlushWaveImage,
     description: "みどりのえぷろんで てをふる うさぎ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "shiba-plush-wave",
@@ -119,6 +130,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 280,
     image: shibaPlushWaveImage,
     description: "あかいふくで げんきな しばいぬ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "sheep-plush-blue-ribbon",
@@ -126,6 +138,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 300,
     image: sheepPlushBlueRibbonImage,
     description: "あおいりぼんの もこもこ ひつじ。",
+    addedOn: "2026-02-01",
   },
   {
     id: "bear-plush-scarf",
@@ -133,6 +146,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 320,
     image: bearPlushScarfImage,
     description: "みずいろまふらーの やさしい くま。",
+    addedOn: "2026-02-01",
   },
   {
     id: "space-adventure-diorama",
@@ -228,6 +242,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 399,
     image: shelfUnlockImage,
     description: "たなの １だんめを つかえるようにする。",
+    addedOn: "2026-02-01",
     placeable: false,
   },
   {
@@ -236,6 +251,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     price: 999,
     image: shelfUnlockImage,
     description: "たなの ３だんめを つかえるようにする。",
+    addedOn: "2026-02-01",
     placeable: false,
   },
 ];
