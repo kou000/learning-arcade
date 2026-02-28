@@ -116,6 +116,28 @@ const PURCHASE_BY_ITEM_ID: Record<string, SpeechPool> = {
     normal: ["したのだんも かざれるように なったよ！"],
     rare: ["たなが さらに にぎやかに なるね！"],
   },
+  "chuchupi-bag": {
+    normal: [
+      "ちゅちゅ〜！ ちゅちゅちゅ？ ちゅちゅ！",
+      "ちゅちゅ！ ちゅちゅちゅ〜 ちゅちゅ。。",
+      "ちゅちゅ？ ちゅちゅ〜！ ちゅちゅちゅ！",
+    ],
+    rare: [
+      "ちゅちゅちゅ〜！？ ちゅちゅ！ ちゅちゅ。。",
+      "ちゅちゅ〜 ちゅちゅ〜！ ちゅちゅちゅ？",
+    ],
+  },
+  "chuchupi-keyholder": {
+    normal: [
+      "ちゅちゅ〜！ ちゅちゅちゅ？ ちゅちゅ！",
+      "ちゅちゅ！ ちゅちゅちゅ〜 ちゅちゅ。。",
+      "ちゅちゅ？ ちゅちゅ〜！ ちゅちゅちゅ！",
+    ],
+    rare: [
+      "ちゅちゅちゅ〜！？ ちゅちゅ！ ちゅちゅ。。",
+      "ちゅちゅ〜 ちゅちゅ〜！ ちゅちゅちゅ？",
+    ],
+  },
 };
 
 function chooseFromPool(key: string, pool: SpeechPool): string {
