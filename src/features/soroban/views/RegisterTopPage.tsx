@@ -1,8 +1,12 @@
 import React from "react";
 import registerGameTop from "@/assets/register-game-top.png";
+import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
-import { loadRegisterProgress } from "@/features/soroban/state";
+import {
+  loadRegisterProgress,
+  loadShopLastOpenedOn,
+} from "@/features/soroban/state";
 
 type Props = {
   onGoPractice: () => void;
@@ -22,6 +26,13 @@ export function RegisterTopPage({
   onGoSnackBadges,
 }: Props) {
   const progress = loadRegisterProgress();
+  const shopLastOpenedOn = loadShopLastOpenedOn();
+  const hasNewShopItems = SHOP_ITEMS.some(
+    (item) =>
+      item.addedOn != null &&
+      shopLastOpenedOn != null &&
+      item.addedOn > shopLastOpenedOn,
+  );
 
   return (
     <SceneFrame
@@ -60,10 +71,15 @@ export function RegisterTopPage({
           </div>
           <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-4">
             <button
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="relative rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
               onClick={onGoShop}
             >
               ショップ
+              {hasNewShopItems ? (
+                <span className="absolute -right-2 -top-2 inline-flex items-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black tracking-wide text-white">
+                  NEW
+                </span>
+              ) : null}
             </button>
             <button
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"

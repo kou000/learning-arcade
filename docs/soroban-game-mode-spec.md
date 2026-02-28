@@ -97,6 +97,7 @@
 - 役割:
   - 解放済み範囲で `級` / `レジ問題` を選択
   - スタートで `#/soroban/register/play` へ遷移
+  - `ShopPage` 側で `New` 対象商品が1件以上ある場合、ショップボタンに `NEW` ラベルを表示
 - 背景画像:
   - `src/assets/register-game-top.png`
 
