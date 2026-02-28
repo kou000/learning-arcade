@@ -207,8 +207,10 @@
   - `learning-arcade:soroban-state` のJSONを直接編集
   - JSON妥当性チェック後に保存
   - 再読込で現在値を再取得
-- 現在は暫定でパスワードなし
-- 遷移は `#/soroban/admin` を直接開く運用（ゲームTOPには専用ボタンを置かない）
+  - 現在のlocalStorage JSONをクリップボードへコピー
+- TOP画面の「admin」ボタン押下時にパスワード入力を要求する
+- パスワードは `1990`（コード上はSHA-256ハッシュで保持）
+- 認証成功時のみ `#/soroban/admin` へ遷移できる
 
 ## 5.6 SnackBudgetTopPage（300円おやつゲームTOP）
 

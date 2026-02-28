@@ -35,6 +35,31 @@ export function RegisterAdminPage({ onGoRegister }: Props) {
     setMessageType("ok");
   };
 
+  const copyStorageJson = async () => {
+    if (typeof window === "undefined") return;
+    const textToCopy = prettyJson(window.localStorage.getItem(SOROBAN_STORAGE_KEY));
+    if (!textToCopy) {
+      setMessage("コピー対象のセーブデータがありません。");
+      setMessageType("error");
+      return;
+    }
+
+    if (!window.isSecureContext || !navigator.clipboard?.writeText) {
+      setMessage("この環境ではクリップボードへコピーできません。");
+      setMessageType("error");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setMessage("現在のセーブデータJSONをクリップボードにコピーしました。");
+      setMessageType("ok");
+    } catch {
+      setMessage("コピーに失敗しました。");
+      setMessageType("error");
+    }
+  };
+
   const save = () => {
     if (typeof window === "undefined") return;
     try {
@@ -67,7 +92,7 @@ export function RegisterAdminPage({ onGoRegister }: Props) {
     >
       <div className="space-y-4">
         <p className="text-sm text-slate-700">
-          パスワードなしの暫定画面です。JSONを編集して保存できます。
+          管理者向け画面です。JSONを編集して保存できます。
         </p>
         <textarea
           className="min-h-[360px] w-full rounded-2xl border border-slate-300 bg-white p-4 font-mono text-sm text-slate-900 shadow-inner"
@@ -87,6 +112,14 @@ export function RegisterAdminPage({ onGoRegister }: Props) {
             onClick={reload}
           >
             再読み込み
+          </button>
+          <button
+            className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+            onClick={() => {
+              void copyStorageJson();
+            }}
+          >
+            JSONをコピー
           </button>
         </div>
         {message ? (
