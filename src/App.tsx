@@ -33,6 +33,16 @@ function isAdminModeFromEnv(): boolean {
   return raw === "1" || raw === "true" || raw === "on";
 }
 
+const ADMIN_PASSWORD_SHA256 = "a7be8e1fe282a37cd666e0632b17d933fa13f21addf4798fc0455bc166e2488c";
+
+async function hashTextToSha256(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text);
+  const digest = await window.crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function getHashPath(): string {
   const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
   const pathOnly = hash.split("?")[0] ?? "";
@@ -150,6 +160,18 @@ export default function App() {
 
   const goHome = () => { window.location.hash = ""; };
   const goSoroban = () => { window.location.hash = "/soroban"; };
+  const goAdminWithPassword = async () => {
+    const password = window.prompt("admin パスワードを入力してください");
+    if (password == null) return;
+
+    const enteredHash = await hashTextToSha256(password.trim());
+    if (enteredHash !== ADMIN_PASSWORD_SHA256) {
+      window.alert("パスワードがちがいます");
+      return;
+    }
+
+    window.location.hash = "/soroban/admin";
+  };
   const goRegister = () => { window.location.hash = "/soroban/register"; };
   const goRegisterStage = () => { window.location.hash = "/soroban/register/stage"; };
   const goRegisterPlay = () => { window.location.hash = "/soroban/register/play"; };
@@ -216,14 +238,23 @@ export default function App() {
         </header>
       ) : null}
       {route === "home" ? (
-        <button
-          type="button"
-          onClick={refreshCacheAndReload}
-          disabled={isRefreshingCache}
-          className="fixed bottom-4 right-4 z-50 rounded-xl border border-slate-300 bg-white/95 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-white disabled:cursor-wait disabled:opacity-70"
-        >
-          {isRefreshingCache ? "更新中..." : "キャッシュ更新"}
-        </button>
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={goAdminWithPassword}
+            className="rounded-xl border border-amber-300 bg-amber-50/95 px-3 py-2 text-xs font-bold text-amber-800 shadow-sm transition hover:bg-amber-100"
+          >
+            admin
+          </button>
+          <button
+            type="button"
+            onClick={refreshCacheAndReload}
+            disabled={isRefreshingCache}
+            className="rounded-xl border border-slate-300 bg-white/95 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-white disabled:cursor-wait disabled:opacity-70"
+          >
+            {isRefreshingCache ? "更新中..." : "キャッシュ更新"}
+          </button>
+        </div>
       ) : null}
       {route === "home" ? <ArcadeHome onStartSoroban={goSoroban} /> : null}
       {route === "soroban" ? (
