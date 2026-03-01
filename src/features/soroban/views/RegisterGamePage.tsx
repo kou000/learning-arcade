@@ -996,8 +996,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   </div>
                 ) : (
                   <div className="rounded-2xl bg-sky-100/90 p-3 text-slate-800">
-                    <div className="text-xs text-slate-600">
-                      おきゃくさん（しばいぬ）
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-xs text-slate-600">
+                        おきゃくさん（しばいぬ）
+                      </div>
+                      <div className="rounded-full border border-sky-400/70 bg-white/90 px-3 py-1 text-xs font-bold tabular-nums text-sky-900 shadow-sm">
+                        もんだい {index + 1}/{problems.length}
+                      </div>
                     </div>
                     <div className="mt-1 text-lg font-bold">{promptText}</div>
                   </div>
