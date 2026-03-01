@@ -8,6 +8,9 @@ import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import registerGameBg from "@/assets/register-game-bg.png";
 import arkSuccess from "@/assets/ark_success.png";
+import registerBadgeBronze from "@/assets/badge/regi-bronze.png";
+import registerBadgeSilver from "@/assets/badge/regi-silver.png";
+import registerBadgeGold from "@/assets/badge/regi-gold.png";
 import {
   advanceRegisterProgressOnClear,
   canPlayStage,
@@ -24,6 +27,12 @@ import {
   type RegisterStage,
   type RegisterSubject,
 } from "@/features/soroban/state";
+import {
+  buildRegisterBadgeId,
+  registerBadgeRankLabel,
+  toBestGameBadgeIds,
+  type RegisterBadgeRank,
+} from "@/features/soroban/registerBadges";
 
 type Props = {
   onGoRegister: () => void;
@@ -54,6 +63,20 @@ const READING_SPEED_OPTIONS = [
   { label: "10x", value: 10 },
 ] as const;
 const STAGE_ALPHA_SECONDS = 15;
+
+const BADGE_CONFETTI = [
+  { left: 6, color: "bg-rose-300", delay: 0 },
+  { left: 14, color: "bg-amber-300", delay: 220 },
+  { left: 22, color: "bg-sky-300", delay: 420 },
+  { left: 31, color: "bg-emerald-300", delay: 640 },
+  { left: 40, color: "bg-violet-300", delay: 900 },
+  { left: 50, color: "bg-yellow-300", delay: 1080 },
+  { left: 60, color: "bg-cyan-300", delay: 1260 },
+  { left: 69, color: "bg-pink-300", delay: 1500 },
+  { left: 77, color: "bg-lime-300", delay: 1720 },
+  { left: 86, color: "bg-orange-300", delay: 1920 },
+  { left: 94, color: "bg-blue-300", delay: 2140 },
+];
 
 const BASE_STAGE_QUESTION_COUNT: Record<1 | 2 | 3 | 4 | 5, number> = {
   1: 3,
@@ -171,6 +194,22 @@ function subjectLabel(subject: RegisterSubject): string {
   return "割り算";
 }
 
+
+function registerBadgeRankByStage(
+  stage: RegisterStage,
+): RegisterBadgeRank | null {
+  if (stage >= 6) return "gold";
+  if (stage >= 5) return "silver";
+  if (stage >= 3) return "bronze";
+  return null;
+}
+
+function registerBadgeImageByRank(rank: RegisterBadgeRank): string {
+  if (rank === "gold") return registerBadgeGold;
+  if (rank === "silver") return registerBadgeSilver;
+  return registerBadgeBronze;
+}
+
 function isAdminModeFromEnv(): boolean {
   const raw = String(
     import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "",
@@ -271,6 +310,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [showCorrectFlash, setShowCorrectFlash] = useState(false);
   const [animatedCoins, setAnimatedCoins] = useState<number>(progress.coins);
   const [isCoinAnimating, setIsCoinAnimating] = useState(false);
+  const [badgeMessage, setBadgeMessage] = useState<string>("");
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+  const [badgeModal, setBadgeModal] = useState<{
+    name: string;
+    rank: RegisterBadgeRank;
+    image: string;
+  } | null>(null);
+  const [badgeImageBroken, setBadgeImageBroken] = useState(false);
   const thankYouTimer = useRef<number | null>(null);
   const flashTimer = useRef<number | null>(null);
   const feedbackTimer = useRef<number | null>(null);
@@ -279,6 +326,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const coinAnimFrameRef = useRef<number | null>(null);
   const coinAnimDelayTimerRef = useRef<number | null>(null);
   const hasStartedCoinAnimRef = useRef(false);
+  const hasShownBadgeModalRef = useRef(false);
+  const badgeModalRef = useRef<{
+    name: string;
+    rank: RegisterBadgeRank;
+    image: string;
+  } | null>(null);
+  const awardedRegisterBadgeIdRef = useRef<string | null>(null);
   const rewardedReviewSourceIndexesRef = useRef<Set<number>>(new Set());
   const reviewTargetSourceIndexesRef = useRef<Set<number> | null>(null);
   const hasAwardedReviewClearBonusRef = useRef(false);
@@ -298,6 +352,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const isFeedbackDialogueForTimer = Boolean(clerkEcho || dogReply);
   const shouldPauseCountdownForDialogue =
     isReadingDialogueForTimer || isFeedbackDialogueForTimer;
+  badgeModalRef.current = badgeModal;
 
   useEffect(() => {
     saveRegisterPlayConfig({
@@ -517,6 +572,42 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       problems.length - wrongQuestionsCount,
     );
     const stagePassed = wrongQuestionsCount === 0;
+    const rankOrder = { bronze: 1, silver: 2, gold: 3 } as const;
+    const badgeRank =
+      isLastQuestion && stagePassed ? registerBadgeRankByStage(playStage) : null;
+    const badgeId = badgeRank
+      ? buildRegisterBadgeId(playGrade, playSubject, badgeRank)
+      : null;
+    let canUpgradeBadge = false;
+    if (badgeRank && badgeId && awardedRegisterBadgeIdRef.current !== badgeId) {
+      const currentBadge = progress.badgeIds.find((id) =>
+        id.startsWith(`register:g${playGrade}:${playSubject}:rank:`),
+      );
+      const currentBadgeRank = currentBadge ? currentBadge.split(":")[4] : null;
+      canUpgradeBadge =
+        currentBadgeRank !== "bronze" &&
+        currentBadgeRank !== "silver" &&
+        currentBadgeRank !== "gold"
+          ? true
+          : rankOrder[badgeRank] > rankOrder[currentBadgeRank];
+      const badgeLabel = `${playGrade}きゅう ${subjectUnlockLabel(playSubject)} ${registerBadgeRankLabel(badgeRank)}`;
+      setBadgeMessage(
+        canUpgradeBadge
+          ? `バッジ「${badgeLabel}」を かくとく！`
+          : `このきゅう・しゅもくは ${registerBadgeRankLabel(currentBadgeRank ?? "bronze")}を もってるよ！`,
+      );
+      if (canUpgradeBadge) {
+        setBadgeModal({
+          name: badgeLabel,
+          rank: badgeRank,
+          image: registerBadgeImageByRank(badgeRank),
+        });
+        setBadgeImageBroken(false);
+        hasShownBadgeModalRef.current = false;
+      }
+      awardedRegisterBadgeIdRef.current = badgeId;
+    }
+
     setProgress((prevProgress) => {
       let next = saveRegisterProgress({
         ...prevProgress,
@@ -542,6 +633,12 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           );
           unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
           next = saveRegisterProgress(advanced);
+        }
+        if (canUpgradeBadge && badgeId) {
+          next = saveRegisterProgress({
+            ...next,
+            badgeIds: toBestGameBadgeIds([...next.badgeIds, badgeId]),
+          });
         }
       }
       return next;
@@ -764,7 +861,8 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
   const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
-  const showCoinGainPanel = isRoundFinished && Boolean(dogReply);
+  const showCoinGainPanel =
+    isRoundFinished && Boolean(dogReply) && !isBadgeModalOpen;
   const reviewTargetSourceIndexes =
     reviewTargetSourceIndexesRef.current ??
     new Set([...mistakeIndexes, ...skippedIndexes]);
@@ -822,6 +920,23 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     }
     return "";
   })();
+
+
+  useEffect(() => {
+    if (!isRoundFinished) return;
+    if (!dogReply) return;
+    if (!badgeModalRef.current) return;
+    if (hasShownBadgeModalRef.current) return;
+    hasShownBadgeModalRef.current = true;
+    const timeoutId = window.setTimeout(() => {
+      setIsBadgeModalOpen(true);
+    }, 1000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isRoundFinished, dogReply]);
+
+  const closeBadgeModal = () => {
+    setIsBadgeModalOpen(false);
+  };
 
   useEffect(() => {
     if (!showCoinGainPanel) return;
@@ -1227,6 +1342,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           <div className="text-sm font-semibold text-emerald-700">
             かくとくしたコイン: +{progress.coins - roundStartCoinsRef.current}
           </div>
+          {badgeMessage ? (
+            <div className="mt-1 text-xs font-bold text-indigo-700">{badgeMessage}</div>
+          ) : null}
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
             <div className="text-[11px] font-bold tracking-[0.14em] text-slate-500">
               げんざいのコイン
@@ -1245,6 +1363,62 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
               かさんちゅう...
             </div>
           ) : null}
+        </div>
+      ) : null}
+      {isBadgeModalOpen && isRoundFinished && badgeModal ? (
+        <div className="absolute inset-0 z-[65] grid place-items-center bg-slate-900/45 p-4">
+          <div className="badge-modal-pop relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-200/80 bg-gradient-to-b from-amber-50 via-white to-sky-50 p-5 shadow-[0_24px_50px_rgba(15,23,42,0.38)]">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.45)_0%,_rgba(251,191,36,0)_70%)]" />
+            {BADGE_CONFETTI.map((piece) => (
+              <span
+                key={`${piece.left}-${piece.delay}`}
+                className={`badge-confetti pointer-events-none absolute top-2 h-2.5 w-2.5 rounded-sm ${piece.color}`}
+                style={
+                  {
+                    left: `${piece.left}%`,
+                    "--delay": `${piece.delay}ms`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+
+            <div className="relative text-center text-xl font-black tracking-wide text-amber-700">
+              バッジをゲットしたよ!
+            </div>
+            <div className="mt-1 text-center text-xs font-black text-slate-600">
+              {badgeModal.name}
+            </div>
+            <div className="mt-4 grid place-items-center">
+              {!badgeImageBroken ? (
+                <div className="badge-float relative">
+                  <img
+                    src={badgeModal.image}
+                    alt={`${badgeModal.name} ${registerBadgeRankLabel(badgeModal.rank)}`}
+                    className="h-52 w-40 object-contain drop-shadow-[0_14px_14px_rgba(0,0,0,0.22)]"
+                    onError={() => setBadgeImageBroken(true)}
+                  />
+                  <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+                    <div className="badge-shine absolute -left-10 top-0 h-full w-12 bg-white/65 blur-[1px]" />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid h-52 w-40 place-items-center rounded-xl border-4 border-dashed border-slate-300 bg-slate-100 text-3xl font-black text-slate-400">
+                  {registerBadgeRankLabel(badgeModal.rank)}
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-center">
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
+                {registerBadgeRankLabel(badgeModal.rank)}
+              </span>
+            </div>
+            <button
+              className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 px-4 py-2 text-sm font-black text-white shadow-[0_8px_18px_rgba(16,185,129,0.35)] hover:from-emerald-700 hover:to-cyan-700"
+              onClick={closeBadgeModal}
+            >
+              とじる
+            </button>
+          </div>
         </div>
       ) : null}
       {isReviewSelectorOpen ? (
