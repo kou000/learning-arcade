@@ -12,7 +12,9 @@ import {
   buildSnackBadgeId,
   difficultyLabel,
   getBestRankByDifficulty,
+  isSnackBadgeRank,
   rankScore,
+  type SnackBadgeRank,
   type SnackDifficulty,
   type SnackRank,
   toBestSnackBadgeIds,
@@ -43,7 +45,7 @@ type Props = {
   onGoRegister: () => void;
 };
 
-function badgeImageByRank(rank: SnackRank): string {
+function badgeImageByRank(rank: SnackBadgeRank): string {
   if (rank === "A") return snackBadgeGold;
   if (rank === "B") return snackBadgeSilver;
   return snackBadgeBronze;
@@ -134,6 +136,7 @@ export function SnackBudgetResultPage({
   const isFinished = speechIndex >= speechLines.length - 1;
   const canGetReward =
     result?.rank === "A" || result?.rank === "B" || result?.rank === "C";
+  const canGetBadge = canGetReward;
   const rewardCandidates = useMemo(
     () =>
       items.reduce<Array<{ id: string; name: string; image: string | null }>>(
@@ -166,14 +169,14 @@ export function SnackBudgetResultPage({
   const [badgeMessage, setBadgeMessage] = useState<string>("");
   const [badgeModal, setBadgeModal] = useState<{
     name: string;
-    rank: SnackRank;
+    rank: SnackBadgeRank;
     image: string;
   } | null>(null);
   const [badgeImageBroken, setBadgeImageBroken] = useState(false);
   const awardedBadgeIdRef = useRef<string | null>(null);
   const badgeModalRef = useRef<{
     name: string;
-    rank: SnackRank;
+    rank: SnackBadgeRank;
     image: string;
   } | null>(null);
   const canGetRewardRef = useRef(false);
@@ -184,7 +187,7 @@ export function SnackBudgetResultPage({
   rewardItemIdRef.current = rewardItemId;
 
   useEffect(() => {
-    if (!isFinished || !result) return;
+    if (!isFinished || !result || !canGetBadge || !isSnackBadgeRank(result.rank)) return;
     const badgeId = buildSnackBadgeId(difficulty, result.rank);
     if (awardedBadgeIdRef.current === badgeId) return;
     awardedBadgeIdRef.current = badgeId;
@@ -211,7 +214,7 @@ export function SnackBudgetResultPage({
         ? `バッジ「${badgeName}」を かくとく！`
         : `このなんいどは ランク${currentBestRank}を もってるよ！`,
     );
-  }, [difficulty, isFinished, result]);
+  }, [canGetBadge, difficulty, isFinished, result]);
 
   useEffect(() => {
     if (!isFinished || hasResultPopupShownRef.current) return;
