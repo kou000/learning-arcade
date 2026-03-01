@@ -60,6 +60,10 @@ export function RegisterTopPage({
           </div>
         </div>
 
+        <div className="absolute bottom-28 right-3 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
+          hash {__APP_BUILD_LABEL__}
+        </div>
+
         <div className="absolute inset-x-0 bottom-2 px-3">
           <div className="mb-2 flex justify-center">
             <button
