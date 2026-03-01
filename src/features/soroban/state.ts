@@ -1,7 +1,7 @@
 import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
 import { getAvailableGrades, getGradeSpec } from "@/domain/specs/kenteiSpec";
 import type { PracticeMode } from "@/features/practice/types";
-import { toBestSnackBadgeIds } from "@/features/soroban/snackBadges";
+import { toBestGameBadgeIds } from "@/features/soroban/registerBadges";
 
 export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
 const SHOP_LAST_OPENED_ON_FALLBACK = "2026-02-27";
@@ -151,7 +151,7 @@ function normalizeRegisterProgress(input: Partial<RegisterProgress> | undefined)
   return {
     coins: Math.max(0, Math.floor(input?.coins ?? DEFAULT_REGISTER_PROGRESS.coins)),
     purchasedItemIds: Array.from(new Set((input?.purchasedItemIds ?? []).filter((id): id is string => typeof id === "string"))),
-    badgeIds: toBestSnackBadgeIds(
+    badgeIds: toBestGameBadgeIds(
       Array.from(
         new Set(
           (input?.badgeIds ?? []).filter(

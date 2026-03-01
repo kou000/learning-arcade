@@ -15,8 +15,8 @@ import {
   rankScore,
   type SnackDifficulty,
   type SnackRank,
-  toBestSnackBadgeIds,
 } from "@/features/soroban/snackBadges";
+import { toBestGameBadgeIds } from "@/features/soroban/registerBadges";
 import {
   loadRegisterProgress,
   saveRegisterProgress,
@@ -197,7 +197,7 @@ export function SnackBudgetResultPage({
     if (canUpgrade) {
       saveRegisterProgress({
         ...current,
-        badgeIds: toBestSnackBadgeIds([...current.badgeIds, badgeId]),
+        badgeIds: toBestGameBadgeIds([...current.badgeIds, badgeId]),
       });
       setBadgeModal({
         name: badgeName,
