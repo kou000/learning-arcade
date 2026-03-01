@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import shelfBg from "@/assets/shelf.png";
+import shelfDefaultBg from "@/assets/shelf.png";
+import shelfColorfulBg from "@/assets/shelf-colorful.png";
+import shelfFancyBg from "@/assets/shelf-fancy.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { SNACK_PLACEABLE_ITEMS } from "@/features/soroban/snackCatalog";
 import {
-  loadRegisterProgress,
-  saveRegisterProgress,
-} from "@/features/soroban/state";
+  DEFAULT_SHELF_ID,
+  SHELF_DEFINITIONS,
+  type ShelfId,
+  getUnlockedShelfIds,
+} from "@/features/soroban/shelfCatalog";
+import { loadRegisterProgress, saveRegisterProgress } from "@/features/soroban/state";
 
 type Props = {
   onGoPractice: () => void;
@@ -18,6 +23,29 @@ type Props = {
 const SHELF_ROWS = 3;
 const UPPER_ROW_UNLOCK_ID = "shelf-upper-unlock";
 const LOWER_ROW_UNLOCK_ID = "shelf-lower-unlock";
+const SHELF_ROW_UNLOCK_ITEM_IDS: Record<
+  ShelfId,
+  { upper: string[]; lower: string[] }
+> = {
+  "shelf-default": {
+    upper: [UPPER_ROW_UNLOCK_ID],
+    lower: [LOWER_ROW_UNLOCK_ID],
+  },
+  "shelf-colorful": {
+    upper: ["shelf-colorful-upper-unlock"],
+    lower: ["shelf-colorful-lower-unlock"],
+  },
+  "shelf-fancy": {
+    upper: ["shelf-fancy-upper-unlock"],
+    lower: ["shelf-fancy-lower-unlock"],
+  },
+};
+
+const SHELF_BG_BY_ID: Record<ShelfId, string> = {
+  "shelf-default": shelfDefaultBg,
+  "shelf-colorful": shelfColorfulBg,
+  "shelf-fancy": shelfFancyBg,
+};
 
 function ShelfItemImage({
   src,
@@ -62,10 +90,15 @@ export function ShelfPage({
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeSlotIndex, setActiveSlotIndex] = useState<number | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const shelfItems = useMemo(
-    () => [...SHOP_ITEMS, ...SNACK_PLACEABLE_ITEMS],
-    [],
+  const shelfItems = useMemo(() => [...SHOP_ITEMS, ...SNACK_PLACEABLE_ITEMS], []);
+
+  const unlockedShelfIds = useMemo(
+    () => getUnlockedShelfIds(progress.purchasedItemIds),
+    [progress.purchasedItemIds],
   );
+  const activeShelfId = unlockedShelfIds.includes(progress.activeShelfId)
+    ? progress.activeShelfId
+    : (unlockedShelfIds[0] ?? DEFAULT_SHELF_ID);
 
   const purchasedItems = useMemo(
     () =>
@@ -76,34 +109,58 @@ export function ShelfPage({
       ),
     [progress.purchasedItemIds, shelfItems],
   );
+  const placedItemIds = useMemo(() => {
+    const ids = new Set<string>();
+    SHELF_DEFINITIONS.forEach((shelf) => {
+      const slots = progress.shelfLayouts[shelf.id] ?? [];
+      slots.forEach((slotItemId) => {
+        if (typeof slotItemId === "string" && slotItemId.length > 0) {
+          ids.add(slotItemId);
+        }
+      });
+    });
+    return ids;
+  }, [progress.shelfLayouts]);
+
   const shelfCols = Math.max(1, progress.shelfCols);
   const slotCount = shelfCols * SHELF_ROWS;
   const shelfSlots = useMemo(
     () =>
       Array.from(
         { length: slotCount },
-        (_, idx) => progress.shelfSlots[idx] ?? null,
+        (_, idx) =>
+          progress.shelfLayouts[activeShelfId]?.[idx] ??
+          progress.shelfSlots[idx] ??
+          null,
       ),
-    [progress.shelfSlots, slotCount],
+    [activeShelfId, progress.shelfLayouts, progress.shelfSlots, slotCount],
   );
 
   useEffect(() => {
     if (
       progress.shelfRows === SHELF_ROWS &&
-      progress.shelfSlots.length === slotCount
-    )
+      progress.shelfSlots.length === slotCount &&
+      unlockedShelfIds.includes(progress.activeShelfId)
+    ) {
       return;
-    setProgress((prev) =>
-      saveRegisterProgress({
+    }
+    setProgress((prev) => {
+      const fallbackShelfId = unlockedShelfIds[0] ?? DEFAULT_SHELF_ID;
+      const nextActiveShelfId = unlockedShelfIds.includes(prev.activeShelfId)
+        ? prev.activeShelfId
+        : fallbackShelfId;
+      const layout = Array.from(
+        { length: prev.shelfCols * SHELF_ROWS },
+        (_, idx) => prev.shelfLayouts[nextActiveShelfId]?.[idx] ?? prev.shelfSlots[idx] ?? null,
+      );
+      return saveRegisterProgress({
         ...prev,
+        activeShelfId: nextActiveShelfId,
         shelfRows: SHELF_ROWS,
-        shelfSlots: Array.from(
-          { length: prev.shelfCols * SHELF_ROWS },
-          (_, idx) => prev.shelfSlots[idx] ?? null,
-        ),
-      }),
-    );
-  }, [progress, slotCount]);
+        shelfSlots: layout,
+      });
+    });
+  }, [progress, slotCount, unlockedShelfIds]);
 
   const saveProgress = (
     updater: (current: typeof progress) => typeof progress,
@@ -118,15 +175,36 @@ export function ShelfPage({
 
   const placeAt = (slotIndex: number, itemId: string) => {
     saveProgress((prev) => {
-      const slots = Array.from(
-        { length: prev.shelfCols * SHELF_ROWS },
-        (_, idx) => prev.shelfSlots[idx] ?? null,
-      );
-      for (let i = 0; i < slots.length; i++) {
-        if (slots[i] === itemId) slots[i] = null;
-      }
-      slots[slotIndex] = itemId;
-      return { ...prev, shelfRows: SHELF_ROWS, shelfSlots: slots };
+      const totalSlots = prev.shelfCols * SHELF_ROWS;
+      const nextLayouts: Partial<Record<ShelfId, Array<string | null>>> = {
+        ...prev.shelfLayouts,
+      };
+
+      SHELF_DEFINITIONS.forEach((shelf) => {
+        const slots = Array.from({ length: totalSlots }, (_, idx) => {
+          if (shelf.id === prev.activeShelfId) {
+            return prev.shelfLayouts[shelf.id]?.[idx] ?? prev.shelfSlots[idx] ?? null;
+          }
+          return prev.shelfLayouts[shelf.id]?.[idx] ?? null;
+        });
+        for (let i = 0; i < slots.length; i++) {
+          if (slots[i] === itemId) slots[i] = null;
+        }
+        nextLayouts[shelf.id] = slots;
+      });
+
+      const targetSlots =
+        nextLayouts[activeShelfId] ??
+        Array.from({ length: totalSlots }, () => null);
+      targetSlots[slotIndex] = itemId;
+      nextLayouts[activeShelfId] = targetSlots;
+
+      return {
+        ...prev,
+        shelfRows: SHELF_ROWS,
+        shelfSlots: targetSlots,
+        shelfLayouts: nextLayouts,
+      };
     });
   };
 
@@ -134,19 +212,52 @@ export function ShelfPage({
     saveProgress((prev) => {
       const slots = Array.from(
         { length: prev.shelfCols * SHELF_ROWS },
-        (_, idx) => prev.shelfSlots[idx] ?? null,
+        (_, idx) =>
+          prev.shelfLayouts[activeShelfId]?.[idx] ?? prev.shelfSlots[idx] ?? null,
       );
       slots[slotIndex] = null;
-      return { ...prev, shelfRows: SHELF_ROWS, shelfSlots: slots };
+      return {
+        ...prev,
+        shelfRows: SHELF_ROWS,
+        shelfSlots: slots,
+        shelfLayouts: {
+          ...prev.shelfLayouts,
+          [activeShelfId]: slots,
+        },
+      };
+    });
+  };
+
+  const onSelectShelf = (shelfId: ShelfId) => {
+    if (!unlockedShelfIds.includes(shelfId)) return;
+    closePicker();
+    setIsEditMode(false);
+    saveProgress((prev) => {
+      const nextSlots = Array.from(
+        { length: prev.shelfCols * SHELF_ROWS },
+        (_, idx) => prev.shelfLayouts[shelfId]?.[idx] ?? null,
+      );
+      return {
+        ...prev,
+        activeShelfId: shelfId,
+        shelfRows: SHELF_ROWS,
+        shelfSlots: nextSlots,
+      };
     });
   };
 
   const onSlotClick = (slotIndex: number) => {
     if (!isEditMode) return;
     const rowIndex = Math.floor(slotIndex / shelfCols);
-    const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
-    const bottomUnlocked =
-      progress.purchasedItemIds.includes(LOWER_ROW_UNLOCK_ID);
+    const unlockIds =
+      SHELF_ROW_UNLOCK_ITEM_IDS[activeShelfId] ??
+      SHELF_ROW_UNLOCK_ITEM_IDS["shelf-default"];
+    const topUnlocked = unlockIds.upper.some((id) =>
+      progress.purchasedItemIds.includes(id),
+    );
+    const bottomUnlocked = unlockIds.lower.some((id) =>
+      progress.purchasedItemIds.includes(id),
+    );
     const isUnlocked =
       rowIndex === 1 ||
       (rowIndex === 0 && topUnlocked) ||
@@ -185,9 +296,15 @@ export function ShelfPage({
       : (shelfItems.find((item) => item.id === activeSlotItemId) ?? null);
 
   const isRowUnlocked = (rowIndex: number) => {
-    const topUnlocked = progress.purchasedItemIds.includes(UPPER_ROW_UNLOCK_ID);
-    const bottomUnlocked =
-      progress.purchasedItemIds.includes(LOWER_ROW_UNLOCK_ID);
+    const unlockIds =
+      SHELF_ROW_UNLOCK_ITEM_IDS[activeShelfId] ??
+      SHELF_ROW_UNLOCK_ITEM_IDS["shelf-default"];
+    const topUnlocked = unlockIds.upper.some((id) =>
+      progress.purchasedItemIds.includes(id),
+    );
+    const bottomUnlocked = unlockIds.lower.some((id) =>
+      progress.purchasedItemIds.includes(id),
+    );
     return (
       rowIndex === 1 ||
       (rowIndex === 0 && topUnlocked) ||
@@ -195,9 +312,43 @@ export function ShelfPage({
     );
   };
 
+  const shelfBackgroundImage = SHELF_BG_BY_ID[activeShelfId] ?? shelfDefaultBg;
+  const shelfOverlayTopClass =
+    activeShelfId === "shelf-fancy" ? "top-[10.5%]" : "top-[9%]";
+  const activeShelfIndex = SHELF_DEFINITIONS.findIndex(
+    (shelf) => shelf.id === activeShelfId,
+  );
+  const canMovePrev = activeShelfIndex > 0;
+  const canMoveNext = activeShelfIndex >= 0 && activeShelfIndex < SHELF_DEFINITIONS.length - 1;
+
+  const moveShelf = (direction: -1 | 1) => {
+    const hasShelfInDirection =
+      direction < 0 ? activeShelfIndex > 0 : activeShelfIndex < SHELF_DEFINITIONS.length - 1;
+    if (!hasShelfInDirection) return;
+
+    let nextShelf: (typeof SHELF_DEFINITIONS)[number] | undefined;
+    for (
+      let idx = activeShelfIndex + direction;
+      idx >= 0 && idx < SHELF_DEFINITIONS.length;
+      idx += direction
+    ) {
+      const candidate = SHELF_DEFINITIONS[idx];
+      if (unlockedShelfIds.includes(candidate.id)) {
+        nextShelf = candidate;
+        break;
+      }
+    }
+
+    if (!nextShelf) {
+      window.alert("みせで べつのたなを かうと ひらくよ");
+      return;
+    }
+    onSelectShelf(nextShelf.id);
+  };
+
   return (
     <SceneFrame
-      backgroundImage={shelfBg}
+      backgroundImage={shelfBackgroundImage}
       fullscreenBackground
       outsideTopLeft={
         <button
@@ -212,7 +363,35 @@ export function ShelfPage({
         className="relative h-full text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
-        <div className="absolute left-1/2 top-[9%] z-10 h-[calc(100vh-80px)] min-h-[640px] max-h-[700px] w-[92%] -translate-x-1/2 -translate-y-[30px] sm:w-[86%] md:w-[80%]">
+        <button
+          className={`absolute left-[2.2%] top-1/2 z-20 -translate-y-1/2 rounded-2xl px-3 py-4 text-3xl font-black leading-none ${
+            canMovePrev
+              ? "bg-white/85 text-slate-900 hover:bg-white"
+              : "cursor-not-allowed bg-white/20 text-white/60"
+          }`}
+          onClick={() => moveShelf(-1)}
+          disabled={!canMovePrev}
+          aria-label="まえのたな"
+        >
+          ←
+        </button>
+
+        <button
+          className={`absolute right-[2.2%] top-1/2 z-20 -translate-y-1/2 rounded-2xl px-3 py-4 text-3xl font-black leading-none ${
+            canMoveNext
+              ? "bg-white/85 text-slate-900 hover:bg-white"
+              : "cursor-not-allowed bg-white/20 text-white/60"
+          }`}
+          onClick={() => moveShelf(1)}
+          disabled={!canMoveNext}
+          aria-label="つぎのたな"
+        >
+          →
+        </button>
+
+        <div
+          className={`absolute left-1/2 ${shelfOverlayTopClass} z-10 h-[calc(100vh-80px)] min-h-[640px] max-h-[700px] w-[92%] -translate-x-1/2 -translate-y-[30px] overflow-hidden rounded-3xl sm:w-[86%] md:w-[80%]`}
+        >
           <div className="grid content-start gap-y-1">
             {Array.from({ length: SHELF_ROWS }, (_, rowIndex) => {
               const rowUnlocked = isRowUnlocked(rowIndex);
@@ -341,9 +520,16 @@ export function ShelfPage({
                       onClick={() => onPickItem(item.id)}
                     >
                       <ShelfItemImage src={item.image} alt={item.name} />
-                      <span className="font-semibold text-slate-700">
-                        {item.name}
-                      </span>
+                      <div className="grid gap-1">
+                        <span className="font-semibold text-slate-700">
+                          {item.name}
+                        </span>
+                        {placedItemIds.has(item.id) ? (
+                          <span className="inline-flex w-fit rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                            はいちずみ
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   ))}
                 </div>

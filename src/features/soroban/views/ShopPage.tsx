@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
@@ -12,8 +12,43 @@ type ShopPageProps = {
   onGoPayment: (itemId: string) => void;
 };
 
-function ItemPreview({ src, alt }: { src: string; alt: string }) {
+function ItemPreview({
+  src,
+  alt,
+  onLongPress,
+}: {
+  src: string;
+  alt: string;
+  onLongPress?: () => void;
+}) {
   const [missing, setMissing] = useState(false);
+  const longPressTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (longPressTimerRef.current != null) {
+        window.clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    },
+    [],
+  );
+
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const startLongPress = () => {
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      onLongPress?.();
+      longPressTimerRef.current = null;
+    }, 420);
+  };
+
   if (missing) {
     return (
       <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500">
@@ -26,6 +61,14 @@ function ItemPreview({ src, alt }: { src: string; alt: string }) {
       src={src}
       alt={alt}
       onError={() => setMissing(true)}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        startLongPress();
+      }}
+      onPointerUp={clearLongPressTimer}
+      onPointerLeave={clearLongPressTimer}
+      onPointerCancel={clearLongPressTimer}
+      onContextMenu={(event) => event.preventDefault()}
       className="h-24 w-24 rounded-xl border border-slate-200 bg-white object-contain p-2"
     />
   );
@@ -62,6 +105,10 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
     name: string;
     price: number;
   } | null>(null);
+  const [previewItem, setPreviewItem] = useState<{
+    src: string;
+    name: string;
+  } | null>(null);
   const [enterMessage] = useState(() => {
     const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
     const query = hash.split("?")[1] ?? "";
@@ -73,6 +120,16 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
   const [leaveMessage] = useState(() => pickShopSpeech("leave-top"));
   const leaveTimerRef = useRef<number | null>(null);
   const purchaseTimerRef = useRef<number | null>(null);
+  const visibleItems = useMemo(
+    () =>
+      SHOP_ITEMS.filter((item) => {
+        const requirements = item.requiredPurchasedItemIds ?? [];
+        return requirements.every((requiredId) =>
+          progress.purchasedItemIds.includes(requiredId),
+        );
+      }),
+    [progress.purchasedItemIds],
+  );
 
   useEffect(() => {
     const maybeSaver = (sorobanState as Record<string, unknown>)
@@ -177,7 +234,7 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
 
         {viewState.mode === "items" ? (
           <div className="grid min-h-0 content-start gap-3 overflow-y-auto rounded-2xl border border-white/35 bg-white/35 p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
-            {SHOP_ITEMS.map((item) => {
+            {visibleItems.map((item) => {
               const purchased = progress.purchasedItemIds.includes(item.id);
               const insufficientCoins = progress.coins < item.price;
               const disabled = purchased || insufficientCoins;
@@ -187,7 +244,13 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
                   key={item.id}
                   className="grid gap-2 rounded-xl border border-white/50 bg-white/55 p-3 backdrop-blur-[1px]"
                 >
-                  <ItemPreview src={item.image} alt={item.name} />
+                  <ItemPreview
+                    src={item.image}
+                    alt={item.name}
+                    onLongPress={() =>
+                      setPreviewItem({ src: item.image, name: item.name })
+                    }
+                  />
                   <div className="flex items-start justify-between gap-2">
                     <div className="font-bold text-slate-800">{item.name}</div>
                     {newItem ? (
@@ -229,6 +292,35 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
           </div>
         ) : null}
       </div>
+
+      {previewItem ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/75 p-4"
+          onClick={() => setPreviewItem(null)}
+        >
+          <div
+            className="grid max-h-[90vh] w-full max-w-3xl gap-3 rounded-2xl border border-white/20 bg-slate-950/85 p-4"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-bold text-white">
+                {previewItem.name}
+              </div>
+              <button
+                className="rounded-lg border border-white/30 px-3 py-1 text-sm font-semibold text-white hover:bg-white/10"
+                onClick={() => setPreviewItem(null)}
+              >
+                とじる
+              </button>
+            </div>
+            <img
+              src={previewItem.src}
+              alt={previewItem.name}
+              className="max-h-[75vh] w-full rounded-xl bg-white object-contain p-2"
+            />
+          </div>
+        </div>
+      ) : null}
     </SceneFrame>
   );
 }

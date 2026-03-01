@@ -110,12 +110,13 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - `RegisterGamePage` : レジゲーム本編
 - `ShopPage` : 報酬ショップTOP（商品一覧）
 - `ShopPaymentPage` : 支払い画面（商品ごと）
-- `ShelfPage` : 棚スロット配置（タップ起点モーダルで購入済みグッズを配置）
+- `ShelfPage` : 複数の棚スロット配置（棚を切り替え、タップ起点モーダルで購入済みグッズを配置）
 - `SnackBudgetGamePage` : 300円おやつゲーム（棚の商品をドラッグ＆ドロップでカゴに入れ、お会計時に結果判定）
 - `SnackBadgeBookPage` : ゲーム内バッジ図鑑（300円おやつゲーム + レジゲームのバッジを表示）
 - `RegisterAdminPage` : セーブデータ編集（管理者画面）
 - `SceneFrame` : ゲーム系共通フレーム
 - `catalog.ts` : ショップ商品定義
+- `shelfCatalog.ts` : 棚ID/解放条件の定義
 - `state.ts` : ゲーム進行と保存管理
 
 重要ルール:
@@ -138,6 +139,8 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 - 購入済みアイテム
 - ゲーム内バッジ（`badgeIds`）
 - 棚サイズ/スロット
+- 現在開いている棚ID（`activeShelfId`）
+- 棚ごとの配置データ（`shelfLayouts`）
 - 解放済み級・種目ステージ
 
 `state.ts` 内で正規化関数を通し、欠損や不正値を補正する設計。

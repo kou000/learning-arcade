@@ -24,6 +24,8 @@ import spaceAdventureDioramaImage from "@/assets/items/space-adventure-diorama.p
 import starKeychainImage from "@/assets/items/star-lamp.png";
 import studyClassroomDioramaImage from "@/assets/items/study-classroom-diorama.png";
 import toyCarImage from "@/assets/items/toy-car.png";
+import shelfColorfulImage from "@/assets/shelf-colorful.png";
+import shelfFancyImage from "@/assets/shelf-fancy.png";
 
 export type ShopItem = {
   id: string;
@@ -33,6 +35,7 @@ export type ShopItem = {
   description: string;
   placeable?: boolean;
   addedOn: string;
+  requiredPurchasedItemIds?: string[];
 };
 
 export const SHOP_ITEMS: ShopItem[] = [
@@ -248,10 +251,68 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: "shelf-lower-unlock",
     name: "たな３だんめかいほう",
-    price: 999,
+    price: 399,
     image: shelfUnlockImage,
     description: "たなの ３だんめを つかえるようにする。",
     addedOn: "2026-02-01",
     placeable: false,
+  },
+  {
+    id: "shelf-colorful-unlock",
+    name: "カラフルたなかいほう",
+    price: 525,
+    image: shelfColorfulImage,
+    description: "からふるな べつのたなを ひらく。",
+    addedOn: "2026-03-01",
+    placeable: false,
+  },
+  {
+    id: "shelf-colorful-upper-unlock",
+    name: "カラフルたな１だんめかいほう",
+    price: 499,
+    image: shelfColorfulImage,
+    description: "からふるなたなの １だんめを つかえるようにする。",
+    addedOn: "2026-03-01",
+    placeable: false,
+    requiredPurchasedItemIds: ["shelf-colorful-unlock"],
+  },
+  {
+    id: "shelf-colorful-lower-unlock",
+    name: "カラフルたな３だんめかいほう",
+    price: 499,
+    image: shelfColorfulImage,
+    description: "からふるなたなの ３だんめを つかえるようにする。",
+    addedOn: "2026-03-01",
+    placeable: false,
+    requiredPurchasedItemIds: ["shelf-colorful-unlock"],
+  },
+  {
+    id: "shelf-fancy-unlock",
+    name: "ファンシーたなかいほう",
+    price: 525,
+    image: shelfFancyImage,
+    description: "ふぁんしーな べつのたなを ひらく。",
+    addedOn: "2026-03-01",
+    placeable: false,
+  },
+  {
+    id: "shelf-fancy-upper-unlock",
+    name: "ファンシーたな１だんめかいほう",
+    price: 499,
+    image: shelfFancyImage,
+    description: "ふぁんしーなたなの １だんめを つかえるようにする。",
+    addedOn: "2026-03-01",
+    placeable: false,
+    requiredPurchasedItemIds: ["shelf-fancy-unlock"],
+  },
+  {
+    id: "shelf-fancy-lower-unlock",
+    name: "ファンシーたな３だんめかいほう",
+    price: 499,
+    image: shelfFancyImage,
+    description: "ふぁんしーなたなの ３だんめを つかえるようにする。",
+    addedOn: "2026-03-01",
+    placeable: false,
+    requiredPurchasedItemIds: ["shelf-fancy-unlock"],
   },
 ];

@@ -116,6 +116,30 @@ const PURCHASE_BY_ITEM_ID: Record<string, SpeechPool> = {
     normal: ["したのだんも かざれるように なったよ！"],
     rare: ["たなが さらに にぎやかに なるね！"],
   },
+  "shelf-colorful-unlock": {
+    normal: ["からふるなたなが あたらしく ひらいたよ！"],
+    rare: ["たな２ごうで もっと かざってみよう！"],
+  },
+  "shelf-fancy-unlock": {
+    normal: ["ふぁんしーなたなが つかえるように なったよ！"],
+    rare: ["たな３ごうで おきにいりを ならべよう！"],
+  },
+  "shelf-colorful-upper-unlock": {
+    normal: ["からふるたなの うえのだんが ひらいたよ！"],
+    rare: ["たな２ごうの うえにも かざれるね！"],
+  },
+  "shelf-colorful-lower-unlock": {
+    normal: ["からふるたなの したのだんも つかえるよ！"],
+    rare: ["たな２ごうが もっと にぎやかに なるね！"],
+  },
+  "shelf-fancy-upper-unlock": {
+    normal: ["ふぁんしーたなの うえのだんが つかえるよ！"],
+    rare: ["たな３ごうの うえに おきにいりを かざろう！"],
+  },
+  "shelf-fancy-lower-unlock": {
+    normal: ["ふぁんしーたなの したのだんも かいほうだよ！"],
+    rare: ["たな３ごうが さらに ひろく つかえるね！"],
+  },
   "chuchupi-bag": {
     normal: [
       "ちゅちゅ〜！ ちゅちゅちゅ？ ちゅちゅ！",
