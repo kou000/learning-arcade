@@ -100,6 +100,7 @@
   - `ShopPage` 側で `New` 対象商品が1件以上ある場合、ショップボタンに `NEW` ラベルを表示
 - 背景画像:
   - `src/assets/register-game-top.png`
+- 画面右下にビルド識別表示（`hash <git short hash>`）を出す
 
 ## 5.2 RegisterGamePage（本編）
 
