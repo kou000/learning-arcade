@@ -162,6 +162,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 
 ## 10. PWA/オフライン
 
+- `src/main.tsx` で `/index.html` の更新監視（初回 + hashページ遷移時 + フォーカス復帰時）を行い、実行中エントリJSと差分があれば自動リロードする。
 - `src/main.tsx` で `navigator.serviceWorker.register("/sw.js")` を実行。
 - 更新版Service Workerがインストール済みになったら `SKIP_WAITING` を送信し、`controllerchange` で自動リロードして最新資産へ切り替える。
 - `public/sw.js` ではアプリシェル（`/`, `/index.html`, manifest, icon）を事前キャッシュ。
