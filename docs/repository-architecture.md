@@ -163,6 +163,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 ## 10. PWA/オフライン
 
 - `src/main.tsx` で `navigator.serviceWorker.register("/sw.js")` を実行。
+- 更新版Service Workerがインストール済みになったら `SKIP_WAITING` を送信し、`controllerchange` で自動リロードして最新資産へ切り替える。
 - `public/sw.js` ではアプリシェル（`/`, `/index.html`, manifest, icon）を事前キャッシュ。
 - ナビゲーション要求はネットワーク優先、失敗時はキャッシュした `index.html` を返す。
 - 同一オリジンの静的アセットはキャッシュ優先で再利用。
