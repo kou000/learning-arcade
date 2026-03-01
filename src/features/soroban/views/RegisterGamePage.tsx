@@ -312,6 +312,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [isCoinAnimating, setIsCoinAnimating] = useState(false);
   const [badgeMessage, setBadgeMessage] = useState<string>("");
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+  const [hasClosedBadgeModal, setHasClosedBadgeModal] = useState(true);
   const [badgeModal, setBadgeModal] = useState<{
     name: string;
     rank: RegisterBadgeRank;
@@ -603,6 +604,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           image: registerBadgeImageByRank(badgeRank),
         });
         setBadgeImageBroken(false);
+        setHasClosedBadgeModal(false);
         hasShownBadgeModalRef.current = false;
       }
       awardedRegisterBadgeIdRef.current = badgeId;
@@ -745,6 +747,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     setIsReviewSelectorOpen(false);
     roundStartCoinsRef.current = progress.coins;
     hasStartedCoinAnimRef.current = false;
+    setHasClosedBadgeModal(true);
     setAnimatedCoins(progress.coins);
     setIsCoinAnimating(false);
     setIndex(0);
@@ -862,7 +865,10 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
   const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
   const showCoinGainPanel =
-    isRoundFinished && Boolean(dogReply) && !isBadgeModalOpen;
+    isRoundFinished &&
+    Boolean(dogReply) &&
+    !isBadgeModalOpen &&
+    (!badgeModal || hasClosedBadgeModal);
   const reviewTargetSourceIndexes =
     reviewTargetSourceIndexesRef.current ??
     new Set([...mistakeIndexes, ...skippedIndexes]);
@@ -928,14 +934,18 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (!badgeModalRef.current) return;
     if (hasShownBadgeModalRef.current) return;
     hasShownBadgeModalRef.current = true;
+
+    const hasCoinGain = roundStartCoinsRef.current !== progress.coins;
+    const badgeModalDelayMs = hasCoinGain ? 2500 : 1000;
     const timeoutId = window.setTimeout(() => {
       setIsBadgeModalOpen(true);
-    }, 1000);
+    }, badgeModalDelayMs);
     return () => window.clearTimeout(timeoutId);
-  }, [isRoundFinished, dogReply]);
+  }, [isRoundFinished, dogReply, progress.coins]);
 
   const closeBadgeModal = () => {
     setIsBadgeModalOpen(false);
+    setHasClosedBadgeModal(true);
   };
 
   useEffect(() => {
