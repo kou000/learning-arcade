@@ -53,39 +53,50 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("focus", runUpdateChecks);
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
+  if (import.meta.env.DEV) {
     navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        let refreshing = false;
-
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          refreshing = true;
-          window.location.reload();
-        });
-
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state !== "installed") return;
-            if (!navigator.serviceWorker.controller) return;
-            newWorker.postMessage({ type: "SKIP_WAITING" });
-          });
-        });
-
-        requestSwUpdate = () => {
-          registration.update().catch(() => {
-            // noop: update check failures should not break app execution
-          });
-        };
-
-        runUpdateChecks();
-      })
-      .catch((error) => {
-        console.error("Service Worker registration failed:", error);
+      .getRegistrations()
+      .then((registrations) =>
+        Promise.all(registrations.map((registration) => registration.unregister())),
+      )
+      .catch(() => {
+        // noop: dev only cleanup failure should not break app execution
       });
-  });
+  } else {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          let refreshing = false;
+
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+          });
+
+          registration.addEventListener("updatefound", () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state !== "installed") return;
+              if (!navigator.serviceWorker.controller) return;
+              newWorker.postMessage({ type: "SKIP_WAITING" });
+            });
+          });
+
+          requestSwUpdate = () => {
+            registration.update().catch(() => {
+              // noop: update check failures should not break app execution
+            });
+          };
+
+          runUpdateChecks();
+        })
+        .catch((error) => {
+          console.error("Service Worker registration failed:", error);
+        });
+    });
+  }
 }

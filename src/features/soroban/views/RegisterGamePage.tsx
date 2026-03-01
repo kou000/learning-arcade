@@ -33,6 +33,7 @@ import {
   toBestGameBadgeIds,
   type RegisterBadgeRank,
 } from "@/features/soroban/registerBadges";
+import { resolveAdminMode } from "@/features/soroban/adminMode";
 
 type Props = {
   onGoRegister: () => void;
@@ -210,12 +211,6 @@ function registerBadgeImageByRank(rank: RegisterBadgeRank): string {
   return registerBadgeBronze;
 }
 
-function isAdminModeFromEnv(): boolean {
-  const raw = String(
-    import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "",
-  ).toLowerCase();
-  return raw === "1" || raw === "true" || raw === "on";
-}
 
 function subjectUnlockLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
@@ -247,7 +242,7 @@ function buildUnlockMessage(
 }
 
 export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
-  const [isAdminMode] = useState(() => isAdminModeFromEnv());
+  const [isAdminMode] = useState(() => resolveAdminMode());
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const roundStartCoinsRef = useRef<number>(progress.coins);
   const config = loadPracticeConfig();

@@ -12,6 +12,7 @@ import { SnackBudgetGamePage } from "@/features/soroban/views/SnackBudgetGamePag
 import { SnackBudgetResultPage } from "@/features/soroban/views/SnackBudgetResultPage";
 import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage";
 import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage";
+import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
 
 type Route =
   | "home"
@@ -27,11 +28,6 @@ type Route =
   | "soroban-badges"
   | "soroban-snack-result"
   | "soroban-admin";
-
-function isAdminModeFromEnv(): boolean {
-  const raw = String(import.meta.env.VITE_REGISTER_ADMIN_MODE ?? "").toLowerCase();
-  return raw === "1" || raw === "true" || raw === "on";
-}
 
 const ADMIN_PASSWORD_SHA256 = "a7be8e1fe282a37cd666e0632b17d933fa13f21addf4798fc0455bc166e2488c";
 
@@ -150,7 +146,7 @@ function getSnackResultItemsFromHash(): SnackResultItem[] {
 export default function App() {
   const [route, setRoute] = useState<Route>(() => getRouteFromHash());
   const [isRefreshingCache, setIsRefreshingCache] = useState(false);
-  const isAdminMode = isAdminModeFromEnv();
+  const [isAdminMode, setIsAdminMode] = useState(() => resolveAdminMode());
 
   useEffect(() => {
     const onHashChange = () => setRoute(getRouteFromHash());
@@ -171,6 +167,18 @@ export default function App() {
     }
 
     window.location.hash = "/soroban/admin";
+  };
+  const setAdminModeEnabled = () => {
+    setAdminModeOverride("on");
+    setIsAdminMode(resolveAdminMode());
+  };
+  const setAdminModeDisabled = () => {
+    setAdminModeOverride("off");
+    setIsAdminMode(resolveAdminMode());
+  };
+  const resetAdminModeToEnv = () => {
+    setAdminModeOverride(null);
+    setIsAdminMode(resolveAdminMode());
   };
   const goRegister = () => { window.location.hash = "/soroban/register"; };
   const goRegisterStage = () => { window.location.hash = "/soroban/register/stage"; };
@@ -318,7 +326,13 @@ export default function App() {
         />
       ) : null}
       {route === "soroban-admin" ? (
-        <RegisterAdminPage onGoRegister={goRegister} />
+        <RegisterAdminPage
+          onGoRegister={goRegister}
+          isAdminMode={isAdminMode}
+          onEnableAdminMode={setAdminModeEnabled}
+          onDisableAdminMode={setAdminModeDisabled}
+          onResetAdminMode={resetAdminModeToEnv}
+        />
       ) : null}
     </div>
   );

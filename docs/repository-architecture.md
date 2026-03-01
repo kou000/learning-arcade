@@ -66,6 +66,7 @@ docs/                    # 実装向けドキュメント（ビルド非対象�
 補足:
 
 - `VITE_REGISTER_ADMIN_MODE` が truthy（`1/true/on`）ならグローバルに `ADMIN MODE` バッジ表示。
+- `/#/soroban/admin` では adminモードを画面操作で ON/OFF でき、必要に応じて環境変数判定へ戻せる（セッション単位）。
 
 ## 5. ドメイン層（問題生成）
 

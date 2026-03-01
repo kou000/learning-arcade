@@ -1,9 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SOROBAN_STORAGE_KEY } from "@/features/soroban/state";
+import { getAdminModeSourceLabel } from "@/features/soroban/adminMode";
 
 type Props = {
   onGoRegister: () => void;
+  isAdminMode: boolean;
+  onEnableAdminMode: () => void;
+  onDisableAdminMode: () => void;
+  onResetAdminMode: () => void;
 };
 
 function prettyJson(raw: string | null): string {
@@ -15,7 +20,13 @@ function prettyJson(raw: string | null): string {
   }
 }
 
-export function RegisterAdminPage({ onGoRegister }: Props) {
+export function RegisterAdminPage({
+  onGoRegister,
+  isAdminMode,
+  onEnableAdminMode,
+  onDisableAdminMode,
+  onResetAdminMode,
+}: Props) {
   const initialText = useMemo(
     () =>
       typeof window === "undefined"
@@ -94,6 +105,37 @@ export function RegisterAdminPage({ onGoRegister }: Props) {
         <p className="text-sm text-slate-700">
           管理者向け画面です。JSONを編集して保存できます。
         </p>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">
+            adminモード: {isAdminMode ? "ON" : "OFF"}
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            現在の判定元: {getAdminModeSourceLabel()}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {isAdminMode ? (
+              <button
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={onDisableAdminMode}
+              >
+                通常モードに戻す
+              </button>
+            ) : (
+              <button
+                className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+                onClick={onEnableAdminMode}
+              >
+                adminモードに切り替える
+              </button>
+            )}
+            <button
+              className="rounded-xl border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100"
+              onClick={onResetAdminMode}
+            >
+              環境変数判定に戻す
+            </button>
+          </div>
+        </div>
         <textarea
           className="min-h-[360px] w-full rounded-2xl border border-slate-300 bg-white p-4 font-mono text-sm text-slate-900 shadow-inner"
           value={editorValue}

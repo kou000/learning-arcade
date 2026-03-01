@@ -3,10 +3,7 @@ import registerGameTop from "@/assets/register-game-top.png";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
-import {
-  loadRegisterProgress,
-  loadShopLastOpenedOn,
-} from "@/features/soroban/state";
+import * as sorobanState from "@/features/soroban/state";
 
 type Props = {
   onGoPractice: () => void;
@@ -17,6 +14,12 @@ type Props = {
   onGoSnackBadges: () => void;
 };
 
+function getBuildLabel(): string {
+  return typeof __APP_BUILD_LABEL__ === "string" && __APP_BUILD_LABEL__.length > 0
+    ? __APP_BUILD_LABEL__
+    : "dev";
+}
+
 export function RegisterTopPage({
   onGoPractice,
   onGoRegisterStage,
@@ -25,8 +28,16 @@ export function RegisterTopPage({
   onGoSnack,
   onGoSnackBadges,
 }: Props) {
-  const progress = loadRegisterProgress();
-  const shopLastOpenedOn = loadShopLastOpenedOn();
+  const buildLabel = getBuildLabel();
+  const progress = sorobanState.loadRegisterProgress();
+  const shopLastOpenedOn = (() => {
+    const maybeLoader = (sorobanState as Record<string, unknown>)
+      .loadShopLastOpenedOn;
+    if (typeof maybeLoader === "function") {
+      return (maybeLoader as () => string | null)();
+    }
+    return null;
+  })();
   const hasNewShopItems = SHOP_ITEMS.some(
     (item) =>
       item.addedOn != null &&
@@ -61,7 +72,7 @@ export function RegisterTopPage({
         </div>
 
         <div className="absolute bottom-28 right-3 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
-          hash {__APP_BUILD_LABEL__}
+          hash {buildLabel}
         </div>
 
         <div className="absolute inset-x-0 bottom-2 px-3">

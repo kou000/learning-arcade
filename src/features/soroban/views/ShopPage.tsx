@@ -4,11 +4,7 @@ import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS, type ShopItem } from "@/features/soroban/catalog";
 import { pickShopSpeech } from "@/features/soroban/speech";
-import {
-  loadRegisterProgress,
-  loadShopLastOpenedOn,
-  saveShopLastOpenedOn,
-} from "@/features/soroban/state";
+import * as sorobanState from "@/features/soroban/state";
 import shopTopBg from "@/assets/shop-top.png";
 
 type ShopPageProps = {
@@ -48,9 +44,16 @@ function isShopItemNew(item: ShopItem, lastOpenedOn: string | null): boolean {
 }
 
 export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
-  const [progress] = useState(() => loadRegisterProgress());
+  const [progress] = useState(() => sorobanState.loadRegisterProgress());
   const [shopLastOpenedOn] = useState<string | null>(
-    () => loadShopLastOpenedOn(),
+    () => {
+      const maybeLoader = (sorobanState as Record<string, unknown>)
+        .loadShopLastOpenedOn;
+      if (typeof maybeLoader === "function") {
+        return (maybeLoader as () => string | null)();
+      }
+      return null;
+    },
   );
   const [showItems, setShowItems] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -72,7 +75,13 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
   const purchaseTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    saveShopLastOpenedOn(formatLocalDateOnly(new Date()));
+    const maybeSaver = (sorobanState as Record<string, unknown>)
+      .saveShopLastOpenedOn;
+    if (typeof maybeSaver === "function") {
+      (maybeSaver as (value: string) => string | null)(
+        formatLocalDateOnly(new Date()),
+      );
+    }
 
     const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
     const [path, query = ""] = hash.split("?");

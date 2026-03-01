@@ -301,6 +301,9 @@
 
 - 環境変数: `VITE_REGISTER_ADMIN_MODE`
   - truthy: `1`, `true`, `on`
+- 管理者画面（`/#/soroban/admin`）のボタンで adminモードの ON/OFF を切り替え可能
+  - 画面での切り替え状態はセッション単位で保持
+  - 「環境変数判定に戻す」で `VITE_REGISTER_ADMIN_MODE` 判定に復帰
 - 影響:
   - `App.tsx` でグローバル `ADMIN MODE` バッジ表示
   - `views/RegisterGamePage.tsx` で「こたえをにゅうりょく」ボタン表示
