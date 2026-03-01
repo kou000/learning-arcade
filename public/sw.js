@@ -7,9 +7,31 @@ const APP_SHELL = [
   "/ark_soroban.png",
 ];
 
+async function warmAppAssetsFromIndex(cache) {
+  const indexResponse = await cache.match("/index.html");
+  if (!indexResponse) return;
+
+  const html = await indexResponse.text();
+  const assetPaths = new Set();
+
+  for (const match of html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)) {
+    const assetPath = match[1];
+    if (assetPath) assetPaths.add(assetPath);
+  }
+
+  if (assetPaths.size === 0) return;
+  await cache.addAll([...assetPaths]);
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then(async (cache) => {
+        await cache.addAll(APP_SHELL);
+        await warmAppAssetsFromIndex(cache);
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -18,6 +40,7 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME && key !== FONT_CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => caches.open(CACHE_NAME).then((cache) => warmAppAssetsFromIndex(cache)))
       .then(() => self.clients.claim())
   );
 });
