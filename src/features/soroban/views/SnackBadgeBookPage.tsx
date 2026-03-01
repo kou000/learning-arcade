@@ -6,6 +6,7 @@ import snackBadgeGold from "@/assets/badge/snack-gold.png";
 import registerBadgeBronze from "@/assets/badge/regi-bronze.png";
 import registerBadgeSilver from "@/assets/badge/regi-silver.png";
 import registerBadgeGold from "@/assets/badge/regi-gold.png";
+import { LongPressPreviewImage } from "@/features/soroban/components/LongPressPreviewImage";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
   getBestRegisterBadgeByKey,
@@ -34,12 +35,13 @@ type Props = {
 type BadgeRowCardProps = {
   title: string;
   currentLabel: string;
+  rankLabel: string | null;
+  rankTone: "gold" | "silver" | "bronze" | null;
   image: string | null;
   placeholderText: string;
   isImageBroken: boolean;
   onImageError: () => void;
   isOwned: boolean;
-  acquiredText: string;
   missingText: string;
   containerClassName: string;
 };
@@ -76,6 +78,20 @@ function registerBadgeImageByRank(rank: RegisterBadgeRank): string {
   return registerBadgeBronze;
 }
 
+function snackRankTone(rank: SnackRank): "gold" | "silver" | "bronze" {
+  if (rank === "A") return "gold";
+  if (rank === "B") return "silver";
+  return "bronze";
+}
+
+function registerRankTone(
+  rank: RegisterBadgeRank,
+): "gold" | "silver" | "bronze" {
+  if (rank === "gold") return "gold";
+  if (rank === "silver") return "silver";
+  return "bronze";
+}
+
 function registerSubjectLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
   if (subject === "mul") return "かけざん";
@@ -85,15 +101,25 @@ function registerSubjectLabel(subject: RegisterSubject): string {
 function BadgeRowCard({
   title,
   currentLabel,
+  rankLabel,
+  rankTone,
   image,
   placeholderText,
   isImageBroken,
   onImageError,
   isOwned,
-  acquiredText,
   missingText,
   containerClassName,
 }: BadgeRowCardProps) {
+  const rankToneClass =
+    rankTone === "gold"
+      ? "border-amber-300 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 text-amber-900"
+      : rankTone === "silver"
+        ? "border-slate-300 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 text-slate-800"
+        : rankTone === "bronze"
+          ? "border-orange-300 bg-gradient-to-r from-orange-200 via-amber-100 to-orange-200 text-orange-900"
+          : "border-amber-300 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 text-amber-900";
+
   return (
     <section className={containerClassName}>
       <div className="mb-2 flex items-center justify-between">
@@ -104,11 +130,14 @@ function BadgeRowCard({
         {image ? (
           <div className="grid place-items-center rounded-lg bg-white/75 px-3 py-4">
             {!isImageBroken ? (
-              <img
+              <LongPressPreviewImage
                 src={image}
                 alt={title}
-                className="h-40 w-32 object-contain"
-                onError={onImageError}
+                title={title}
+                imageClassName="h-40 w-32 object-contain"
+                missingClassName="grid h-40 w-32 place-items-center rounded-lg border-4 border-dashed border-slate-300 bg-slate-100 text-3xl font-black text-slate-400"
+                missingContent={placeholderText}
+                onImageError={onImageError}
               />
             ) : (
               <div className="grid h-40 w-32 place-items-center rounded-lg border-4 border-dashed border-slate-300 bg-slate-100 text-3xl font-black text-slate-400">
@@ -126,9 +155,18 @@ function BadgeRowCard({
         <div className={`rounded-lg bg-white/75 px-3 py-4 ${isOwned ? "text-slate-700" : "text-slate-500"}`}>
           <div className="text-xs font-bold">いまのバッジ</div>
           <div className="mt-1 text-2xl font-black">{isOwned ? title : "みかくとく"}</div>
-          <div className={`mt-2 text-xs font-bold ${isOwned ? "text-emerald-700" : "text-slate-500"}`}>
-            {isOwned ? acquiredText : missingText}
-          </div>
+          {isOwned && rankLabel ? (
+            <div className="mt-2">
+              <span className={`inline-flex rounded-full border px-4 py-1.5 text-base font-black tracking-wide shadow-sm ${rankToneClass}`}>
+                {rankLabel}
+              </span>
+            </div>
+          ) : null}
+          {!isOwned ? (
+            <div className="mt-2 text-xs font-bold text-slate-500">
+              {missingText}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
@@ -204,17 +242,14 @@ export function SnackBadgeBookPage({ onGoRegister }: Props) {
               const bestRank = snackBestByDifficulty[difficulty];
               const imageKey = `snack:${difficulty}`;
               const isImageBroken = badgeImageErrorMap[imageKey] === true;
+              const baseTitle = gameBadgeLabel(difficulty);
               return (
                 <BadgeRowCard
                   key={difficulty}
-                  title={
-                    bestRank
-                      ? `${gameBadgeLabel(difficulty)} ランク${bestRank}`
-                      : gameBadgeLabel(difficulty)
-                  }
-                  currentLabel={
-                    bestRank ? `いまのバッジ: ランク${bestRank}` : "みかくとく"
-                  }
+                  title={baseTitle}
+                  currentLabel={bestRank ? "" : "みかくとく"}
+                  rankLabel={bestRank ? `ランク${bestRank}` : null}
+                  rankTone={bestRank ? snackRankTone(bestRank) : null}
                   image={bestRank ? snackBadgeImageByRank(bestRank) : null}
                   placeholderText={bestRank ?? "?"}
                   isImageBroken={isImageBroken}
@@ -222,7 +257,6 @@ export function SnackBadgeBookPage({ onGoRegister }: Props) {
                     setBadgeImageErrorMap((prev) => ({ ...prev, [imageKey]: true }))
                   }
                   isOwned={Boolean(bestRank)}
-                  acquiredText="かくとくずみ"
                   missingText="このなんいどで あそんで かくとくしよう"
                   containerClassName={`rounded-xl border p-3 ${badgeTheme(difficulty).frame}`}
                 />
@@ -243,18 +277,14 @@ export function SnackBadgeBookPage({ onGoRegister }: Props) {
                   const imageKey = `register:${entry.key}`;
                   const isImageBroken = badgeImageErrorMap[imageKey] === true;
                   const subject = registerSubjectLabel(entry.subject);
-                  const fullTitle = entry.rank
-                    ? `${entry.grade}きゅう ${subject} ${registerBadgeRankLabel(entry.rank)}`
-                    : `${entry.grade}きゅう ${subject}`;
+                  const fullTitle = `${entry.grade}きゅう ${subject}`;
                   return (
                     <BadgeRowCard
                       key={entry.key}
                       title={fullTitle}
-                      currentLabel={
-                        entry.rank
-                          ? `いまのバッジ: ${registerBadgeRankLabel(entry.rank)}`
-                          : "みかくとく"
-                      }
+                      currentLabel={entry.rank ? "" : "みかくとく"}
+                      rankLabel={entry.rank ? registerBadgeRankLabel(entry.rank) : null}
+                      rankTone={entry.rank ? registerRankTone(entry.rank) : null}
                       image={entry.rank ? registerBadgeImageByRank(entry.rank) : null}
                       placeholderText={entry.rank ? registerBadgeRankLabel(entry.rank) : "?"}
                       isImageBroken={isImageBroken}
@@ -265,7 +295,6 @@ export function SnackBadgeBookPage({ onGoRegister }: Props) {
                         }))
                       }
                       isOwned={Boolean(entry.rank)}
-                      acquiredText="かくとくずみ"
                       missingText="このきゅう・しゅもくで あそんで かくとくしよう"
                       containerClassName="rounded-lg border border-amber-200 bg-white/85 p-3"
                     />

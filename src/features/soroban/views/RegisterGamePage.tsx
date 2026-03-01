@@ -930,8 +930,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (hasShownBadgeModalRef.current) return;
     hasShownBadgeModalRef.current = true;
 
-    const hasCoinGain = roundStartCoinsRef.current !== progress.coins;
-    const badgeModalDelayMs = hasCoinGain ? 2500 : 1000;
+    const badgeModalDelayMs = 1000;
     const timeoutId = window.setTimeout(() => {
       setIsBadgeModalOpen(true);
     }, badgeModalDelayMs);

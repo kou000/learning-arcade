@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import shelfDefaultBg from "@/assets/shelf.png";
 import shelfColorfulBg from "@/assets/shelf-colorful.png";
 import shelfFancyBg from "@/assets/shelf-fancy.png";
+import { LongPressPreviewImage } from "@/features/soroban/components/LongPressPreviewImage";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { SNACK_PLACEABLE_ITEMS } from "@/features/soroban/snackCatalog";
@@ -46,39 +47,6 @@ const SHELF_BG_BY_ID: Record<ShelfId, string> = {
   "shelf-colorful": shelfColorfulBg,
   "shelf-fancy": shelfFancyBg,
 };
-
-function ShelfItemImage({
-  src,
-  alt,
-  size = "picker",
-}: {
-  src: string;
-  alt: string;
-  size?: "picker" | "slot";
-}) {
-  const [missing, setMissing] = useState(false);
-  const sizeClass =
-    size === "slot"
-      ? "h-[clamp(90px,14vw,150px)] w-[clamp(90px,14vw,150px)]"
-      : "h-12 w-12";
-
-  if (missing) {
-    return (
-      <div
-        className={`${sizeClass} rounded-lg border border-dashed border-white/70 bg-white/50`}
-      />
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      onError={() => setMissing(true)}
-      className={`${sizeClass} object-contain drop-shadow-[0_6px_8px_rgba(15,23,42,0.45)]`}
-    />
-  );
-}
 
 export function ShelfPage({
   onGoPractice: _onGoPractice,
@@ -430,10 +398,12 @@ export function ShelfPage({
                         >
                           {item && rowUnlocked ? (
                             <div className="grid place-items-center gap-1 p-1">
-                              <ShelfItemImage
+                              <LongPressPreviewImage
                                 src={item.image}
                                 alt={item.name}
-                                size="slot"
+                                title={item.name}
+                                imageClassName="h-[clamp(90px,14vw,150px)] w-[clamp(90px,14vw,150px)] object-contain drop-shadow-[0_6px_8px_rgba(15,23,42,0.45)]"
+                                missingClassName="h-[clamp(90px,14vw,150px)] w-[clamp(90px,14vw,150px)] rounded-lg border border-dashed border-white/70 bg-white/50"
                               />
                               {isEditMode ? (
                                 <div className="text-[10px] leading-tight text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.65)]">
@@ -519,7 +489,13 @@ export function ShelfPage({
                       }`}
                       onClick={() => onPickItem(item.id)}
                     >
-                      <ShelfItemImage src={item.image} alt={item.name} />
+                      <LongPressPreviewImage
+                        src={item.image}
+                        alt={item.name}
+                        title={item.name}
+                        imageClassName="h-12 w-12 object-contain drop-shadow-[0_6px_8px_rgba(15,23,42,0.45)]"
+                        missingClassName="h-12 w-12 rounded-lg border border-dashed border-white/70 bg-white/50"
+                      />
                       <div className="grid gap-1">
                         <span className="font-semibold text-slate-700">
                           {item.name}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
+import { LongPressPreviewImage } from "@/features/soroban/components/LongPressPreviewImage";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import { SHOP_ITEMS, type ShopItem } from "@/features/soroban/catalog";
 import { pickShopSpeech } from "@/features/soroban/speech";
@@ -11,68 +12,6 @@ type ShopPageProps = {
   onGoRegister: () => void;
   onGoPayment: (itemId: string) => void;
 };
-
-function ItemPreview({
-  src,
-  alt,
-  onLongPress,
-}: {
-  src: string;
-  alt: string;
-  onLongPress?: () => void;
-}) {
-  const [missing, setMissing] = useState(false);
-  const longPressTimerRef = useRef<number | null>(null);
-
-  useEffect(
-    () => () => {
-      if (longPressTimerRef.current != null) {
-        window.clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-    },
-    [],
-  );
-
-  const clearLongPressTimer = () => {
-    if (longPressTimerRef.current != null) {
-      window.clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
-
-  const startLongPress = () => {
-    clearLongPressTimer();
-    longPressTimerRef.current = window.setTimeout(() => {
-      onLongPress?.();
-      longPressTimerRef.current = null;
-    }, 420);
-  };
-
-  if (missing) {
-    return (
-      <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500">
-        がぞうなし
-      </div>
-    );
-  }
-  return (
-    <img
-      src={src}
-      alt={alt}
-      onError={() => setMissing(true)}
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        startLongPress();
-      }}
-      onPointerUp={clearLongPressTimer}
-      onPointerLeave={clearLongPressTimer}
-      onPointerCancel={clearLongPressTimer}
-      onContextMenu={(event) => event.preventDefault()}
-      className="h-24 w-24 rounded-xl border border-slate-200 bg-white object-contain p-2"
-    />
-  );
-}
 
 function formatLocalDateOnly(now: Date): string {
   const year = now.getFullYear();
@@ -104,10 +43,6 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
     id: string;
     name: string;
     price: number;
-  } | null>(null);
-  const [previewItem, setPreviewItem] = useState<{
-    src: string;
-    name: string;
   } | null>(null);
   const [enterMessage] = useState(() => {
     const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
@@ -244,12 +179,10 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
                   key={item.id}
                   className="grid gap-2 rounded-xl border border-white/50 bg-white/55 p-3 backdrop-blur-[1px]"
                 >
-                  <ItemPreview
+                  <LongPressPreviewImage
                     src={item.image}
                     alt={item.name}
-                    onLongPress={() =>
-                      setPreviewItem({ src: item.image, name: item.name })
-                    }
+                    title={item.name}
                   />
                   <div className="flex items-start justify-between gap-2">
                     <div className="font-bold text-slate-800">{item.name}</div>
@@ -292,35 +225,6 @@ export function ShopPage({ onGoRegister, onGoPayment }: ShopPageProps) {
           </div>
         ) : null}
       </div>
-
-      {previewItem ? (
-        <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/75 p-4"
-          onClick={() => setPreviewItem(null)}
-        >
-          <div
-            className="grid max-h-[90vh] w-full max-w-3xl gap-3 rounded-2xl border border-white/20 bg-slate-950/85 p-4"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-bold text-white">
-                {previewItem.name}
-              </div>
-              <button
-                className="rounded-lg border border-white/30 px-3 py-1 text-sm font-semibold text-white hover:bg-white/10"
-                onClick={() => setPreviewItem(null)}
-              >
-                とじる
-              </button>
-            </div>
-            <img
-              src={previewItem.src}
-              alt={previewItem.name}
-              className="max-h-[75vh] w-full rounded-xl bg-white object-contain p-2"
-            />
-          </div>
-        </div>
-      ) : null}
     </SceneFrame>
   );
 }
