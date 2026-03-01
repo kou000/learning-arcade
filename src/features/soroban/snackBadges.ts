@@ -1,5 +1,6 @@
 export type SnackDifficulty = "easy" | "normal" | "hard";
 export type SnackRank = "A" | "B" | "C" | "D" | "E" | "F";
+export type SnackBadgeRank = "A" | "B" | "C";
 
 const RANK_SCORE: Record<SnackRank, number> = {
   A: 6,
@@ -11,6 +12,10 @@ const RANK_SCORE: Record<SnackRank, number> = {
 };
 
 const DIFFICULTY_ORDER: SnackDifficulty[] = ["easy", "normal", "hard"];
+
+export function isSnackBadgeRank(rank: SnackRank): rank is SnackBadgeRank {
+  return rank === "A" || rank === "B" || rank === "C";
+}
 
 export function difficultyLabel(difficulty: SnackDifficulty): string {
   if (difficulty === "hard") return "むずかしい";
@@ -53,10 +58,11 @@ export function parseSnackBadgeId(
 }
 
 export function toBestSnackBadgeIds(badgeIds: string[]): string[] {
-  const bestByDifficulty: Partial<Record<SnackDifficulty, SnackRank>> = {};
+  const bestByDifficulty: Partial<Record<SnackDifficulty, SnackBadgeRank>> = {};
   badgeIds.forEach((badgeId) => {
     const parsed = parseSnackBadgeId(badgeId);
     if (!parsed) return;
+    if (!isSnackBadgeRank(parsed.rank)) return;
     const current = bestByDifficulty[parsed.difficulty];
     if (!current || rankScore(parsed.rank) > rankScore(current)) {
       bestByDifficulty[parsed.difficulty] = parsed.rank;
@@ -70,11 +76,11 @@ export function toBestSnackBadgeIds(badgeIds: string[]): string[] {
 
 export function getBestRankByDifficulty(
   badgeIds: string[],
-): Partial<Record<SnackDifficulty, SnackRank>> {
-  const best: Partial<Record<SnackDifficulty, SnackRank>> = {};
+): Partial<Record<SnackDifficulty, SnackBadgeRank>> {
+  const best: Partial<Record<SnackDifficulty, SnackBadgeRank>> = {};
   toBestSnackBadgeIds(badgeIds).forEach((badgeId) => {
     const parsed = parseSnackBadgeId(badgeId);
-    if (!parsed) return;
+    if (!parsed || !isSnackBadgeRank(parsed.rank)) return;
     best[parsed.difficulty] = parsed.rank;
   });
   return best;
