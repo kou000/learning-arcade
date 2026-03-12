@@ -893,16 +893,6 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     setActiveInput("");
   };
 
-  const toggleSign = () => {
-    if (isDivMode) return;
-    if (!activeInput) {
-      setActiveInput("-");
-      return;
-    }
-    setActiveInput(
-      activeInput.startsWith("-") ? activeInput.slice(1) : `-${activeInput}`,
-    );
-  };
   const promptText = (() => {
     if (playSubject === "mitori") {
       if (bubbleStep === 0) return "おかいけいおねがいします！";
@@ -1252,11 +1242,10 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   </button>
                 ))}
                 <button
-                  className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
-                  onClick={toggleSign}
-                  disabled={isDivMode}
+                  className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
+                  onClick={clearInput}
                 >
-                  ±
+                  クリア
                 </button>
                 <button
                   className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-xl font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
@@ -1271,12 +1260,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   ←
                 </button>
               </div>
-              <button
-                className="mt-2 w-full rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
-                onClick={clearInput}
-              >
-                クリア
-              </button>
+              <div className="mt-2 h-[52px]" aria-hidden="true" />
               <button
                 className="mt-2 w-full rounded-xl border border-[#3f1300] bg-gradient-to-b from-[#ff9a52] to-[#d64f16] px-4 py-4 text-lg font-black text-[#fff8ef] shadow-[0_3px_0_#7d2b07,0_8px_14px_rgba(70,18,0,0.45)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#7d2b07,0_3px_8px_rgba(70,18,0,0.4)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={onTellAmount}
