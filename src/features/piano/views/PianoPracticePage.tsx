@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import fennecCheering from "@/assets/piano/fennec-cheering.png";
 import { PianoAudioEngine } from "@/features/piano/audio/audioEngine";
@@ -385,6 +385,11 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
     if (practiceMode === "free" || !isGuidePlaying) {
       updateProgressByInput(noteId);
     }
+  };
+
+  const handleKeyPointerDown = (event: ReactPointerEvent<HTMLButtonElement>, noteId: string) => {
+    event.preventDefault();
+    void onPressKey(noteId);
   };
 
   const startModelPlay = async () => {
@@ -840,7 +845,7 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
                 <button
                   key={key.id}
                   type="button"
-                  onPointerDown={() => void onPressKey(key.id)}
+                  onPointerDown={(event) => handleKeyPointerDown(event, key.id)}
                   onPointerUp={releasePressedKey}
                   onPointerLeave={releasePressedKey}
                   onPointerCancel={releasePressedKey}
@@ -870,7 +875,7 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
                 <button
                   key={key.id}
                   type="button"
-                  onPointerDown={() => void onPressKey(key.id)}
+                  onPointerDown={(event) => handleKeyPointerDown(event, key.id)}
                   onPointerUp={releasePressedKey}
                   onPointerLeave={releasePressedKey}
                   onPointerCancel={releasePressedKey}
