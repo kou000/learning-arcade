@@ -116,8 +116,10 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
   const [recordedNotes, setRecordedNotes] = useState<RecordedNote[]>([]);
   const [recordedDurationMs, setRecordedDurationMs] = useState(0);
   const [volumePercent, setVolumePercent] = useState(80);
+  const [isAudioReady, setIsAudioReady] = useState(false);
 
   const audioEngineRef = useRef<PianoAudioEngine>(new PianoAudioEngine());
+  const rootRef = useRef<HTMLElement | null>(null);
   const recordingStartAtRef = useRef<number>(0);
   const timersRef = useRef<number[]>([]);
   const pressedKeyIdRef = useRef<string | null>(null);
@@ -212,6 +214,12 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
   const playTone = async (noteId: string, durationMs = 260) => {
     const volume = Math.max(0, Math.min(1, volumePercent / 100));
     await audioEngineRef.current.playOneShot(noteId, durationMs, volume);
+  };
+
+  const enableAudio = async () => {
+    const enabled = await audioEngineRef.current.enableAudio();
+    setIsAudioReady(enabled);
+    return enabled;
   };
 
   const startHeldTone = async (noteId: string) => {
@@ -343,6 +351,11 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
 
   const onPressKey = async (noteId: string) => {
     if (isModelPlaying || isPlayback) return;
+    if (!isAudioReady) {
+      const enabled = await enableAudio();
+      setEncouragement(enabled ? "おとを だせるようになったよ！" : "うえのボタンで おとを だしてね");
+      if (!enabled) return;
+    }
 
     if (pressedKeyIdRef.current && pressedKeyIdRef.current !== noteId) {
       void audioEngineRef.current.noteOff(pressedKeyIdRef.current);
@@ -367,8 +380,15 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
     }
   };
 
-  const startModelPlay = () => {
+  const startModelPlay = async () => {
     if (isModelPlaying || isPlayback) return;
+    if (!isAudioReady) {
+      const enabled = await enableAudio();
+      if (!enabled) {
+        setEncouragement("まずは おとを だすボタンを おしてね");
+        return;
+      }
+    }
     clearTimers();
     releasePressedKey();
     setCurrentStep(0);
@@ -427,8 +447,15 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
     setEncouragement("テンポれんしゅうを とめたよ");
   };
 
-  const playRecording = () => {
+  const playRecording = async () => {
     if (isModelPlaying || isRecording || isPlayback || isGuidePlaying || recordedNotes.length === 0) return;
+    if (!isAudioReady) {
+      const enabled = await enableAudio();
+      if (!enabled) {
+        setEncouragement("まずは おとを だすボタンを おしてね");
+        return;
+      }
+    }
     clearTimers();
     releasePressedKey();
     setIsPlayback(true);
@@ -454,8 +481,15 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
     timersRef.current.push(finishTimer);
   };
 
-  const startGuidedPractice = () => {
+  const startGuidedPractice = async () => {
     if (practiceMode !== "guided" || isModelPlaying || isPlayback || isRecording || isGuidePlaying) return;
+    if (!isAudioReady) {
+      const enabled = await enableAudio();
+      if (!enabled) {
+        setEncouragement("まずは おとを だすボタンを おしてね");
+        return;
+      }
+    }
     clearTimers();
     releasePressedKey();
     setRecordedNotes([]);
@@ -530,7 +564,7 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
     ((note.startBeat + 0.5) / beatsPerMeasure) * measureContentWidthPercent;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-pink-50 p-6 text-slate-700">
+    <main ref={rootRef} className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-pink-50 p-6 text-slate-700">
       <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5 rounded-[2rem] bg-white/90 p-6 shadow-[0_16px_40px_rgba(148,163,184,0.24)]">
         <header className="flex items-center justify-between gap-4">
           <button
@@ -769,6 +803,24 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
         <section className="rounded-3xl bg-slate-100 p-4 shadow-inner">
           <h2 className="mb-3 text-center text-2xl font-black text-slate-700">けんばん</h2>
           <div className="relative mx-auto flex h-52 w-full max-w-[1060px] rounded-2xl bg-slate-200 p-2">
+            {!isAudioReady ? (
+              <div className="absolute inset-0 z-20 grid place-items-center rounded-2xl bg-slate-900/40 backdrop-blur-[2px]">
+                <div className="mx-4 flex max-w-md flex-col items-center gap-4 rounded-[2rem] bg-white px-6 py-5 text-center shadow-[0_16px_40px_rgba(15,23,42,0.24)]">
+                  <p className="text-2xl font-black text-slate-800">さいしょに おとを だせるようにする</p>
+                  <p className="text-base font-bold text-slate-500">このあと けんばんを おすと おとが でるよ</p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const enabled = await enableAudio();
+                      setEncouragement(enabled ? "おとの じゅんびが できたよ！" : "もういちど おしてみてね");
+                    }}
+                    className="rounded-[1.5rem] bg-amber-300 px-6 py-3 text-2xl font-black text-amber-900 shadow-[0_6px_0_#f59e0b] transition active:translate-y-[2px] active:shadow-[0_2px_0_#f59e0b]"
+                  >
+                    🔊 おとを だす
+                  </button>
+                </div>
+              </div>
+            ) : null}
             {whiteKeys.map((key) => {
               const isTarget = key.id === currentPracticeNote?.noteId && !isModelPlaying;
               const isActive = activeNoteIds.includes(key.id);
