@@ -33,6 +33,7 @@ export type FlatPracticeNote = {
   noteId: string;
   lyric: string;
   measureIndex: number;
+  durationBeat: number;
   requiresInput: boolean;
 };
 
@@ -150,16 +151,29 @@ export const PIANO_SONGS: SongScore[] = [
 
 export const flattenSongNotes = (song: SongScore): FlatPracticeNote[] => {
   return song.sections.flatMap((section) =>
-    section.measures.flatMap((measure) =>
-      measure.noteEvents
-        .slice()
-        .sort((a, b) => a.startBeat - b.startBeat)
-        .map((note) => ({
+    section.measures.flatMap((measure) => {
+      const sortedNotes = measure.noteEvents.slice().sort((a, b) => a.startBeat - b.startBeat);
+      const mergedNotes: FlatPracticeNote[] = [];
+
+      sortedNotes.forEach((note) => {
+        if (note.lyric === "ー") {
+          const previous = mergedNotes.at(-1);
+          if (previous && previous.noteId === note.pitch) {
+            previous.durationBeat += note.durationBeat;
+          }
+          return;
+        }
+
+        mergedNotes.push({
           noteId: note.pitch,
           lyric: note.lyric ?? "・",
           measureIndex: measure.index,
-          requiresInput: note.lyric !== "ー",
-        })),
-    ),
+          durationBeat: note.durationBeat,
+          requiresInput: true,
+        });
+      });
+
+      return mergedNotes;
+    }),
   );
 };

@@ -90,6 +90,14 @@ const NOTE_STAFF_POSITION: Record<string, number> = {
   b5: 2,
 };
 
+const durationToDenominator = (durationBeat: number) => {
+  if (durationBeat >= 4) return 1;
+  if (durationBeat >= 2) return 2;
+  if (durationBeat >= 1) return 4;
+  if (durationBeat >= 0.5) return 8;
+  return 16;
+};
+
 export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps) {
   const [selectedSongId, setSelectedSongId] = useState<string>(PIANO_SONGS[0].id);
   const [selectedTempo, setSelectedTempo] = useState<TempoId>("normal");
@@ -180,10 +188,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
       return;
     }
 
-    let nextStep = expectedIndex + 1;
-    while (nextStep < practiceNotes.length && !practiceNotes[nextStep]?.requiresInput) {
-      nextStep += 1;
-    }
+    const nextStep = expectedIndex + 1;
 
     if (nextStep >= practiceNotes.length) {
       setCurrentStep(practiceNotes.length - 1);
@@ -285,7 +290,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
 
 
   const progressPercent = ((currentStep + 1) / Math.max(practiceNotes.length, 1)) * 100;
-  const currentPracticeNote = practiceNotes.find((note, index) => index >= currentStep && note.requiresInput) ?? practiceNotes[currentStep] ?? practiceNotes[0];
+  const currentPracticeNote = practiceNotes[currentStep] ?? practiceNotes[0];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-pink-50 p-6 text-slate-700">
@@ -409,14 +414,40 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
                 const absoluteIndex = visibleStart + index;
                 const isCurrent = absoluteIndex === currentStep;
                 const top = NOTE_STAFF_POSITION[note.noteId] ?? 72;
+                const denominator = durationToDenominator(note.durationBeat);
+                const isWhole = denominator === 1;
+                const isHalf = denominator === 2;
+                const flagCount = denominator >= 16 ? 2 : denominator >= 8 ? 1 : 0;
+
                 return (
                   <div key={`${note.noteId}-${absoluteIndex}`} className="relative h-full">
                     <div
-                      className={`absolute left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border ${
-                        isCurrent ? "border-fuchsia-700 bg-fuchsia-400" : "border-indigo-500 bg-indigo-300"
+                      className={`absolute left-1/2 h-3.5 w-5 -translate-x-1/2 rounded-full border-2 ${
+                        isCurrent
+                          ? isHalf || isWhole
+                            ? "border-fuchsia-700 bg-white"
+                            : "border-fuchsia-700 bg-fuchsia-400"
+                          : isHalf || isWhole
+                            ? "border-indigo-600 bg-white"
+                            : "border-indigo-500 bg-indigo-300"
                       }`}
                       style={{ top: `${top}%` }}
                     />
+                    {!isWhole ? (
+                      <div
+                        className={`absolute left-[57%] w-0.5 ${isCurrent ? "bg-fuchsia-700" : "bg-indigo-600"}`}
+                        style={{ top: `${top - 22}%`, height: "22%" }}
+                      >
+                        {flagCount > 0 ? (
+                          <>
+                            <div className={`absolute right-0 top-0 h-2 w-3 rounded-tr-full border-t-2 border-r-2 ${isCurrent ? "border-fuchsia-700" : "border-indigo-600"}`} />
+                            {flagCount > 1 ? (
+                              <div className={`absolute right-0 top-1.5 h-2 w-3 rounded-tr-full border-t-2 border-r-2 ${isCurrent ? "border-fuchsia-700" : "border-indigo-600"}`} />
+                            ) : null}
+                          </>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
