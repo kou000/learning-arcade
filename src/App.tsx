@@ -13,6 +13,7 @@ import { SnackBudgetResultPage } from "@/features/soroban/views/SnackBudgetResul
 import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage";
 import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
+import { PianoPracticeMockPage } from "@/features/piano/views/PianoPracticeMockPage";
 
 type Route =
   | "home"
@@ -27,7 +28,8 @@ type Route =
   | "soroban-snack"
   | "soroban-badges"
   | "soroban-snack-result"
-  | "soroban-admin";
+  | "soroban-admin"
+  | "piano-practice";
 
 const ADMIN_PASSWORD_SHA256 = "a7be8e1fe282a37cd666e0632b17d933fa13f21addf4798fc0455bc166e2488c";
 
@@ -59,6 +61,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/snack") return "soroban-snack";
   if (h === "soroban/snack/result") return "soroban-snack-result";
   if (h === "soroban/admin") return "soroban-admin";
+  if (h === "piano/practice") return "piano-practice";
   return "home";
 }
 
@@ -334,6 +337,7 @@ export default function App() {
           onResetAdminMode={resetAdminModeToEnv}
         />
       ) : null}
+      {route === "piano-practice" ? <PianoPracticeMockPage onBackHome={goHome} /> : null}
     </div>
   );
 }
