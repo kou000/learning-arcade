@@ -65,6 +65,13 @@ const STAFF_LINES = [16, 30, 44, 58, 72];
 const NOTE_HEAD_LEFT_PADDING_PX = 6;
 const MEASURE_VIEW_COUNT = 2;
 const MEASURE_INNER_PADDING_PERCENT = 6;
+const KEYBOARD_TOUCH_STYLE = {
+  WebkitTouchCallout: "none",
+  WebkitUserSelect: "none",
+  userSelect: "none" as const,
+  WebkitTapHighlightColor: "transparent",
+  touchAction: "none" as const,
+};
 
 const NOTE_STAFF_POSITION: Record<string, number> = {
   c4: 82,
@@ -802,7 +809,11 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
 
         <section className="rounded-3xl bg-slate-100 p-4 shadow-inner">
           <h2 className="mb-3 text-center text-2xl font-black text-slate-700">けんばん</h2>
-          <div className="relative mx-auto flex h-52 w-full max-w-[1060px] rounded-2xl bg-slate-200 p-2">
+          <div
+            className="relative mx-auto flex h-52 w-full max-w-[1060px] rounded-2xl bg-slate-200 p-2 select-none"
+            style={KEYBOARD_TOUCH_STYLE}
+            onContextMenu={(event) => event.preventDefault()}
+          >
             {!isAudioReady ? (
               <div className="absolute inset-0 z-20 grid place-items-center rounded-2xl bg-slate-900/40 backdrop-blur-[2px]">
                 <div className="mx-4 flex max-w-md flex-col items-center gap-4 rounded-[2rem] bg-white px-6 py-5 text-center shadow-[0_16px_40px_rgba(15,23,42,0.24)]">
@@ -833,13 +844,15 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
                   onPointerUp={releasePressedKey}
                   onPointerLeave={releasePressedKey}
                   onPointerCancel={releasePressedKey}
-                  className={`relative flex-1 rounded-b-2xl border border-slate-300 px-1 pb-3 pt-24 text-center shadow-[inset_0_-8px_0_rgba(148,163,184,0.2)] transition ${
+                  className={`relative flex-1 rounded-b-2xl border border-slate-300 px-1 pb-3 pt-24 text-center shadow-[inset_0_-8px_0_rgba(148,163,184,0.2)] transition select-none ${
                     isTarget
                       ? "bg-gradient-to-b from-yellow-100 via-yellow-200 to-amber-200 ring-4 ring-yellow-300"
                       : isActive
                         ? "bg-yellow-100"
                         : "bg-white"
                   } ${key.hand === "left" ? "hover:bg-pink-50" : "hover:bg-sky-50"}`}
+                  style={KEYBOARD_TOUCH_STYLE}
+                  onContextMenu={(event) => event.preventDefault()}
                 >
                   <div className="text-2xl font-black text-slate-700">{key.label}</div>
                 </button>
@@ -861,14 +874,15 @@ export function PianoPracticePage({ onBackHome }: PianoPracticePageProps) {
                   onPointerUp={releasePressedKey}
                   onPointerLeave={releasePressedKey}
                   onPointerCancel={releasePressedKey}
-                  className={`absolute top-2 h-24 w-[3.8%] -translate-x-1/2 rounded-b-xl shadow-lg transition ${
+                  className={`absolute top-2 h-24 w-[3.8%] -translate-x-1/2 rounded-b-xl shadow-lg transition select-none ${
                     isTarget
                       ? "bg-gradient-to-b from-yellow-200 to-amber-400 ring-4 ring-yellow-300"
                       : isActive
                         ? "bg-violet-500"
                         : "bg-slate-800 hover:bg-slate-700"
                   }`}
-                  style={{ left }}
+                  style={{ ...KEYBOARD_TOUCH_STYLE, left }}
+                  onContextMenu={(event) => event.preventDefault()}
                 />
               );
             })}
