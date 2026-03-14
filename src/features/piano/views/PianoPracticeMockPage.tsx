@@ -61,12 +61,41 @@ const ACTION_BUTTONS = [
   { id: "listen", label: "きく", icon: "🎧", color: "bg-violet-300 text-violet-900 shadow-violet-400" },
 ] as const;
 
+const STAFF_LINES = [16, 30, 44, 58, 72];
+
+const NOTE_STAFF_POSITION: Record<string, number> = {
+  c4: 82,
+  c4s: 82,
+  d4: 76,
+  d4s: 76,
+  e4: 72,
+  f4: 66,
+  f4s: 66,
+  g4: 58,
+  g4s: 58,
+  a4: 52,
+  a4s: 52,
+  b4: 44,
+  c5: 38,
+  c5s: 38,
+  d5: 30,
+  d5s: 30,
+  e5: 24,
+  f5: 16,
+  f5s: 16,
+  g5: 10,
+  g5s: 10,
+  a5: 6,
+  a5s: 6,
+  b5: 2,
+};
+
 export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps) {
   const [selectedSongId, setSelectedSongId] = useState<string>(PIANO_SONGS[0].id);
   const [selectedTempo, setSelectedTempo] = useState<TempoId>("normal");
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedRounds, setCompletedRounds] = useState(0);
-  const [encouragement, setEncouragement] = useState("あと1かいでクリア！");
+  const [isPracticeCompleted, setIsPracticeCompleted] = useState(false);
+  const [encouragement, setEncouragement] = useState("さいごまで ひいてみよう！");
   const [activeNoteIds, setActiveNoteIds] = useState<string[]>([]);
   const [isModelPlaying, setIsModelPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -90,6 +119,8 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
     () => TEMPO_OPTIONS.find((tempo) => tempo.id === selectedTempo) ?? TEMPO_OPTIONS[1],
     [selectedTempo],
   );
+  const visibleStart = Math.floor(currentStep / 8) * 8;
+  const visibleNotes = useMemo(() => practiceNotes.slice(visibleStart, visibleStart + 8), [practiceNotes, visibleStart]);
 
   useEffect(() => {
     return () => {
@@ -107,8 +138,8 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   const resetSessionState = () => {
     clearTimers();
     setCurrentStep(0);
-    setCompletedRounds(0);
-    setEncouragement("あと1かいでクリア！");
+    setIsPracticeCompleted(false);
+    setEncouragement("さいごまで ひいてみよう！");
     setActiveNoteIds([]);
     setIsModelPlaying(false);
     setIsRecording(false);
@@ -138,7 +169,10 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   };
 
   const updateProgressByInput = (noteId: string) => {
-    const expected = practiceNotes[currentStep]?.noteId;
+    const expectedIndex = practiceNotes.findIndex((note, index) => index >= currentStep && note.requiresInput);
+    if (expectedIndex < 0) return;
+
+    const expected = practiceNotes[expectedIndex]?.noteId;
     if (!expected) return;
 
     if (noteId !== expected) {
@@ -146,16 +180,18 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
       return;
     }
 
-    const nextStep = currentStep + 1;
+    let nextStep = expectedIndex + 1;
+    while (nextStep < practiceNotes.length && !practiceNotes[nextStep]?.requiresInput) {
+      nextStep += 1;
+    }
+
     if (nextStep >= practiceNotes.length) {
-      const nextRounds = Math.min(completedRounds + 1, 5);
-      setCompletedRounds(nextRounds);
-      setCurrentStep(0);
-      if (nextRounds >= 5) {
-        setEncouragement("すごい！「できた！」をおしてね");
-      } else {
-        setEncouragement(`いいね！あと${5 - nextRounds}かい`);
+      setCurrentStep(practiceNotes.length - 1);
+      if (!isPracticeCompleted) {
+        setRewardStars((prev) => prev + 1);
       }
+      setIsPracticeCompleted(true);
+      setEncouragement("やったー！ほしを1こゲット✨ つぎのきょくにいこう！");
       return;
     }
 
@@ -238,7 +274,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   const restartPractice = () => {
     clearTimers();
     setCurrentStep(0);
-    setCompletedRounds(0);
+    setIsPracticeCompleted(false);
     setEncouragement("よーい、スタート！");
     setActiveNoteIds([]);
     setIsModelPlaying(false);
@@ -246,19 +282,10 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
     setIsPlayback(false);
   };
 
-  const onComplete = () => {
-    if (completedRounds < 5) {
-      setEncouragement("もうすこし！5かいクリアで「できた！」");
-      return;
-    }
-    setRewardStars((prev) => prev + 1);
-    setEncouragement("やったー！ほしを1こゲット✨");
-    setCompletedRounds(0);
-    setCurrentStep(0);
-  };
 
-  const progressPercent = (completedRounds / 5) * 100;
-  const currentPracticeNote = practiceNotes[currentStep] ?? practiceNotes[0];
+
+  const progressPercent = ((currentStep + 1) / Math.max(practiceNotes.length, 1)) * 100;
+  const currentPracticeNote = practiceNotes.find((note, index) => index >= currentStep && note.requiresInput) ?? practiceNotes[currentStep] ?? practiceNotes[0];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-pink-50 p-6 text-slate-700">
@@ -271,9 +298,23 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
           >
             くもどる
           </button>
-          <h1 className="rounded-2xl bg-white px-8 py-3 text-4xl font-black tracking-wide text-indigo-600 shadow-sm">
-            {selectedSong.title}
-          </h1>
+          <div className="rounded-2xl bg-white px-4 py-2 shadow-sm">
+            <label className="sr-only" htmlFor="song-select">
+              きょくをえらぶ
+            </label>
+            <select
+              id="song-select"
+              value={selectedSong.id}
+              onChange={(event) => selectSong(event.target.value)}
+              className="rounded-xl border border-indigo-200 bg-white px-4 py-3 text-3xl font-black tracking-wide text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-300"
+            >
+              {PIANO_SONGS.map((song) => (
+                <option key={song.id} value={song.id}>
+                  {song.title}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-3 rounded-2xl bg-amber-50 px-4 py-2 shadow-sm">
             <div className="grid h-12 w-12 place-items-center rounded-full bg-amber-100 text-2xl">🐻</div>
             <div>
@@ -283,32 +324,8 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
           </div>
         </header>
 
-        <section className="rounded-3xl bg-pink-50 p-4 shadow-sm">
-          <h2 className="mb-3 text-xl font-black text-pink-700">きょくをえらぶ</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {PIANO_SONGS.map((song) => {
-              const isSelected = song.id === selectedSong.id;
-              return (
-                <button
-                  key={song.id}
-                  type="button"
-                  onClick={() => selectSong(song.id)}
-                  className={`rounded-2xl px-3 py-3 text-xl font-black transition ${
-                    isSelected
-                      ? "bg-fuchsia-300 text-fuchsia-900 shadow-[0_6px_0_#e879f9]"
-                      : "bg-white text-pink-600 shadow-sm"
-                  }`}
-                >
-                  {song.title}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
         <section className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-3xl bg-emerald-50 p-4 shadow-sm">
           <div className="space-y-3">
-            <p className="text-2xl font-black text-emerald-700">{currentPracticeNote?.sectionTitle ?? "れんしゅう"}</p>
             <div className="flex items-center gap-2 text-sm font-bold text-emerald-800">
               <span className="rounded-full bg-white px-3 py-1">しょうせつ {currentPracticeNote?.measureIndex ?? 1}</span>
               <span>{selectedSong.beatsPerMeasure}/4</span>
@@ -316,7 +333,9 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
             <div className="h-5 w-full overflow-hidden rounded-full bg-emerald-100">
               <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
-            <p className="text-lg font-bold text-emerald-700">{completedRounds} / 5</p>
+            <p className="text-lg font-bold text-emerald-700">
+              {Math.min(currentStep + 1, practiceNotes.length)} / {practiceNotes.length}
+            </p>
             <p className="inline-flex rounded-full bg-white px-4 py-2 text-lg font-bold text-emerald-700">{encouragement}</p>
           </div>
           <div className="grid place-items-center gap-1">
@@ -359,12 +378,13 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
               {Math.min(currentStep + 1, practiceNotes.length)} / {practiceNotes.length}
             </p>
           </div>
-          <div className="grid grid-cols-8 gap-2">
-            {practiceNotes.slice(0, 8).map((note, index) => {
-              const isCurrent = index === currentStep;
+          <div className="mb-3 grid grid-cols-8 gap-2">
+            {visibleNotes.map((note, index) => {
+              const absoluteIndex = visibleStart + index;
+              const isCurrent = absoluteIndex === currentStep;
               return (
                 <div
-                  key={`${note.lyric}-${index}`}
+                  key={`${note.lyric}-${absoluteIndex}`}
                   className={`rounded-2xl px-2 py-3 text-center text-2xl font-black transition ${
                     isCurrent
                       ? "scale-105 bg-fuchsia-300 text-fuchsia-900 shadow-[0_6px_0_#e879f9]"
@@ -375,6 +395,32 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
                 </div>
               );
             })}
+          </div>
+          <div className="relative h-24 rounded-2xl bg-white/80 px-3 py-2 shadow-inner">
+            {STAFF_LINES.map((lineTop) => (
+              <div
+                key={lineTop}
+                className="absolute left-3 right-3 border-t border-indigo-200"
+                style={{ top: `${lineTop}%` }}
+              />
+            ))}
+            <div className="relative grid h-full grid-cols-8 gap-2">
+              {visibleNotes.map((note, index) => {
+                const absoluteIndex = visibleStart + index;
+                const isCurrent = absoluteIndex === currentStep;
+                const top = NOTE_STAFF_POSITION[note.noteId] ?? 72;
+                return (
+                  <div key={`${note.noteId}-${absoluteIndex}`} className="relative h-full">
+                    <div
+                      className={`absolute left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border ${
+                        isCurrent ? "border-fuchsia-700 bg-fuchsia-400" : "border-indigo-500 bg-indigo-300"
+                      }`}
+                      style={{ top: `${top}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -470,20 +516,13 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
           />
         </section>
 
-        <footer className="grid grid-cols-2 gap-4 pt-1">
+        <footer className="pt-1">
           <button
             type="button"
             onClick={restartPractice}
             className="rounded-[2rem] bg-slate-200 px-6 py-4 text-3xl font-black text-slate-700 shadow-[0_6px_0_#cbd5e1] transition active:translate-y-[2px] active:shadow-[0_2px_0_#cbd5e1]"
           >
             🔁 もういっかい
-          </button>
-          <button
-            type="button"
-            onClick={onComplete}
-            className="rounded-[2rem] bg-lime-300 px-6 py-4 text-4xl font-black text-lime-900 shadow-[0_8px_0_#84cc16] transition active:translate-y-[2px] active:shadow-[0_2px_0_#84cc16]"
-          >
-            🎉 できた！
           </button>
         </footer>
 

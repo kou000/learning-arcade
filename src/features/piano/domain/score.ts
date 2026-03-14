@@ -32,8 +32,8 @@ export type SongScore = {
 export type FlatPracticeNote = {
   noteId: string;
   lyric: string;
-  sectionTitle: string;
   measureIndex: number;
+  requiresInput: boolean;
 };
 
 const makeNote = (
@@ -157,8 +157,8 @@ export const flattenSongNotes = (song: SongScore): FlatPracticeNote[] => {
         .map((note) => ({
           noteId: note.pitch,
           lyric: note.lyric ?? "・",
-          sectionTitle: section.title,
           measureIndex: measure.index,
+          requiresInput: note.lyric !== "ー",
         })),
     ),
   );
