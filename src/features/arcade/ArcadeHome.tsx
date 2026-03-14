@@ -2,7 +2,9 @@ import React from "react";
 import arkNormal from "@/assets/ark_normal.png";
 import arkSuccess from "@/assets/ark_success.png";
 
-type Props = { onStartSoroban: () => void };
+type Props = {
+  onStartSoroban: () => void;
+};
 
 export function ArcadeHome({ onStartSoroban }: Props) {
   return (
@@ -31,37 +33,69 @@ export function ArcadeHome({ onStartSoroban }: Props) {
             </div>
           </header>
 
-          <main className="relative mt-8 rounded-[30px] border border-slate-200 bg-white/90 p-6 shadow-inner">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <span className="text-4xl">✨</span>
-                  <h2 className="text-4xl font-black text-slate-800">そろばん（珠算）</h2>
+          <main className="relative mt-8 space-y-4 rounded-[30px] border border-slate-200 bg-white/90 p-6 shadow-inner">
+            <section>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">✨</span>
+                    <h2 className="text-4xl font-black text-slate-800">そろばん（珠算）</h2>
+                  </div>
+                  <p className="mt-2 text-lg text-slate-600">
+                    そろばんのけいさんを れんしゅうしよう！
+                  </p>
                 </div>
-                <p className="mt-2 text-lg text-slate-600">
-                  そろばんのけいさんを れんしゅうしよう！
-                </p>
+                <div className="hidden h-36 w-44 items-center justify-center rounded-2xl bg-amber-50 shadow-sm sm:flex">
+                  <img
+                    src={arkSuccess}
+                    alt="そろばん"
+                    width={148}
+                    height={98}
+                    draggable={false}
+                    className="select-none"
+                  />
+                </div>
               </div>
-              <div className="hidden sm:flex h-36 w-44 items-center justify-center rounded-2xl bg-amber-50 shadow-sm">
-                <img
-                  src={arkSuccess}
-                  alt="そろばん"
-                  width={148}
-                  height={98}
-                  draggable={false}
-                  className="select-none"
-                />
-              </div>
-            </div>
 
-            <div className="mt-4">
-              <button
-                onClick={onStartSoroban}
-                className="w-full rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 px-6 py-6 text-3xl font-black text-white shadow-[0_12px_0_rgba(14,116,144,0.25)] transition active:translate-y-0.5 active:shadow-[0_7px_0_rgba(14,116,144,0.25)]"
-              >
-                はじめる
-              </button>
-            </div>
+              <div className="mt-4">
+                <button
+                  onClick={onStartSoroban}
+                  className="w-full rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 px-6 py-6 text-3xl font-black text-white shadow-[0_12px_0_rgba(14,116,144,0.25)] transition active:translate-y-0.5 active:shadow-[0_7px_0_rgba(14,116,144,0.25)]"
+                >
+                  はじめる
+                </button>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-pink-100 bg-gradient-to-r from-pink-50 to-sky-50 p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">🎹</span>
+                    <h2 className="text-4xl font-black text-slate-800">ピアノれんしゅう</h2>
+                  </div>
+                  <p className="mt-2 text-lg text-slate-600">
+                    ひかるけんばんで たのしく おとあそび！
+                  </p>
+                </div>
+                <div className="hidden h-36 w-44 items-center justify-center rounded-2xl bg-white/90 shadow-sm sm:flex">
+                  <span className="text-6xl" aria-hidden>
+                    🌈
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  className="w-full cursor-not-allowed rounded-2xl bg-gradient-to-b from-fuchsia-300 to-pink-400 px-6 py-6 text-3xl font-black text-white/90 shadow-[0_12px_0_rgba(190,24,93,0.18)] opacity-80"
+                >
+                  ピアノ（じゅんびちゅう）
+                </button>
+              </div>
+            </section>
           </main>
         </div>
       </div>
