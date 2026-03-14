@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { PianoAudioEngine } from "@/features/piano/audio/audioEngine";
+import { PIANO_SONGS, flattenSongNotes } from "@/features/piano/domain/score";
+
 type PianoPracticeMockPageProps = {
   onBackHome: () => void;
 };
@@ -17,65 +20,6 @@ type TempoId = "slow" | "normal" | "fast";
 type RecordedNote = {
   noteId: string;
   atMs: number;
-};
-
-type SongConfig = {
-  id: string;
-  title: string;
-  noteBlocks: string[];
-  sequence: string[];
-  sectionLabel: string;
-};
-
-const SONGS: SongConfig[] = [
-  {
-    id: "twinkle",
-    title: "きらきらぼし",
-    noteBlocks: ["ド", "ド", "ソ", "ソ", "ラ", "ラ", "ソ", "ー"],
-    sequence: ["c4", "c4", "g4", "g4", "a4", "a4", "g4", "g4"],
-    sectionLabel: "みぎて れんしゅう 2しょうせつめ",
-  },
-  {
-    id: "frog",
-    title: "かえるのうた",
-    noteBlocks: ["ド", "レ", "ミ", "ファ", "ミ", "レ", "ド", "ー"],
-    sequence: ["c4", "d4", "e4", "f4", "e4", "d4", "c4", "c4"],
-    sectionLabel: "りょうて れんしゅう 1しょうせつめ",
-  },
-  {
-    id: "chopsticks",
-    title: "ねこふんじゃった",
-    noteBlocks: ["ソ", "ラ", "ソ", "ミ", "ファ", "ミ", "ド", "ー"],
-    sequence: ["g4", "a4", "g4", "e4", "f4", "e4", "c4", "c4"],
-    sectionLabel: "ひだりて れんしゅう 3しょうせつめ",
-  },
-];
-
-const NOTE_FREQUENCIES: Record<string, number> = {
-  c4: 261.63,
-  c4s: 277.18,
-  d4: 293.66,
-  d4s: 311.13,
-  e4: 329.63,
-  f4: 349.23,
-  f4s: 369.99,
-  g4: 392,
-  g4s: 415.3,
-  a4: 440,
-  a4s: 466.16,
-  b4: 493.88,
-  c5: 523.25,
-  c5s: 554.37,
-  d5: 587.33,
-  d5s: 622.25,
-  e5: 659.25,
-  f5: 698.46,
-  f5s: 739.99,
-  g5: 783.99,
-  g5s: 830.61,
-  a5: 880,
-  a5s: 932.33,
-  b5: 987.77,
 };
 
 const PIANO_KEYS: PianoKey[] = [
@@ -118,7 +62,7 @@ const ACTION_BUTTONS = [
 ] as const;
 
 export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps) {
-  const [selectedSongId, setSelectedSongId] = useState<string>(SONGS[0].id);
+  const [selectedSongId, setSelectedSongId] = useState<string>(PIANO_SONGS[0].id);
   const [selectedTempo, setSelectedTempo] = useState<TempoId>("normal");
   const [currentStep, setCurrentStep] = useState(0);
   const [completedRounds, setCompletedRounds] = useState(0);
@@ -132,14 +76,15 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   const [rewardStars, setRewardStars] = useState(12);
   const [volumePercent, setVolumePercent] = useState(80);
 
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioEngineRef = useRef<PianoAudioEngine>(new PianoAudioEngine());
   const recordingStartAtRef = useRef<number>(0);
   const timersRef = useRef<number[]>([]);
 
   const selectedSong = useMemo(
-    () => SONGS.find((song) => song.id === selectedSongId) ?? SONGS[0],
+    () => PIANO_SONGS.find((song) => song.id === selectedSongId) ?? PIANO_SONGS[0],
     [selectedSongId],
   );
+  const practiceNotes = useMemo(() => flattenSongNotes(selectedSong), [selectedSong]);
   const whiteKeys = useMemo(() => PIANO_KEYS.filter((key) => key.type === "white"), []);
   const selectedTempoConfig = useMemo(
     () => TEMPO_OPTIONS.find((tempo) => tempo.id === selectedTempo) ?? TEMPO_OPTIONS[1],
@@ -150,9 +95,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
     return () => {
       timersRef.current.forEach((timer) => window.clearTimeout(timer));
       timersRef.current = [];
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => undefined);
-      }
+      void audioEngineRef.current.dispose();
     };
   }, []);
 
@@ -181,41 +124,9 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
     setEncouragement("きょくを えらんだよ！おてほんを きいてみよう");
   };
 
-  const getAudioContext = async () => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext();
-    }
-    if (audioCtxRef.current.state === "suspended") {
-      await audioCtxRef.current.resume();
-    }
-    return audioCtxRef.current;
-  };
-
   const playTone = async (noteId: string, durationMs = 260) => {
-    const freq = NOTE_FREQUENCIES[noteId];
-    if (!freq) return;
-    const context = await getAudioContext();
-    const osc = context.createOscillator();
-    const gain = context.createGain();
-
-    osc.type = "triangle";
-    osc.frequency.value = freq;
-    gain.gain.value = 0.0001;
-
     const volume = Math.max(0, Math.min(1, volumePercent / 100));
-    const peakGain = Math.max(0.0001, 0.24 * volume);
-
-    osc.connect(gain);
-    gain.connect(context.destination);
-
-    const now = context.currentTime;
-    const end = now + durationMs / 1000;
-
-    gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, end);
-
-    osc.start(now);
-    osc.stop(end + 0.02);
+    await audioEngineRef.current.playOneShot(noteId, durationMs, volume);
   };
 
   const pulseKey = (noteId: string, pulseMs = 240) => {
@@ -227,14 +138,16 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   };
 
   const updateProgressByInput = (noteId: string) => {
-    const expected = selectedSong.sequence[currentStep];
+    const expected = practiceNotes[currentStep]?.noteId;
+    if (!expected) return;
+
     if (noteId !== expected) {
       setEncouragement("そのおとじゃないよ。つぎはピカッとかがやくキー！");
       return;
     }
 
     const nextStep = currentStep + 1;
-    if (nextStep >= selectedSong.sequence.length) {
+    if (nextStep >= practiceNotes.length) {
       const nextRounds = Math.min(completedRounds + 1, 5);
       setCompletedRounds(nextRounds);
       setCurrentStep(0);
@@ -265,16 +178,16 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
     }
   };
 
-  const startModelPlay = async () => {
+  const startModelPlay = () => {
     if (isModelPlaying || isPlayback) return;
     clearTimers();
     setIsModelPlaying(true);
     setEncouragement("おてほん さいせいちゅう");
 
-    selectedSong.sequence.forEach((noteId, index) => {
+    practiceNotes.forEach((note, index) => {
       const timer = window.setTimeout(() => {
-        void onPlayNote(noteId, { fromAuto: true, skipProgress: true });
-        if (index === selectedSong.sequence.length - 1) {
+        void onPlayNote(note.noteId, { fromAuto: true, skipProgress: true });
+        if (index === practiceNotes.length - 1) {
           setIsModelPlaying(false);
           setEncouragement("まねして ひいてみよう！");
         }
@@ -345,6 +258,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   };
 
   const progressPercent = (completedRounds / 5) * 100;
+  const currentPracticeNote = practiceNotes[currentStep] ?? practiceNotes[0];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-pink-50 p-6 text-slate-700">
@@ -372,7 +286,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
         <section className="rounded-3xl bg-pink-50 p-4 shadow-sm">
           <h2 className="mb-3 text-xl font-black text-pink-700">きょくをえらぶ</h2>
           <div className="grid grid-cols-3 gap-3">
-            {SONGS.map((song) => {
+            {PIANO_SONGS.map((song) => {
               const isSelected = song.id === selectedSong.id;
               return (
                 <button
@@ -394,7 +308,11 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
 
         <section className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-3xl bg-emerald-50 p-4 shadow-sm">
           <div className="space-y-3">
-            <p className="text-2xl font-black text-emerald-700">{selectedSong.sectionLabel}</p>
+            <p className="text-2xl font-black text-emerald-700">{currentPracticeNote?.sectionTitle ?? "れんしゅう"}</p>
+            <div className="flex items-center gap-2 text-sm font-bold text-emerald-800">
+              <span className="rounded-full bg-white px-3 py-1">しょうせつ {currentPracticeNote?.measureIndex ?? 1}</span>
+              <span>{selectedSong.beatsPerMeasure}/4</span>
+            </div>
             <div className="h-5 w-full overflow-hidden rounded-full bg-emerald-100">
               <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
@@ -438,22 +356,22 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xl font-black text-indigo-700">いま ひく おと</h2>
             <p className="rounded-full bg-white px-3 py-1 text-sm font-bold text-indigo-500">
-              {Math.min(currentStep + 1, selectedSong.noteBlocks.length)} / {selectedSong.noteBlocks.length}
+              {Math.min(currentStep + 1, practiceNotes.length)} / {practiceNotes.length}
             </p>
           </div>
           <div className="grid grid-cols-8 gap-2">
-            {selectedSong.noteBlocks.map((note, index) => {
+            {practiceNotes.slice(0, 8).map((note, index) => {
               const isCurrent = index === currentStep;
               return (
                 <div
-                  key={`${note}-${index}`}
+                  key={`${note.lyric}-${index}`}
                   className={`rounded-2xl px-2 py-3 text-center text-2xl font-black transition ${
                     isCurrent
                       ? "scale-105 bg-fuchsia-300 text-fuchsia-900 shadow-[0_6px_0_#e879f9]"
                       : "bg-white text-indigo-500 shadow-sm"
                   }`}
                 >
-                  {note}
+                  {note.lyric}
                 </div>
               );
             })}
@@ -464,7 +382,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
           <h2 className="mb-3 text-center text-2xl font-black text-slate-700">けんばん</h2>
           <div className="relative mx-auto flex h-52 w-full max-w-[1060px] rounded-2xl bg-slate-200 p-2">
             {whiteKeys.map((key) => {
-              const isTarget = key.id === selectedSong.sequence[currentStep];
+              const isTarget = key.id === currentPracticeNote?.noteId;
               const isActive = activeNoteIds.includes(key.id);
 
               return (
@@ -490,7 +408,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
               const leftIndex = PIANO_KEYS.slice(0, index).filter((item) => item.type === "white").length - 1;
               const left = `${(leftIndex + 1) * (100 / whiteKeys.length) - 2.5}%`;
               const isActive = activeNoteIds.includes(key.id);
-              const isTarget = key.id === selectedSong.sequence[currentStep];
+              const isTarget = key.id === currentPracticeNote?.noteId;
 
               return (
                 <button
@@ -534,7 +452,6 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
             })}
           </div>
         </section>
-
 
         <section className="rounded-3xl bg-cyan-50 p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
