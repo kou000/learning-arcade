@@ -93,6 +93,26 @@ export class PianoAudioEngine {
     }, durationMs);
   }
 
+  async playMetronomeClick(accent = false, volume = 0.8) {
+    const context = await this.getContext();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    const peakGain = Math.max(0.0001, (accent ? 0.22 : 0.14) * Math.max(0, Math.min(1, volume)));
+
+    oscillator.type = "square";
+    oscillator.frequency.value = accent ? 1760 : 1320;
+
+    gain.gain.value = 0.0001;
+    gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.1);
+  }
+
   async dispose() {
     const noteIds = Array.from(this.activeTones.keys());
     await Promise.all(noteIds.map((noteId) => this.noteOff(noteId, 50)));

@@ -1,6 +1,7 @@
 import React from "react";
 import arkNormal from "@/assets/ark_normal.png";
 import arkSuccess from "@/assets/ark_success.png";
+import fennecMascot from "@/assets/piano/fennec-mascot.png";
 
 type Props = {
   onStartSoroban: () => void;
@@ -72,7 +73,14 @@ export function ArcadeHome({ onStartSoroban, onStartPiano }: Props) {
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl">🎹</span>
+                    <img
+                      src={fennecMascot}
+                      alt="ピアノれんしゅう"
+                      width={56}
+                      height={56}
+                      draggable={false}
+                      className="h-14 w-14 select-none object-contain"
+                    />
                     <h2 className="text-4xl font-black text-slate-800">ピアノれんしゅう</h2>
                   </div>
                   <p className="mt-2 text-lg text-slate-600">
@@ -80,9 +88,14 @@ export function ArcadeHome({ onStartSoroban, onStartPiano }: Props) {
                   </p>
                 </div>
                 <div className="hidden h-36 w-44 items-center justify-center rounded-2xl bg-white/90 shadow-sm sm:flex">
-                  <span className="text-6xl" aria-hidden>
-                    🌈
-                  </span>
+                  <img
+                    src={fennecMascot}
+                    alt="ピアノれんしゅうのアイコン"
+                    width={120}
+                    height={120}
+                    draggable={false}
+                    className="h-28 w-28 select-none object-contain drop-shadow"
+                  />
                 </div>
               </div>
 

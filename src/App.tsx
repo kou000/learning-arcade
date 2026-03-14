@@ -13,7 +13,7 @@ import { SnackBudgetResultPage } from "@/features/soroban/views/SnackBudgetResul
 import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage";
 import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
-import { PianoPracticeMockPage } from "@/features/piano/views/PianoPracticeMockPage";
+import { PianoPracticePage } from "@/features/piano/views/PianoPracticePage";
 
 type Route =
   | "home"
@@ -338,7 +338,7 @@ export default function App() {
           onResetAdminMode={resetAdminModeToEnv}
         />
       ) : null}
-      {route === "piano-practice" ? <PianoPracticeMockPage onBackHome={goHome} /> : null}
+      {route === "piano-practice" ? <PianoPracticePage onBackHome={goHome} /> : null}
     </div>
   );
 }
