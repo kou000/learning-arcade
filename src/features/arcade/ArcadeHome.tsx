@@ -4,9 +4,10 @@ import arkSuccess from "@/assets/ark_success.png";
 
 type Props = {
   onStartSoroban: () => void;
+  onStartPiano: () => void;
 };
 
-export function ArcadeHome({ onStartSoroban }: Props) {
+export function ArcadeHome({ onStartSoroban, onStartPiano }: Props) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-20 pt-12">
       <div className="mx-auto max-w-5xl">
@@ -88,9 +89,8 @@ export function ArcadeHome({ onStartSoroban }: Props) {
               <div className="mt-4">
                 <button
                   type="button"
-                  disabled
-                  aria-disabled="true"
-                  className="w-full cursor-not-allowed rounded-2xl bg-gradient-to-b from-fuchsia-300 to-pink-400 px-6 py-6 text-3xl font-black text-white/90 shadow-[0_12px_0_rgba(190,24,93,0.18)] opacity-80"
+                  onClick={onStartPiano}
+                  className="w-full rounded-2xl bg-gradient-to-b from-fuchsia-300 to-pink-400 px-6 py-6 text-3xl font-black text-white/90 shadow-[0_12px_0_rgba(190,24,93,0.18)] transition active:translate-y-0.5 active:shadow-[0_7px_0_rgba(190,24,93,0.18)]"
                 >
                   ピアノ（じゅんびちゅう）
                 </button>

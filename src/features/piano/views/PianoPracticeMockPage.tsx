@@ -130,6 +130,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
   const [recordedNotes, setRecordedNotes] = useState<RecordedNote[]>([]);
   const [recordedDurationMs, setRecordedDurationMs] = useState(0);
   const [rewardStars, setRewardStars] = useState(12);
+  const [volumePercent, setVolumePercent] = useState(80);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const recordingStartAtRef = useRef<number>(0);
@@ -201,13 +202,16 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
     osc.frequency.value = freq;
     gain.gain.value = 0.0001;
 
+    const volume = Math.max(0, Math.min(1, volumePercent / 100));
+    const peakGain = Math.max(0.0001, 0.24 * volume);
+
     osc.connect(gain);
     gain.connect(context.destination);
 
     const now = context.currentTime;
     const end = now + durationMs / 1000;
 
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, end);
 
     osc.start(now);
@@ -468,25 +472,15 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
                   key={key.id}
                   type="button"
                   onClick={() => void onPlayNote(key.id)}
-                  className={`relative flex-1 rounded-b-2xl border border-slate-300 bg-white px-1 pb-3 pt-24 text-center shadow-[inset_0_-8px_0_rgba(148,163,184,0.2)] transition ${
-                    isActive
-                      ? "bg-yellow-100"
-                      : key.hand === "left"
-                        ? "hover:bg-pink-50"
-                        : "hover:bg-sky-50"
-                  }`}
+                  className={`relative flex-1 rounded-b-2xl border border-slate-300 px-1 pb-3 pt-24 text-center shadow-[inset_0_-8px_0_rgba(148,163,184,0.2)] transition ${
+                    isTarget
+                      ? "bg-gradient-to-b from-yellow-100 via-yellow-200 to-amber-200 ring-4 ring-yellow-300"
+                      : isActive
+                        ? "bg-yellow-100"
+                        : "bg-white"
+                  } ${key.hand === "left" ? "hover:bg-pink-50" : "hover:bg-sky-50"}`}
                 >
-                  {isTarget ? (
-                    <span
-                      className={`absolute left-1/2 top-2 -translate-x-1/2 rounded-full px-3 py-1 text-base font-black ${
-                        key.hand === "left" ? "bg-pink-300 text-pink-900" : "bg-sky-300 text-sky-900"
-                      }`}
-                    >
-                      ひかる
-                    </span>
-                  ) : null}
                   <div className="text-2xl font-black text-slate-700">{key.label}</div>
-                  <div className="text-lg font-bold text-slate-500">ゆび {key.finger}</div>
                 </button>
               );
             })}
@@ -496,6 +490,7 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
               const leftIndex = PIANO_KEYS.slice(0, index).filter((item) => item.type === "white").length - 1;
               const left = `${(leftIndex + 1) * (100 / whiteKeys.length) - 2.5}%`;
               const isActive = activeNoteIds.includes(key.id);
+              const isTarget = key.id === selectedSong.sequence[currentStep];
 
               return (
                 <button
@@ -503,7 +498,11 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
                   type="button"
                   onClick={() => void onPlayNote(key.id)}
                   className={`absolute top-2 h-24 w-[3.8%] -translate-x-1/2 rounded-b-xl shadow-lg transition ${
-                    isActive ? "bg-violet-500" : "bg-slate-800 hover:bg-slate-700"
+                    isTarget
+                      ? "bg-gradient-to-b from-yellow-200 to-amber-400 ring-4 ring-yellow-300"
+                      : isActive
+                        ? "bg-violet-500"
+                        : "bg-slate-800 hover:bg-slate-700"
                   }`}
                   style={{ left }}
                 />
@@ -534,6 +533,24 @@ export function PianoPracticeMockPage({ onBackHome }: PianoPracticeMockPageProps
               );
             })}
           </div>
+        </section>
+
+
+        <section className="rounded-3xl bg-cyan-50 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-2xl font-black text-cyan-700">おと の おおきさ</h2>
+            <p className="rounded-full bg-white px-3 py-1 text-lg font-black text-cyan-700">{volumePercent}%</p>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={volumePercent}
+            onChange={(event) => setVolumePercent(Number(event.target.value))}
+            className="h-3 w-full cursor-pointer appearance-none rounded-full bg-cyan-200 accent-cyan-500"
+            aria-label="おとのおおきさ"
+          />
         </section>
 
         <footer className="grid grid-cols-2 gap-4 pt-1">

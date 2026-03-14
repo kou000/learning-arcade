@@ -159,6 +159,7 @@ export default function App() {
 
   const goHome = () => { window.location.hash = ""; };
   const goSoroban = () => { window.location.hash = "/soroban"; };
+  const goPianoPractice = () => { window.location.hash = "/piano/practice"; };
   const goAdminWithPassword = async () => {
     const password = window.prompt("admin パスワードを入力してください");
     if (password == null) return;
@@ -267,7 +268,7 @@ export default function App() {
           </button>
         </div>
       ) : null}
-      {route === "home" ? <ArcadeHome onStartSoroban={goSoroban} /> : null}
+      {route === "home" ? <ArcadeHome onStartSoroban={goSoroban} onStartPiano={goPianoPractice} /> : null}
       {route === "soroban" ? (
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
       ) : null}
