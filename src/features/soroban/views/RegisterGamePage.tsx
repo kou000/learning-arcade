@@ -45,6 +45,22 @@ type ParsedMitoriLine = {
   value: number;
 };
 
+type MitoriCheckpoint = {
+  lineIndex: number;
+  cumulative: number;
+};
+
+type MulHelpStep = {
+  multiplierPart: number;
+  subtotal: number;
+};
+
+type DivHelpStep = {
+  quotientPart: number;
+  product: number;
+  remainder: number;
+};
+
 const RECEIPT_NAMES = [
   "りんご",
   "パン",
@@ -110,6 +126,26 @@ function parseMitoriLines(problem: Problem): ParsedMitoriLine[] {
     });
 }
 
+function buildMitoriCheckpoints(lines: ParsedMitoriLine[]): MitoriCheckpoint[] {
+  if (lines.length < 2) return [];
+  const maxLine = Math.max(1, lines.length - 1);
+  const firstLine = Math.min(maxLine, Math.max(1, Math.floor(lines.length / 3)));
+  const secondLine = Math.min(
+    maxLine,
+    Math.max(firstLine + 1, Math.floor((lines.length * 2) / 3)),
+  );
+  const checkpointLines = Array.from(new Set([firstLine, secondLine])).sort(
+    (a, b) => a - b,
+  );
+
+  return checkpointLines.map((lineIndex) => {
+    const cumulative = lines
+      .slice(0, lineIndex)
+      .reduce((sum, line) => sum + line.sign * line.value, 0);
+    return { lineIndex, cumulative };
+  });
+}
+
 function parseMul(problem: Problem): { price: number; count: number } {
   const [left, right] = problem.question.split("×").map((part) => part.trim());
   return {
@@ -124,6 +160,45 @@ function parseDiv(problem: Problem): { total: number; people: number } {
     total: parseNumber(left ?? "0"),
     people: parseNumber(right ?? "1"),
   };
+}
+
+function buildMulHelpSteps(mul: { price: number; count: number }): MulHelpStep[] {
+  const digits = String(Math.abs(mul.count)).split("");
+  for (let index = 0; index < digits.length; index++) {
+    const digitValue = Number(digits[index]);
+    const place = 10 ** (digits.length - index - 1);
+    const multiplierPart = digitValue * place;
+    if (multiplierPart <= 0) continue;
+    return [
+      {
+        multiplierPart,
+        subtotal: mul.price * multiplierPart,
+      },
+    ];
+  }
+  return [];
+}
+
+function buildDivHelpSteps(
+  div: { total: number; people: number },
+  quotient: number,
+): DivHelpStep[] {
+  const digits = String(Math.abs(quotient)).split("");
+  for (let index = 0; index < digits.length; index++) {
+    const digitValue = Number(digits[index]);
+    const place = 10 ** (digits.length - index - 1);
+    const quotientPart = digitValue * place;
+    if (quotientPart <= 0) continue;
+    const product = div.people * quotientPart;
+    return [
+      {
+        quotientPart,
+        product,
+        remainder: div.total - product,
+      },
+    ];
+  }
+  return [];
 }
 
 function peopleLabel(people: number): string {
@@ -299,6 +374,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [isReviewSelectorOpen, setIsReviewSelectorOpen] = useState(false);
   const [hasMistakeOnCurrentQuestion, setHasMistakeOnCurrentQuestion] =
     useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
   const [dogReply, setDogReply] = useState<string | null>(null);
@@ -339,6 +415,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     () =>
       current && playSubject === "mitori" ? parseMitoriLines(current) : [],
     [current, playSubject],
+  );
+  const mitoriCheckpoints = useMemo(
+    () =>
+      playSubject === "mitori"
+        ? buildMitoriCheckpoints(mitoriLines)
+        : [],
+    [playSubject, mitoriLines],
   );
   const currentReward = rewardFor(playSubject, playGrade);
   const isReadingDialogueForTimer =
@@ -443,6 +526,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     setAnswer("");
     setQuotient("");
     setHasMistakeOnCurrentQuestion(false);
+    setIsHelpOpen(false);
     clearFeedbackTimers();
     setStatus("idle");
     setClerkEcho(null);
@@ -850,6 +934,10 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const mul = playSubject === "mul" ? parseMul(current) : null;
   const div = playSubject === "div" ? parseDiv(current) : null;
+  const mulHelpSteps = mul ? buildMulHelpSteps(mul) : [];
+  const divHelpSteps = div
+    ? buildDivHelpSteps(div, parseNumber(current.answer))
+    : [];
   const isDivMode = playSubject === "div";
   const receiptReady =
     playSubject === "mitori" ? bubbleStep > mitoriLines.length : bubbleStep > 0;
@@ -870,6 +958,16 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
   const activeInput = isDivMode ? quotient : answer;
   const registerDisplayValue = activeInput.length > 0 ? activeInput : "0";
+  const helpStepsCount =
+    playSubject === "mitori"
+      ? mitoriCheckpoints.length
+      : playSubject === "mul"
+        ? mulHelpSteps.length
+        : divHelpSteps.length;
+  const canUseHelp =
+    receiptReady &&
+    helpStepsCount > 0 &&
+    (isReviewMode || hasMistakeOnCurrentQuestion);
 
   const setActiveInput = (value: string) => {
     clearAnswerFeedback();
@@ -1138,6 +1236,24 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                         </span>
                       </div>
                     ))}
+                    {canUseHelp && isHelpOpen ? (
+                      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-slate-800">
+                        <div className="text-xs font-bold text-amber-800">
+                          おたすけヒント（とちゅう 2かしょ）
+                        </div>
+                        <div className="mt-1 grid gap-1 text-sm">
+                          {mitoriCheckpoints.map((checkpoint, checkpointIndex) => (
+                            <div key={`${checkpoint.lineIndex}-${checkpointIndex}`}>
+                              {checkpointIndex + 1}つめ:
+                              {` ${checkpoint.lineIndex}ぎょうめまで = `}
+                              <span className="font-black tabular-nums">
+                                {checkpoint.cumulative}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
 
@@ -1147,6 +1263,42 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     <div className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-[var(--sheet-font)] text-slate-900">
                       {current.question}
                     </div>
+                    {canUseHelp && isHelpOpen ? (
+                      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-slate-800">
+                        <div className="text-xs font-bold text-amber-800">
+                          おたすけヒント（とちゅうのけいさん）
+                        </div>
+                        {playSubject === "mul" && mul ? (
+                          <div className="mt-1 grid gap-1 text-sm">
+                            {mulHelpSteps.map((step) => (
+                              <div key={step.multiplierPart}>
+                                {mul.price} × {step.multiplierPart} ={" "}
+                                <span className="font-black tabular-nums">
+                                  {step.subtotal}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                        {playSubject === "div" && div ? (
+                          <div className="mt-1 grid gap-1 text-sm">
+                            {divHelpSteps.map((step) => (
+                              <div key={step.quotientPart}>
+                                {step.quotientPart} をたてる: {div.people} ×{" "}
+                                {step.quotientPart} ={" "}
+                                <span className="font-black tabular-nums">
+                                  {step.product}
+                                </span>
+                                {" / のこり "}
+                                <span className="font-black tabular-nums">
+                                  {step.remainder}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -1212,6 +1364,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     onClick={onSkipQuestion}
                   >
                     このもんだいをスキップ
+                  </button>
+                ) : null}
+                {canUseHelp ? (
+                  <button
+                    className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-100"
+                    onClick={() => setIsHelpOpen((prev) => !prev)}
+                  >
+                    {isHelpOpen ? "おたすけをとじる" : "おたすけをみる"}
                   </button>
                 ) : null}
               </div>
