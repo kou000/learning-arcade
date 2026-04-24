@@ -19,11 +19,17 @@ import festivalStallDioramaImage from "@/assets/items/festival-stall-diorama.png
 import jellyfishUnderwaterDioramaImage from "@/assets/items/jellyfish-underwater-diorama.png";
 import keimarukunKeyholderImage from "@/assets/items/keimarukun-keyholder.png";
 import keimarukunPlushImage from "@/assets/items/keimarukun-plush.png";
+import keimarukunBreakfastCardImage from "@/assets/items/keimarukun-breakfast-card.png";
 import moonlightForestDioramaImage from "@/assets/items/moonlight-forest-diorama.png";
+import keimarukunMagicCardImage from "@/assets/items/keimarukun-magic-card.png";
+import keimarukunPandaCardImage from "@/assets/items/keimarukun-panda-card.png";
+import keimarukunRamenCardImage from "@/assets/items/keimarukun-ramen-card.png";
+import keimarukunRockGuitarCardImage from "@/assets/items/keimarukun-rock-guitar-card.png";
 import spaceAdventureDioramaImage from "@/assets/items/space-adventure-diorama.png";
 import starKeychainImage from "@/assets/items/star-lamp.png";
 import studyClassroomDioramaImage from "@/assets/items/study-classroom-diorama.png";
 import toyCarImage from "@/assets/items/toy-car.png";
+import keimarukunWinterCardImage from "@/assets/items/keimarukun-winter-card.png";
 import shelfColorfulImage from "@/assets/shelf-colorful.png";
 import shelfFancyImage from "@/assets/shelf-fancy.png";
 
@@ -238,6 +244,54 @@ export const SHOP_ITEMS: ShopItem[] = [
     image: keimarukunPlushImage,
     description: "けいまるくんの ふわふわ ぬいぐるみ。",
     addedOn: "2026-02-28",
+  },
+  {
+    id: "keimarukun-rock-guitar-card",
+    name: "けいまるくん ろっくぎたーかーど",
+    price: 180,
+    image: keimarukunRockGuitarCardImage,
+    description: "ぎたーをもった けいまるくんの かっこいい かーど。",
+    addedOn: "2026-04-24",
+  },
+  {
+    id: "keimarukun-magic-card",
+    name: "けいまるくん まほうつかいかーど",
+    price: 200,
+    image: keimarukunMagicCardImage,
+    description: "ほしのまほうをつかう けいまるくんの きらきらかーど。",
+    addedOn: "2026-04-24",
+  },
+  {
+    id: "keimarukun-panda-card",
+    name: "けいまるくん ぱんだかーど",
+    price: 160,
+    image: keimarukunPandaCardImage,
+    description: "ぱんだのふくをきた けいまるくんの ふわふわかーど。",
+    addedOn: "2026-04-24",
+  },
+  {
+    id: "keimarukun-breakfast-card",
+    name: "けいまるくん あさごはんかーど",
+    price: 120,
+    image: keimarukunBreakfastCardImage,
+    description: "とーすとになった けいまるくんの ほかほかかーど。",
+    addedOn: "2026-04-24",
+  },
+  {
+    id: "keimarukun-winter-card",
+    name: "けいまるくん ふゆかーど",
+    price: 140,
+    image: keimarukunWinterCardImage,
+    description: "ゆきのひの けいまるくんの ぬくぬくかーど。",
+    addedOn: "2026-04-24",
+  },
+  {
+    id: "keimarukun-ramen-card",
+    name: "けいまるくん らーめんかーど",
+    price: 170,
+    image: keimarukunRamenCardImage,
+    description: "らーめんをたべる けいまるくんの あつあつかーど。",
+    addedOn: "2026-04-24",
   },
   {
     id: "shelf-upper-unlock",
