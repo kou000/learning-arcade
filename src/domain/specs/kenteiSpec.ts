@@ -84,7 +84,13 @@ export const KENTEI_SPEC_ZENSHUREN: Record<Grade, GradeSpec> = {
         [3, 2],
       ],
     },
-    div: { digitsSum: 4, count: 15, minutes: 7, digitsPairs: [[2, 2]] },
+    div: {
+      digitsSum: 4,
+      count: 15,
+      minutes: 7,
+      digitsPairs: [[2, 2]],
+      borrowMixRatio: 0.2,
+    },
     mitori: {
       digitsMin: 2,
       digitsMax: 3,
@@ -195,7 +201,13 @@ export const KENTEI_SPEC_ZENSHUGAKUREN: Partial<Record<Grade, GradeSpec>> = {
         [3, 2],
       ],
     },
-    div: { digitsSum: 4, count: 20, minutes: 10, digitsPairs: [[2, 2]] },
+    div: {
+      digitsSum: 4,
+      count: 20,
+      minutes: 10,
+      digitsPairs: [[2, 2]],
+      borrowMixRatio: 0.2,
+    },
     mitori: {
       digitsMin: 2,
       digitsMax: 3,

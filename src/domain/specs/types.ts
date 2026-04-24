@@ -13,6 +13,7 @@ export type DivSpec = {
   count: number;
   minutes: number;
   digitsPairs?: Array<[number, number]>;
+  borrowMixRatio?: number;
 };
 export type MitoriSpec = {
   digitsMin: number;
