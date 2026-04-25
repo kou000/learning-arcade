@@ -18,7 +18,38 @@ export type CardItem = {
   image: string;
   description: string;
   addedOn: string;
+  gachaId: CardGachaId;
 };
+
+export type CardGachaId = "classic" | "dream" | "outing";
+
+export type CardGachaDefinition = {
+  id: CardGachaId;
+  name: string;
+  shortName: string;
+  description: string;
+};
+
+export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
+  {
+    id: "classic",
+    name: "けいまる ベーシック",
+    shortName: "ベーシック",
+    description: "いつもの けいまるくんが あつまった がちゃ。",
+  },
+  {
+    id: "dream",
+    name: "ゆめいろ コレクション",
+    shortName: "ゆめいろ",
+    description: "まほうや うちゅうの きらきら がちゃ。",
+  },
+  {
+    id: "outing",
+    name: "おでかけ コレクション",
+    shortName: "おでかけ",
+    description: "うみや おまつりに おでかけする がちゃ。",
+  },
+];
 
 export const KEIMARUKUN_CARDS: CardItem[] = [
   {
@@ -27,6 +58,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunRockGuitarCardImage,
     description: "ぎたーをもった けいまるくんの かっこいい かーど。",
     addedOn: "2026-04-24",
+    gachaId: "classic",
   },
   {
     id: "keimarukun-magic-card",
@@ -34,6 +66,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunMagicCardImage,
     description: "ほしのまほうをつかう けいまるくんの きらきらかーど。",
     addedOn: "2026-04-24",
+    gachaId: "dream",
   },
   {
     id: "keimarukun-panda-card",
@@ -41,6 +74,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunPandaCardImage,
     description: "ぱんだのふくをきた けいまるくんの ふわふわかーど。",
     addedOn: "2026-04-24",
+    gachaId: "classic",
   },
   {
     id: "keimarukun-breakfast-card",
@@ -48,6 +82,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunBreakfastCardImage,
     description: "とーすとになった けいまるくんの ほかほかかーど。",
     addedOn: "2026-04-24",
+    gachaId: "classic",
   },
   {
     id: "keimarukun-winter-card",
@@ -55,6 +90,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunWinterCardImage,
     description: "ゆきのひの けいまるくんの ぬくぬくかーど。",
     addedOn: "2026-04-24",
+    gachaId: "classic",
   },
   {
     id: "keimarukun-ramen-card",
@@ -62,6 +98,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunRamenCardImage,
     description: "らーめんをたべる けいまるくんの あつあつかーど。",
     addedOn: "2026-04-24",
+    gachaId: "classic",
   },
   {
     id: "keimarukun-space-card",
@@ -69,6 +106,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunSpaceCardImage,
     description: "うちゅうふくで ほしをたんけんする けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "dream",
   },
   {
     id: "keimarukun-nap-card",
@@ -76,6 +114,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunNapCardImage,
     description: "おつきさまと いっしょに すやすやねむる けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "dream",
   },
   {
     id: "keimarukun-sweets-card",
@@ -83,6 +122,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunSweetsCardImage,
     description: "あまいすいーつに かこまれた けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "outing",
   },
   {
     id: "keimarukun-beach-card",
@@ -90,6 +130,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunBeachCardImage,
     description: "うきわで うみべをたのしむ けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "outing",
   },
   {
     id: "keimarukun-picnic-card",
@@ -97,6 +138,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunPicnicCardImage,
     description: "おそとで さんどいっちをたべる けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "outing",
   },
   {
     id: "keimarukun-dance-card",
@@ -104,6 +146,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunDanceCardImage,
     description: "おんがくにあわせて たのしくおどる けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "dream",
   },
   {
     id: "keimarukun-festival-card",
@@ -111,6 +154,7 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunFestivalCardImage,
     description: "おまつりのよるを たのしむ けいまるくん。",
     addedOn: "2026-04-25",
+    gachaId: "outing",
   },
 ];
 
@@ -122,4 +166,17 @@ export function getCardById(cardId: string): CardItem | null {
 
 export function isCardItemId(itemId: string): boolean {
   return CARD_ITEM_ID_SET.has(itemId);
+}
+
+export function getCardsByGachaId(gachaId: CardGachaId): CardItem[] {
+  return KEIMARUKUN_CARDS.filter((card) => card.gachaId === gachaId);
+}
+
+export function getCardGachaDefinition(
+  gachaId: CardGachaId,
+): CardGachaDefinition {
+  return (
+    CARD_GACHA_DEFINITIONS.find((gacha) => gacha.id === gachaId) ??
+    CARD_GACHA_DEFINITIONS[0]
+  );
 }

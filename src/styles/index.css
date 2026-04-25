@@ -85,6 +85,15 @@
   animation: gachaResultPopIn 0.48s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+@keyframes gachaSpinFrameFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.gacha-spin-frame {
+  animation: gachaSpinFrameFade 420ms ease-in-out both;
+}
+
 @keyframes gachaCardFloat {
   0% { transform: translateY(0) rotate(-1deg); }
   50% { transform: translateY(-9px) rotate(1deg); }
