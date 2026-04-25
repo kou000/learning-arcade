@@ -12,6 +12,8 @@ import { SnackBudgetGamePage } from "@/features/soroban/views/SnackBudgetGamePag
 import { SnackBudgetResultPage } from "@/features/soroban/views/SnackBudgetResultPage";
 import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage";
 import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage";
+import { GachaPage } from "@/features/soroban/views/GachaPage";
+import { CardBookPage } from "@/features/soroban/views/CardBookPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
 import { PianoPracticePage } from "@/features/piano/views/PianoPracticePage";
 
@@ -24,6 +26,8 @@ type Route =
   | "soroban-shop"
   | "soroban-shop-payment"
   | "soroban-shelf"
+  | "soroban-gacha"
+  | "soroban-cards"
   | "soroban-snack-top"
   | "soroban-snack"
   | "soroban-badges"
@@ -56,6 +60,8 @@ function getRouteFromHash(): Route {
   if (h === "soroban/shop") return "soroban-shop";
   if (h.startsWith("soroban/shop/payment/")) return "soroban-shop-payment";
   if (h === "soroban/shelf") return "soroban-shelf";
+  if (h === "soroban/gacha") return "soroban-gacha";
+  if (h === "soroban/cards") return "soroban-cards";
   if (h === "soroban/badges") return "soroban-badges";
   if (h === "soroban/snack/top") return "soroban-snack-top";
   if (h === "soroban/snack") return "soroban-snack";
@@ -196,6 +202,8 @@ export default function App() {
     window.location.hash = `/soroban/shop/payment/${encodeURIComponent(itemId)}`;
   };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
+  const goGacha = () => { window.location.hash = "/soroban/gacha"; };
+  const goCards = () => { window.location.hash = "/soroban/cards"; };
   const goSnackTop = () => { window.location.hash = "/soroban/snack/top"; };
   const goSnackBadges = () => { window.location.hash = "/soroban/badges"; };
   const goSnack = (difficulty: "easy" | "normal" | "hard" = "easy") => {
@@ -278,6 +286,8 @@ export default function App() {
           onGoRegisterStage={goRegisterStage}
           onGoShop={goShop}
           onGoShelf={goShelf}
+          onGoGacha={goGacha}
+          onGoCards={goCards}
           onGoSnack={goSnackTop}
           onGoSnackBadges={goSnackBadges}
         />
@@ -303,6 +313,12 @@ export default function App() {
       ) : null}
       {route === "soroban-shelf" ? (
         <ShelfPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
+      ) : null}
+      {route === "soroban-gacha" ? (
+        <GachaPage onGoRegister={goRegister} onGoCards={goCards} />
+      ) : null}
+      {route === "soroban-cards" ? (
+        <CardBookPage onGoRegister={goRegister} onGoGacha={goGacha} />
       ) : null}
       {route === "soroban-snack-top" ? (
         <SnackBudgetTopPage onGoRegister={goRegister} onGoSnackPlay={goSnack} />

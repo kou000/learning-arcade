@@ -13,6 +13,8 @@
 - `#/soroban/shop` : ショップTOP（`ShopPage`）
 - `#/soroban/shop/payment/:itemId` : 支払い画面（`ShopPaymentPage`）
 - `#/soroban/shelf` : 棚（`ShelfPage`）
+- `#/soroban/gacha` : ガチャガチャ（`GachaPage`）
+- `#/soroban/cards` : カードずかん（`CardBookPage`）
 - `#/soroban/badges` : バッジ図鑑（`SnackBadgeBookPage`）
 - `#/soroban/snack/top` : 300円おやつゲームTOP（`SnackBudgetTopPage`）
 - `#/soroban/snack` : 300円おやつゲーム（`SnackBudgetGamePage`）
@@ -55,6 +57,8 @@
 - `shelfRows`, `shelfCols`, `shelfSlots`
 - `unlockedGrades`
 - `unlockedStageByGrade`（`0:みとり`, `1:かけ`, `2:わり`）
+
+カード所持は新規キーを増やさず、カードIDを `purchasedItemIds` に保存する。カード定義は `catalog.ts` ではなく `cardCatalog.ts` で管理する。
 
 ## 4. ゲーム進行の解放仕様
 
@@ -218,7 +222,24 @@
 - 画像欠損時プレースホルダー表示
 - 旧セーブデータ（`shelfSlots` のみ保持）読み込み時は、既存配置を `shelf-default` に移行して後方互換を維持する
 
-## 5.5 RegisterAdminPage（管理者画面）
+## 5.5 GachaPage / CardBookPage
+
+ファイル:
+- `src/features/soroban/views/GachaPage.tsx`
+- `src/features/soroban/views/CardBookPage.tsx`
+- `src/features/soroban/cardCatalog.ts`
+
+- けいまるカードはショップ商品とは別に `cardCatalog.ts` で管理する
+- ガチャ対象は `cardCatalog.ts` のけいまるカード全種
+- 1回300コイン
+- 未所持カードが残っている間は、必ず未所持カードから1枚出す
+- 全カード所持後はガチャを回せない
+- 所持カードIDは `registerProgress.purchasedItemIds` に保存する
+- カードはショップ一覧に表示しない
+- カードは棚の配置候補に表示しない
+- カードずかんでは全カード枠を表示し、未所持カードは伏せカードとして表示する
+
+## 5.6 RegisterAdminPage（管理者画面）
 
 ファイル: `src/features/soroban/views/RegisterAdminPage.tsx`
 
@@ -230,7 +251,7 @@
 - TOP画面の「admin」ボタン押下時にパスワード入力を要求する
 - 認証成功時のみ `#/soroban/admin` へ遷移できる
 
-## 5.6 SnackBudgetTopPage（300円おやつゲームTOP）
+## 5.7 SnackBudgetTopPage（300円おやつゲームTOP）
 
 ファイル: `src/features/soroban/views/SnackBudgetTopPage.tsx`
 
@@ -240,7 +261,7 @@
 - 背景画像:
   - `src/assets/snack-game-top.png`
 
-## 5.7 SnackBudgetGamePage（300円おやつゲーム）
+## 5.8 SnackBudgetGamePage（300円おやつゲーム）
 
 ファイル: `src/features/soroban/views/SnackBudgetGamePage.tsx`
 
@@ -258,7 +279,7 @@
     - ふつう: 同じお菓子は1個まで
     - むずかしい: 同じお菓子は1個まで + 価格の一の位が0でない商品が増える
 
-## 5.8 SnackBudgetResultPage（300円おやつ結果）
+## 5.9 SnackBudgetResultPage（300円おやつ結果）
 
 ファイル: `src/features/soroban/views/SnackBudgetResultPage.tsx`
 
@@ -290,7 +311,7 @@
 - 同じ `級 × 種目` では最高ランク1つのみ保持
 - 獲得モーダルはステージ結果表示後に出し、閉じた後でコイン加算パネル表示を開始
 
-## 5.9 SnackBadgeBookPage（バッジ図鑑）
+## 5.10 SnackBadgeBookPage（バッジ図鑑）
 
 ファイル: `src/features/soroban/views/SnackBadgeBookPage.tsx`
 

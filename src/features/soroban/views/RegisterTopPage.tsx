@@ -10,6 +10,8 @@ type Props = {
   onGoRegisterStage: () => void;
   onGoShop: () => void;
   onGoShelf: () => void;
+  onGoGacha: () => void;
+  onGoCards: () => void;
   onGoSnack: () => void;
   onGoSnackBadges: () => void;
 };
@@ -25,6 +27,8 @@ export function RegisterTopPage({
   onGoRegisterStage,
   onGoShop,
   onGoShelf,
+  onGoGacha,
+  onGoCards,
   onGoSnack,
   onGoSnackBadges,
 }: Props) {
@@ -84,7 +88,7 @@ export function RegisterTopPage({
               レジゲームスタート
             </button>
           </div>
-          <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-4">
+          <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
             <button
               className="relative rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
               onClick={onGoShop}
@@ -101,6 +105,18 @@ export function RegisterTopPage({
               onClick={onGoShelf}
             >
               たな
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoGacha}
+            >
+              ガチャガチャ
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoCards}
+            >
+              カードずかん
             </button>
             <button
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
