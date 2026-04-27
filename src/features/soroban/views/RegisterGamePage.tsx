@@ -80,6 +80,11 @@ const READING_SPEED_OPTIONS = [
   { label: "10x", value: 10 },
 ] as const;
 const STAGE_ALPHA_SECONDS = 15;
+const MITORI_HELP_DIVIDER_CLASSES = [
+  "bg-sky-500/90",
+  "bg-fuchsia-500/90",
+] as const;
+const MITORI_HELP_DIVIDER_LABELS = ["あおいせん", "ピンクのせん"] as const;
 
 const BADGE_CONFETTI = [
   { left: 6, color: "bg-rose-300", delay: 0 },
@@ -422,6 +427,16 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
         ? buildMitoriCheckpoints(mitoriLines)
         : [],
     [playSubject, mitoriLines],
+  );
+  const mitoriCheckpointByLineIndex = useMemo(
+    () =>
+      new Map(
+        mitoriCheckpoints.map((checkpoint, checkpointIndex) => [
+          checkpoint.lineIndex,
+          { checkpoint, checkpointIndex },
+        ]),
+      ),
+    [mitoriCheckpoints],
   );
   const currentReward = rewardFor(playSubject, playGrade);
   const isReadingDialogueForTimer =
@@ -1221,19 +1236,32 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                       レシート
                     </div>
                     {mitoriLines.map((line, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between text-sm font-[var(--sheet-font)]"
-                      >
-                        <span>
-                          {line.sign === -1
-                            ? `${RECEIPT_NAMES[i % RECEIPT_NAMES.length]} クーポン`
-                            : RECEIPT_NAMES[i % RECEIPT_NAMES.length]}
-                        </span>
-                        <span>
-                          {line.sign === -1 ? "-" : ""}
-                          {line.value}
-                        </span>
+                      <div key={i}>
+                        <div className="flex items-center justify-between text-sm font-[var(--sheet-font)]">
+                          <span>
+                            {line.sign === -1
+                              ? `${RECEIPT_NAMES[i % RECEIPT_NAMES.length]} クーポン`
+                              : RECEIPT_NAMES[i % RECEIPT_NAMES.length]}
+                          </span>
+                          <span>
+                            {line.sign === -1 ? "-" : ""}
+                            {line.value}
+                          </span>
+                        </div>
+                        {canUseHelp && isHelpOpen ? (() => {
+                          const marker = mitoriCheckpointByLineIndex.get(i + 1);
+                          if (marker == null) return null;
+                          const dividerClass =
+                            MITORI_HELP_DIVIDER_CLASSES[
+                              marker.checkpointIndex %
+                                MITORI_HELP_DIVIDER_CLASSES.length
+                            ];
+                          return (
+                            <div
+                              className={`my-1 h-0.5 rounded-full ${dividerClass}`}
+                            />
+                          );
+                        })() : null}
                       </div>
                     ))}
                     {canUseHelp && isHelpOpen ? (
@@ -1244,8 +1272,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                         <div className="mt-1 grid gap-1 text-sm">
                           {mitoriCheckpoints.map((checkpoint, checkpointIndex) => (
                             <div key={`${checkpoint.lineIndex}-${checkpointIndex}`}>
-                              {checkpointIndex + 1}つめ:
-                              {` ${checkpoint.lineIndex}ぎょうめまで = `}
+                              {
+                                MITORI_HELP_DIVIDER_LABELS[
+                                  checkpointIndex %
+                                    MITORI_HELP_DIVIDER_LABELS.length
+                                ]
+                              }
+                              {`（${checkpoint.lineIndex}ぎょうめまで） = `}
                               <span className="font-black tabular-nums">
                                 {checkpoint.cumulative}
                               </span>
