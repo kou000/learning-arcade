@@ -1,15 +1,20 @@
 import keimarukunBeachCardImage from "@/assets/cards/keimarukun-beach-card.png";
+import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
+import keimarukunCurryCardImage from "@/assets/cards/keimarukun-curry-card.png";
 import keimarukunDanceCardImage from "@/assets/cards/keimarukun-dance-card.png";
 import keimarukunFestivalCardImage from "@/assets/cards/keimarukun-festival-card.png";
 import keimarukunMagicCardImage from "@/assets/cards/keimarukun-magic-card.png";
 import keimarukunNapCardImage from "@/assets/cards/keimarukun-nap-card.png";
+import keimarukunOmuriceCardImage from "@/assets/cards/keimarukun-omurice-card.png";
 import keimarukunPandaCardImage from "@/assets/cards/keimarukun-panda-card.png";
 import keimarukunPicnicCardImage from "@/assets/cards/keimarukun-picnic-card.png";
 import keimarukunRamenCardImage from "@/assets/cards/keimarukun-ramen-card.png";
 import keimarukunRockGuitarCardImage from "@/assets/cards/keimarukun-rock-guitar-card.png";
 import keimarukunSpaceCardImage from "@/assets/cards/keimarukun-space-card.png";
+import keimarukunSteakCardImage from "@/assets/cards/keimarukun-steak-card.png";
 import keimarukunSweetsCardImage from "@/assets/cards/keimarukun-sweets-card.png";
+import keimarukunSushiCardImage from "@/assets/cards/keimarukun-sushi-card.png";
 import keimarukunWinterCardImage from "@/assets/cards/keimarukun-winter-card.png";
 
 export type CardItem = {
@@ -21,7 +26,7 @@ export type CardItem = {
   gachaId: CardGachaId;
 };
 
-export type CardGachaId = "classic" | "dream" | "outing";
+export type CardGachaId = "classic" | "dream" | "outing" | "food";
 
 export type CardGachaDefinition = {
   id: CardGachaId;
@@ -48,6 +53,12 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     name: "おでかけ コレクション",
     shortName: "おでかけ",
     description: "うみや おまつりに おでかけする がちゃ。",
+  },
+  {
+    id: "food",
+    name: "たべもの コレクション",
+    shortName: "たべもの",
+    description: "おいしい たべものが あつまった がちゃ。",
   },
 ];
 
@@ -155,6 +166,46 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     description: "おまつりのよるを たのしむ けいまるくん。",
     addedOn: "2026-04-25",
     gachaId: "outing",
+  },
+  {
+    id: "keimarukun-sushi-card",
+    name: "けいまるくん すしかーど",
+    image: keimarukunSushiCardImage,
+    description: "おすしやさんで まぐろすしになった けいまるくん。",
+    addedOn: "2026-04-27",
+    gachaId: "food",
+  },
+  {
+    id: "keimarukun-curry-card",
+    name: "けいまるくん かれーかーど",
+    image: keimarukunCurryCardImage,
+    description: "すぱいすかおる かれーを たべる けいまるくん。",
+    addedOn: "2026-04-27",
+    gachaId: "food",
+  },
+  {
+    id: "keimarukun-steak-card",
+    name: "けいまるくん にくかーど",
+    image: keimarukunSteakCardImage,
+    description: "あつあつの おにくに ちょっとこまった けいまるくん。",
+    addedOn: "2026-04-27",
+    gachaId: "food",
+  },
+  {
+    id: "keimarukun-omurice-card",
+    name: "けいまるくん おむらいすかーど",
+    image: keimarukunOmuriceCardImage,
+    description: "ふわふわ おむらいすにつつまれた けいまるくん。",
+    addedOn: "2026-04-27",
+    gachaId: "food",
+  },
+  {
+    id: "keimarukun-banana-card",
+    name: "けいまるくん ばななかーど",
+    image: keimarukunBananaCardImage,
+    description: "ばななぱふぇと いっしょの あまい けいまるくん。",
+    addedOn: "2026-04-27",
+    gachaId: "food",
   },
 ];
 

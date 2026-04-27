@@ -281,13 +281,13 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
             <div className="rounded-full border-2 border-amber-200 bg-white/90 px-3 py-1.5 text-center text-sm font-black text-amber-900 shadow-lg backdrop-blur-sm">
               {selectedGacha.description}
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {CARD_GACHA_DEFINITIONS.map((gacha) => {
                 const active = gacha.id === selectedGachaId;
                 return (
                   <button
                     key={gacha.id}
-                    className={`rounded-2xl border-2 px-2 py-2 text-sm font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                    className={`rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
                       active
                         ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
                         : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
