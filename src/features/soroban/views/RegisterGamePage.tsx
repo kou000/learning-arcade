@@ -224,6 +224,14 @@ function isDivSubject(subject: RegisterSubject): boolean {
   return subject === "div" || subject === "mentalDiv";
 }
 
+function isMentalSubject(subject: RegisterSubject): boolean {
+  return (
+    subject === "mentalMitori" ||
+    subject === "mentalMul" ||
+    subject === "mentalDiv"
+  );
+}
+
 function rewardFor(subject: RegisterSubject, grade: Grade): number {
   const base = isMitoriSubject(subject) ? 4 : 2;
   const gradeBonus = Math.max(0, Math.ceil((9 - grade) / 2));
@@ -981,6 +989,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     isMitoriSubject(playSubject)
       ? bubbleStep <= mitoriLines.length
       : bubbleStep === 0;
+  const isMentalMode = isMentalSubject(playSubject);
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
   const isDialogMode = isReadingItems || isFeedbackDialogue || isRoundFinished;
   const showCoinGainPanel =
@@ -1437,6 +1446,16 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
               <div className="text-sm font-bold text-slate-700 text-white">
                 レジ
               </div>
+              {isMentalMode ? (
+                <div className="mt-2 rounded-2xl border-2 border-orange-300 bg-orange-100 px-4 py-3 text-center text-orange-950 shadow-sm">
+                  <div className="text-4xl font-black leading-none tracking-wide">
+                    あんざん
+                  </div>
+                  <div className="mt-2 text-xs font-bold">
+                    そろばんをつかわずに こたえよう
+                  </div>
+                </div>
+              ) : null}
               <div className="mt-2 rounded-2xl border-4 border-[#1b1f24] bg-[#2d391b] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),inset_0_-10px_20px_rgba(0,0,0,0.25)]">
                 <div className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#d4e985]/80">
                   TOTAL
