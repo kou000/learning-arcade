@@ -39,6 +39,9 @@ export function ControlBar({
     { value: "mitori", label: subjectLabel("mitori") },
     { value: "mul", label: subjectLabel("mul") },
     { value: "div", label: subjectLabel("div") },
+    ...(gradeSpec?.mentalMitori ? [{ value: "mentalMitori" as const, label: subjectLabel("mentalMitori") }] : []),
+    ...(gradeSpec?.mentalMul ? [{ value: "mentalMul" as const, label: subjectLabel("mentalMul") }] : []),
+    ...(gradeSpec?.mentalDiv ? [{ value: "mentalDiv" as const, label: subjectLabel("mentalDiv") }] : []),
     ...(hasDenpyo ? [{ value: "denpyo" as const, label: subjectLabel("denpyo") }] : []),
   ];
 

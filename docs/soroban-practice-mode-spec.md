@@ -18,6 +18,7 @@
 
 - 関数: `generateProblems(grade, subject, examBody)`
 - one-by-one では 1 セットのみ生成
+- 全珠学連では 1〜8級の暗算種目（乗暗算/除暗算/見取暗算）も選択可能
 - 問題型:
   - `vertical`（見取り算など）
   - `inline`（かけ算/わり算など）
@@ -90,3 +91,4 @@
 2. one-by-one の挙動変更は `OneByOnePractice.tsx` に閉じる
 3. 保存項目追加時は `state.ts` の正規化を必ず更新する
 4. 変更後は `npm run build` と操作確認（正解時オート進行）を行う
+5. 暗算種目は `Subject` と級別仕様に存在する場合のみ表示する

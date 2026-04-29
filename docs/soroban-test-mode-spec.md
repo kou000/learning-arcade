@@ -14,6 +14,8 @@
 テストモードも共通ジェネレーターを使う。
 
 - 関数: `generateProblems(grade, subject, examBody)`
+- 全珠学連では `mentalMul`（乗暗算）/ `mentalDiv`（除暗算）/ `mentalMitori`（見取暗算）も同じ入口で生成する。
+- 暗算種目は現行実装では 1〜8級のみ。9〜10級には表示しない。
 - 生成単位:
   - 1セット = 問題配列1つ
   - `sets` 分だけ複数セット生成
@@ -64,6 +66,7 @@
 - 問題シート: `src/features/practice/components/ProblemSheet.tsx`
   - `vertical` 問題は 5問ごとの縦レイアウト
   - `inline` 問題は2カラムレイアウト
+  - 点数欄は固定文言ではなく、種目仕様の満点と問題数から表示する
 - 解答シート: `src/features/practice/components/AnswerSheet.tsx`
   - `showAnswers === true` の時だけ表示
 - 印刷:
@@ -74,6 +77,7 @@
 - 設定変更（級/種目/モード/セット数）で問題を再生成
 - `examBody` は実質 `zenshugakuren` に補正される
 - 級により伝票算がない場合、`denpyo` 選択は `mitori` に補正
+- 級により暗算仕様がない場合、暗算選択は利用可能な種目に補正
 
 ## 6. 他モードとの関係
 

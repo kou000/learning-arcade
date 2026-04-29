@@ -32,6 +32,14 @@ export function generateMitori(spec: MitoriSpec): Problem[] {
       : null;
 
     for (let t = 0; t < spec.terms; t++) {
+      if (spec.makeTenPairs) {
+        const first = randInt(1, 9);
+        const second = 10 - first;
+        nums.push(first, second);
+        total += 10;
+        t += 1;
+        continue;
+      }
       const d = digitPlan ? digitPlan[t] : randInt(spec.digitsMin, spec.digitsMax);
       const min = d === 1 ? 0 : 10 ** (d - 1);
       const max = 10 ** d - 1;

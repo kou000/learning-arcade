@@ -7,7 +7,13 @@ import {
   type SnackRank,
 } from "@/features/soroban/snackBadges";
 
-export type RegisterBadgeSubject = "mitori" | "mul" | "div";
+export type RegisterBadgeSubject =
+  | "mitori"
+  | "mul"
+  | "div"
+  | "mentalMitori"
+  | "mentalMul"
+  | "mentalDiv";
 export type RegisterBadgeRank = "bronze" | "silver" | "gold";
 
 const REGISTER_BADGE_RANK_SCORE: Record<RegisterBadgeRank, number> = {
@@ -37,16 +43,22 @@ export function buildRegisterBadgeId(
 export function parseRegisterBadgeId(
   badgeId: string,
 ): { grade: Grade; subject: RegisterBadgeSubject; rank: RegisterBadgeRank } | null {
-  const m = /^register:g(\d+):(mitori|mul|div):rank:(bronze|silver|gold)$/.exec(
-    badgeId,
-  );
+  const m =
+    /^register:g(\d+):(mitori|mul|div|mentalMitori|mentalMul|mentalDiv):rank:(bronze|silver|gold)$/.exec(
+      badgeId,
+    );
   if (!m) return null;
   const grade = Number(m[1]);
   if (!Number.isFinite(grade)) return null;
   const subject = m[2];
   const rank = m[3];
   if (
-    (subject === "mitori" || subject === "mul" || subject === "div") &&
+    (subject === "mitori" ||
+      subject === "mul" ||
+      subject === "div" ||
+      subject === "mentalMitori" ||
+      subject === "mentalMul" ||
+      subject === "mentalDiv") &&
     (rank === "bronze" || rank === "silver" || rank === "gold")
   ) {
     return { grade: grade as Grade, subject, rank };

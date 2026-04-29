@@ -21,6 +21,25 @@ import {
 } from "@/domain/specs/kenteiSpec";
 import { loadPracticeConfig, savePracticeConfig } from "@/features/soroban/state";
 
+function isSubjectAvailable(
+  spec: ReturnType<typeof getGradeSpec>,
+  subject: Subject,
+): boolean {
+  if (!spec) return false;
+  if (subject === "mul" || subject === "div" || subject === "mitori") return true;
+  if (subject === "denpyo") return Boolean(spec.denpyo);
+  if (subject === "mentalMul") return Boolean(spec.mentalMul);
+  if (subject === "mentalDiv") return Boolean(spec.mentalDiv);
+  if (subject === "mentalMitori") return Boolean(spec.mentalMitori);
+  return false;
+}
+
+function fallbackSubject(spec: ReturnType<typeof getGradeSpec>): Subject {
+  if (spec?.mitori) return "mitori";
+  if (spec?.mentalMitori) return "mentalMitori";
+  return "mitori";
+}
+
 type Props = {
   onBack: () => void;
   onGoRegister: () => void;
@@ -52,7 +71,7 @@ export function PracticePage({ onBack, onGoRegister }: Props) {
   const onChangeGrade = (g: Grade) => {
     setGrade(g);
     const spec = getGradeSpec(examBody, g);
-    setSubject((prev) => (prev === "denpyo" && !spec?.denpyo ? "mitori" : prev));
+    setSubject((prev) => (isSubjectAvailable(spec, prev) ? prev : fallbackSubject(spec)));
   };
 
   const onChangeExamBody = (b: ExamBody) => {
@@ -62,7 +81,7 @@ export function PracticePage({ onBack, onGoRegister }: Props) {
       const nextGrade = available[0] ?? grade;
       setGrade(nextGrade);
       const spec = getGradeSpec(b, nextGrade);
-      setSubject((prev) => (prev === "denpyo" && !spec?.denpyo ? "mitori" : prev));
+      setSubject((prev) => (isSubjectAvailable(spec, prev) ? prev : fallbackSubject(spec)));
     }
   };
 
@@ -79,10 +98,17 @@ export function PracticePage({ onBack, onGoRegister }: Props) {
       const available = getAvailableGrades("zenshugakuren");
       const nextGrade = available.includes(grade) ? grade : (available[0] ?? grade);
       const spec = getGradeSpec("zenshugakuren", nextGrade);
-      const nextSubject = subject === "denpyo" && !spec?.denpyo ? "mitori" : subject;
+      const nextSubject = isSubjectAvailable(spec, subject)
+        ? subject
+        : fallbackSubject(spec);
       setExamBody("zenshugakuren");
       setGrade(nextGrade);
       setSubject(nextSubject);
+      return;
+    }
+    const spec = getGradeSpec(examBody, grade);
+    if (!isSubjectAvailable(spec, subject)) {
+      setSubject(fallbackSubject(spec));
       return;
     }
     const next: Problem[][] = [];
@@ -177,6 +203,7 @@ export function PracticePage({ onBack, onGoRegister }: Props) {
                       problems={problems}
                       grade={grade}
                       subject={subject}
+                      examBody={examBody}
                       setNumber={i + 1}
                       minutes={minutes}
                     />

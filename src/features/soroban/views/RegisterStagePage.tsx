@@ -35,7 +35,10 @@ function toRegisterSubject(config: PracticeConfig): RegisterSubject {
   if (
     config.subject === "mitori" ||
     config.subject === "mul" ||
-    config.subject === "div"
+    config.subject === "div" ||
+    config.subject === "mentalMitori" ||
+    config.subject === "mentalMul" ||
+    config.subject === "mentalDiv"
   )
     return config.subject;
   return "mitori";
@@ -46,7 +49,7 @@ function stageLabel(stage: RegisterStage): string {
 }
 
 function stageDetail(stage: RegisterStage, subject: RegisterSubject): string {
-  if (subject === "mitori") {
+  if (subject === "mitori" || subject === "mentalMitori") {
     if (stage === 1) return "2もん\nじかんせいげんなし\nノーミス";
     if (stage === 2) return "2もん\nじかんせいげんゆるめ\nノーミス";
     if (stage === 3) return "3もん\nじかんせいげん\nノーミス";
@@ -65,7 +68,10 @@ function stageDetail(stage: RegisterStage, subject: RegisterSubject): string {
 function subjectLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
   if (subject === "mul") return "かけざん";
-  return "わりざん";
+  if (subject === "div") return "わりざん";
+  if (subject === "mentalMitori") return "みとりあんざん";
+  if (subject === "mentalMul") return "かけあんざん";
+  return "わりあんざん";
 }
 
 export function RegisterStagePage({
@@ -113,6 +119,9 @@ export function RegisterStagePage({
         { value: "mitori" as const, label: "みとりざん" },
         { value: "mul" as const, label: "かけざん" },
         { value: "div" as const, label: "わりざん" },
+        { value: "mentalMitori" as const, label: "みとりあんざん" },
+        { value: "mentalMul" as const, label: "かけあんざん" },
+        { value: "mentalDiv" as const, label: "わりあんざん" },
       ].filter((x) => unlockedSubjects.includes(x.value)),
     [unlockedSubjects],
   );

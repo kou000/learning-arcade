@@ -16,7 +16,13 @@ const REGISTER_GRADE_ORDER: Grade[] = [
   ...getAvailableGrades(REGISTER_EXAM_BODY),
 ].sort((a, b) => b - a);
 const REGISTER_START_GRADE: Grade = REGISTER_GRADE_ORDER[0] ?? 8;
-const REGISTER_SUBJECT_ORDER = ["mitori", "mul", "div"] as const;
+const REGISTER_CORE_SUBJECT_ORDER = ["mitori", "mul", "div"] as const;
+const REGISTER_SUBJECT_ORDER = [
+  ...REGISTER_CORE_SUBJECT_ORDER,
+  "mentalMitori",
+  "mentalMul",
+  "mentalDiv",
+] as const;
 
 export type RegisterSubject = (typeof REGISTER_SUBJECT_ORDER)[number];
 export type RegisterStage = 1 | 2 | 3 | 4 | 5 | 6;
@@ -124,6 +130,9 @@ function normalizePracticeConfig(
   const subject = (() => {
     const next = input?.subject;
     if (next === "mul" || next === "div" || next === "mitori") return next;
+    if (next === "mentalMul" && gradeSpec?.mentalMul) return next;
+    if (next === "mentalDiv" && gradeSpec?.mentalDiv) return next;
+    if (next === "mentalMitori" && gradeSpec?.mentalMitori) return next;
     if (next === "denpyo" && hasDenpyo) return next;
     return "mitori";
   })();
@@ -269,7 +278,10 @@ function normalizeRegisterPlayConfig(
   const subject =
     input?.subject === "mitori" ||
     input?.subject === "mul" ||
-    input?.subject === "div"
+    input?.subject === "div" ||
+    input?.subject === "mentalMitori" ||
+    input?.subject === "mentalMul" ||
+    input?.subject === "mentalDiv"
       ? input.subject
       : DEFAULT_REGISTER_PLAY_CONFIG.subject;
   const stage = input?.stage;
@@ -401,7 +413,9 @@ export function saveShopLastOpenedOn(dateOn: string): string | null {
 }
 
 function stageFromSubject(subject: RegisterSubject): number {
-  return REGISTER_SUBJECT_ORDER.indexOf(subject);
+  return REGISTER_CORE_SUBJECT_ORDER.indexOf(
+    subject as (typeof REGISTER_CORE_SUBJECT_ORDER)[number],
+  );
 }
 
 export function getRegisterGradeOrder(): Grade[] {
@@ -422,7 +436,17 @@ export function getRegisterUnlockedSubjects(
     0,
     Math.min(2, Math.floor(progress.unlockedStageByGrade[grade] ?? 0)),
   );
-  return REGISTER_SUBJECT_ORDER.slice(0, stage + 1);
+  const gradeSpec = getGradeSpec(REGISTER_EXAM_BODY, grade);
+  const mentalSubjects: RegisterSubject[] = [];
+  if (stage >= 2) {
+    if (gradeSpec?.mentalMitori) mentalSubjects.push("mentalMitori");
+    if (gradeSpec?.mentalMul) mentalSubjects.push("mentalMul");
+    if (gradeSpec?.mentalDiv) mentalSubjects.push("mentalDiv");
+  }
+  return [
+    ...REGISTER_CORE_SUBJECT_ORDER.slice(0, stage + 1),
+    ...mentalSubjects,
+  ];
 }
 
 export function clampRegisterSelection(
@@ -455,6 +479,7 @@ export function advanceRegisterProgressOnClear(
     Math.min(2, Math.floor(normalized.unlockedStageByGrade[grade] ?? 0)),
   );
   const playedStage = stageFromSubject(subject);
+  if (playedStage < 0) return normalized;
   if (playedStage !== currentStage) return normalized;
 
   const next: RegisterProgress = {

@@ -212,8 +212,20 @@ function peopleLabel(people: number): string {
   return `${people}にん`;
 }
 
+function isMitoriSubject(subject: RegisterSubject): boolean {
+  return subject === "mitori" || subject === "mentalMitori";
+}
+
+function isMulSubject(subject: RegisterSubject): boolean {
+  return subject === "mul" || subject === "mentalMul";
+}
+
+function isDivSubject(subject: RegisterSubject): boolean {
+  return subject === "div" || subject === "mentalDiv";
+}
+
 function rewardFor(subject: RegisterSubject, grade: Grade): number {
-  const base = subject === "mitori" ? 4 : 2;
+  const base = isMitoriSubject(subject) ? 4 : 2;
   const gradeBonus = Math.max(0, Math.ceil((9 - grade) / 2));
   return base + gradeBonus;
 }
@@ -240,7 +252,10 @@ function questionCountFromSpec(grade: Grade, subject: RegisterSubject): number {
   if (!spec) return 1;
   if (subject === "mitori") return Math.max(1, spec.mitori.count);
   if (subject === "mul") return Math.max(1, spec.mul.count);
-  return Math.max(1, spec.div.count);
+  if (subject === "div") return Math.max(1, spec.div.count);
+  if (subject === "mentalMitori") return Math.max(1, spec.mentalMitori?.count ?? 1);
+  if (subject === "mentalMul") return Math.max(1, spec.mentalMul?.count ?? 1);
+  return Math.max(1, spec.mentalDiv?.count ?? 1);
 }
 
 function stageQuestionCount(
@@ -249,7 +264,7 @@ function stageQuestionCount(
   stage: RegisterStage,
 ): number {
   if (stage !== 6) {
-    if (subject === "mitori") return MITORI_STAGE_QUESTION_COUNT[stage];
+    if (isMitoriSubject(subject)) return MITORI_STAGE_QUESTION_COUNT[stage];
     return BASE_STAGE_QUESTION_COUNT[stage];
   }
   return questionCountFromSpec(grade, subject);
@@ -272,7 +287,10 @@ function buildTimeLimitSeconds(
 function subjectLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "見取り算";
   if (subject === "mul") return "掛け算";
-  return "割り算";
+  if (subject === "div") return "割り算";
+  if (subject === "mentalMitori") return "見取暗算";
+  if (subject === "mentalMul") return "乗暗算";
+  return "除暗算";
 }
 
 
@@ -295,7 +313,10 @@ function registerBadgeImageByRank(rank: RegisterBadgeRank): string {
 function subjectUnlockLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
   if (subject === "mul") return "かけざん";
-  return "わりざん";
+  if (subject === "div") return "わりざん";
+  if (subject === "mentalMitori") return "みとりあんざん";
+  if (subject === "mentalMul") return "かけあんざん";
+  return "わりあんざん";
 }
 
 function buildUnlockMessage(
@@ -418,12 +439,12 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const currentSourceIndex = problemSourceIndexes[index] ?? index;
   const mitoriLines = useMemo(
     () =>
-      current && playSubject === "mitori" ? parseMitoriLines(current) : [],
+      current && isMitoriSubject(playSubject) ? parseMitoriLines(current) : [],
     [current, playSubject],
   );
   const mitoriCheckpoints = useMemo(
     () =>
-      playSubject === "mitori"
+      isMitoriSubject(playSubject)
         ? buildMitoriCheckpoints(mitoriLines)
         : [],
     [playSubject, mitoriLines],
@@ -440,7 +461,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   );
   const currentReward = rewardFor(playSubject, playGrade);
   const isReadingDialogueForTimer =
-    playSubject === "mitori"
+    isMitoriSubject(playSubject)
       ? bubbleStep <= mitoriLines.length
       : bubbleStep === 0;
   const isFeedbackDialogueForTimer = Boolean(clerkEcho || dogReply);
@@ -480,7 +501,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (isReadingPaused) return;
 
     const shouldAutoStep =
-      playSubject === "mitori"
+      isMitoriSubject(playSubject)
         ? bubbleStep <= mitoriLines.length
         : bubbleStep === 0;
     if (!shouldAutoStep) return;
@@ -678,7 +699,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       const currentBadge = progress.badgeIds.find((id) =>
         id.startsWith(`register:g${playGrade}:${playSubject}:rank:`),
       );
-      const currentBadgeRank = currentBadge ? currentBadge.split(":")[4] : null;
+      const currentBadgeRank = currentBadge
+        ? (currentBadge.split(":")[4] as RegisterBadgeRank | undefined)
+        : null;
       canUpgradeBadge =
         currentBadgeRank !== "bronze" &&
         currentBadgeRank !== "silver" &&
@@ -721,15 +744,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           playStage,
         );
         next = saveRegisterProgress(stageMarked);
-        if (playStage === 3) {
-          const advanced = advanceRegisterProgressOnClear(
-            next,
-            playGrade,
-            playSubject,
-          );
-          unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
-          next = saveRegisterProgress(advanced);
-        }
+        const advanced = advanceRegisterProgressOnClear(
+          next,
+          playGrade,
+          playSubject,
+        );
+        unlockMessage = buildUnlockMessage(prevProgress, advanced, playGrade);
+        next = saveRegisterProgress(advanced);
         if (canUpgradeBadge && badgeId) {
           next = saveRegisterProgress({
             ...next,
@@ -853,7 +874,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const buildClerkEcho = () => {
-    if (playSubject === "div") {
+    if (isDivSubject(playSubject)) {
       return `ひとり ${quotient || "0"}こで ふくろにわけますね。`;
     }
     return `${answer || "0"} えんですね。`;
@@ -872,7 +893,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       onWrongAnswer();
     };
 
-    if (playSubject === "div") {
+    if (isDivSubject(playSubject)) {
       const expectedQ = parseNumber(current.answer);
       const inputQ = parseNumber(quotient);
       if (inputQ === expectedQ) {
@@ -947,17 +968,17 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     );
   }
 
-  const mul = playSubject === "mul" ? parseMul(current) : null;
-  const div = playSubject === "div" ? parseDiv(current) : null;
+  const mul = isMulSubject(playSubject) ? parseMul(current) : null;
+  const div = isDivSubject(playSubject) ? parseDiv(current) : null;
   const mulHelpSteps = mul ? buildMulHelpSteps(mul) : [];
   const divHelpSteps = div
     ? buildDivHelpSteps(div, parseNumber(current.answer))
     : [];
-  const isDivMode = playSubject === "div";
+  const isDivMode = isDivSubject(playSubject);
   const receiptReady =
-    playSubject === "mitori" ? bubbleStep > mitoriLines.length : bubbleStep > 0;
+    isMitoriSubject(playSubject) ? bubbleStep > mitoriLines.length : bubbleStep > 0;
   const isReadingItems =
-    playSubject === "mitori"
+    isMitoriSubject(playSubject)
       ? bubbleStep <= mitoriLines.length
       : bubbleStep === 0;
   const isFeedbackDialogue = Boolean(clerkEcho || dogReply);
@@ -974,9 +995,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const activeInput = isDivMode ? quotient : answer;
   const registerDisplayValue = activeInput.length > 0 ? activeInput : "0";
   const helpStepsCount =
-    playSubject === "mitori"
+    isMitoriSubject(playSubject)
       ? mitoriCheckpoints.length
-      : playSubject === "mul"
+      : isMulSubject(playSubject)
         ? mulHelpSteps.length
         : divHelpSteps.length;
   const canUseHelp =
@@ -1007,7 +1028,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const promptText = (() => {
-    if (playSubject === "mitori") {
+    if (isMitoriSubject(playSubject)) {
       if (bubbleStep === 0) return "おかいけいおねがいします！";
       if (currentLine) {
         return currentLine.sign === -1
@@ -1016,10 +1037,10 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       }
       return "ごうけいいくらですか";
     }
-    if (playSubject === "mul" && mul) {
+    if (isMulSubject(playSubject) && mul) {
       return `${MUL_NAMES[index % MUL_NAMES.length]} ${mul.price}円 を ${mul.count} こ ください！`;
     }
-    if (playSubject === "div" && div) {
+    if (isDivSubject(playSubject) && div) {
       return `あめを ${div.total} こ、${peopleLabel(div.people)}にわけたいです！`;
     }
     return "";
@@ -1230,7 +1251,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   </div>
                 )}
 
-                {playSubject === "mitori" && receiptReady ? (
+                {isMitoriSubject(playSubject) && receiptReady ? (
                   <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
                     <div className="text-sm font-bold text-slate-700">
                       レシート
@@ -1290,7 +1311,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   </div>
                 ) : null}
 
-                {playSubject !== "mitori" && receiptReady ? (
+                {!isMitoriSubject(playSubject) && receiptReady ? (
                   <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
                     <div className="text-sm font-bold text-slate-700">問題</div>
                     <div className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-[var(--sheet-font)] text-slate-900">
@@ -1301,7 +1322,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                         <div className="text-xs font-bold text-amber-800">
                           おたすけヒント（とちゅうのけいさん）
                         </div>
-                        {playSubject === "mul" && mul ? (
+                        {isMulSubject(playSubject) && mul ? (
                           <div className="mt-1 grid gap-1 text-sm">
                             {mulHelpSteps.map((step) => (
                               <div key={step.multiplierPart}>
@@ -1313,7 +1334,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                             ))}
                           </div>
                         ) : null}
-                        {playSubject === "div" && div ? (
+                        {isDivSubject(playSubject) && div ? (
                           <div className="mt-1 grid gap-1 text-sm">
                             {divHelpSteps.map((step) => (
                               <div key={step.quotientPart}>
@@ -1339,7 +1360,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
             {!isDialogMode ? (
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {playSubject === "div" ? (
+                {isDivSubject(playSubject) ? (
                   <label className="grid gap-1 text-sm md:col-span-2">
                     <span className="text-slate-700">しょう</span>
                     <input

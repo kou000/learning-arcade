@@ -26,7 +26,14 @@ import {
 } from "@/features/soroban/state";
 
 const DIFFICULTIES: SnackDifficulty[] = ["easy", "normal", "hard"];
-const REGISTER_SUBJECTS: RegisterSubject[] = ["mitori", "mul", "div"];
+const REGISTER_SUBJECTS: RegisterSubject[] = [
+  "mitori",
+  "mul",
+  "div",
+  "mentalMitori",
+  "mentalMul",
+  "mentalDiv",
+];
 
 type Props = {
   onGoRegister: () => void;
@@ -95,7 +102,10 @@ function registerRankTone(
 function registerSubjectLabel(subject: RegisterSubject): string {
   if (subject === "mitori") return "みとりざん";
   if (subject === "mul") return "かけざん";
-  return "わりざん";
+  if (subject === "div") return "わりざん";
+  if (subject === "mentalMitori") return "みとりあんざん";
+  if (subject === "mentalMul") return "かけあんざん";
+  return "わりあんざん";
 }
 
 function BadgeRowCard({

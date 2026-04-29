@@ -1,12 +1,13 @@
 import React from "react";
 import type { Problem } from "@/domain/generator/types";
-import type { Subject } from "@/domain/specs/types";
+import type { ExamBody, Grade, Subject } from "@/domain/specs/types";
 import { subjectLabel } from "@/domain/generator";
 
 type Props = {
   problems: Problem[];
-  grade: number;
+  grade: Grade;
   subject: Subject;
+  examBody: ExamBody;
   setNumber: number;
   minutes: number;
 };
@@ -17,9 +18,14 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-export function ProblemSheet({ problems, grade, subject, setNumber, minutes }: Props) {
+export function ProblemSheet({ problems, grade, subject, examBody, setNumber, minutes }: Props) {
   const isVertical = problems.some((p) => p.kind === "vertical");
   const subjectName = subjectLabel(subject);
+  const fullScore = 150;
+  const pointsPerProblem = problems.length > 0 ? fullScore / problems.length : 0;
+  const pointsLabel = Number.isInteger(pointsPerProblem)
+    ? `1問${pointsPerProblem}点`
+    : `${problems.length}題`;
 
   return (
     <div className="rounded-2xl border border-slate-800 bg-white px-6 py-5 text-slate-900 shadow-sm print:rounded-none print:border-slate-900 print:px-4 print:py-4 print:shadow-none">
@@ -35,7 +41,7 @@ export function ProblemSheet({ problems, grade, subject, setNumber, minutes }: P
         <div className="ml-auto w-40 border border-slate-800 px-3 py-2 text-xs">
           <div className="flex items-center justify-between">
             <span>点数</span>
-            <span>1問10点（150点）</span>
+            <span>{pointsLabel}（{fullScore}点）</span>
           </div>
           <div className="mt-3 h-6 border-t border-slate-800" />
         </div>
