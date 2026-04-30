@@ -1,6 +1,7 @@
 import keimarukunBeachCardImage from "@/assets/cards/keimarukun-beach-card.png";
 import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
+import keimarukunCarCardImage from "@/assets/cards/keimarukun-car-card.png";
 import keimarukunCurryCardImage from "@/assets/cards/keimarukun-curry-card.png";
 import keimarukunDanceCardImage from "@/assets/cards/keimarukun-dance-card.png";
 import keimarukunFestivalCardImage from "@/assets/cards/keimarukun-festival-card.png";
@@ -11,6 +12,7 @@ import keimarukunPandaCardImage from "@/assets/cards/keimarukun-panda-card.png";
 import keimarukunPicnicCardImage from "@/assets/cards/keimarukun-picnic-card.png";
 import keimarukunRamenCardImage from "@/assets/cards/keimarukun-ramen-card.png";
 import keimarukunRockGuitarCardImage from "@/assets/cards/keimarukun-rock-guitar-card.png";
+import keimarukunSchoolCardImage from "@/assets/cards/keimarukun-school-card.png";
 import keimarukunSpaceCardImage from "@/assets/cards/keimarukun-space-card.png";
 import keimarukunSteakCardImage from "@/assets/cards/keimarukun-steak-card.png";
 import keimarukunSweetsCardImage from "@/assets/cards/keimarukun-sweets-card.png";
@@ -206,6 +208,22 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     description: "ばななぱふぇと いっしょの あまい けいまるくん。",
     addedOn: "2026-04-27",
     gachaId: "food",
+  },
+  {
+    id: "keimarukun-car-card",
+    name: "けいまるくん くるまかーど",
+    image: keimarukunCarCardImage,
+    description: "くるまで おでかけする けいまるくんの きらきらかーど。",
+    addedOn: "2026-04-30",
+    gachaId: "dream",
+  },
+  {
+    id: "keimarukun-school-card",
+    name: "けいまるくん とうこうかーど",
+    image: keimarukunSchoolCardImage,
+    description: "らんどせるで がっこうへむかう けいまるくん。",
+    addedOn: "2026-04-30",
+    gachaId: "outing",
   },
 ];
 
