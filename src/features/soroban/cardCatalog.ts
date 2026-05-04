@@ -1,10 +1,12 @@
 import keimarukunBeachCardImage from "@/assets/cards/keimarukun-beach-card.png";
 import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
+import keimarukunBathCardImage from "@/assets/cards/keimarukun-bath-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
 import keimarukunCarCardImage from "@/assets/cards/keimarukun-car-card.png";
 import keimarukunCurryCardImage from "@/assets/cards/keimarukun-curry-card.png";
 import keimarukunDanceCardImage from "@/assets/cards/keimarukun-dance-card.png";
 import keimarukunFestivalCardImage from "@/assets/cards/keimarukun-festival-card.png";
+import keimarukunGameCardImage from "@/assets/cards/keimarukun-game-card.png";
 import keimarukunMagicCardImage from "@/assets/cards/keimarukun-magic-card.png";
 import keimarukunNapCardImage from "@/assets/cards/keimarukun-nap-card.png";
 import keimarukunOmuriceCardImage from "@/assets/cards/keimarukun-omurice-card.png";
@@ -12,12 +14,15 @@ import keimarukunPandaCardImage from "@/assets/cards/keimarukun-panda-card.png";
 import keimarukunPicnicCardImage from "@/assets/cards/keimarukun-picnic-card.png";
 import keimarukunRamenCardImage from "@/assets/cards/keimarukun-ramen-card.png";
 import keimarukunRockGuitarCardImage from "@/assets/cards/keimarukun-rock-guitar-card.png";
+import keimarukunRollerCoasterCardImage from "@/assets/cards/keimarukun-roller-coaster-card.png";
 import keimarukunSchoolCardImage from "@/assets/cards/keimarukun-school-card.png";
 import keimarukunSpaceCardImage from "@/assets/cards/keimarukun-space-card.png";
 import keimarukunSteakCardImage from "@/assets/cards/keimarukun-steak-card.png";
+import keimarukunStudyCardImage from "@/assets/cards/keimarukun-study-card.png";
 import keimarukunSweetsCardImage from "@/assets/cards/keimarukun-sweets-card.png";
 import keimarukunSushiCardImage from "@/assets/cards/keimarukun-sushi-card.png";
 import keimarukunWinterCardImage from "@/assets/cards/keimarukun-winter-card.png";
+import keimarukunWorkCardImage from "@/assets/cards/keimarukun-work-card.png";
 
 export type CardItem = {
   id: string;
@@ -28,7 +33,7 @@ export type CardItem = {
   gachaId: CardGachaId;
 };
 
-export type CardGachaId = "classic" | "dream" | "outing" | "food";
+export type CardGachaId = "classic" | "dream" | "outing" | "food" | "life";
 
 export type CardGachaDefinition = {
   id: CardGachaId;
@@ -61,6 +66,12 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     name: "たべもの コレクション",
     shortName: "たべもの",
     description: "おいしい たべものが あつまった がちゃ。",
+  },
+  {
+    id: "life",
+    name: "わくわく ライフ",
+    shortName: "ライフ",
+    description: "まいにちの がんばりと あそびが あつまった がちゃ。",
   },
 ];
 
@@ -224,6 +235,46 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     description: "らんどせるで がっこうへむかう けいまるくん。",
     addedOn: "2026-04-30",
     gachaId: "outing",
+  },
+  {
+    id: "keimarukun-work-card",
+    name: "けいまるくん しごとかーど",
+    image: keimarukunWorkCardImage,
+    description: "ぱそこんで しごとを がんばる けいまるくん。",
+    addedOn: "2026-05-04",
+    gachaId: "life",
+  },
+  {
+    id: "keimarukun-roller-coaster-card",
+    name: "けいまるくん じぇっとこーすたーかーど",
+    image: keimarukunRollerCoasterCardImage,
+    description: "かぜをきって じぇっとこーすたーにのる けいまるくん。",
+    addedOn: "2026-05-04",
+    gachaId: "life",
+  },
+  {
+    id: "keimarukun-game-card",
+    name: "けいまるくん げーむかーど",
+    image: keimarukunGameCardImage,
+    description: "げーむにむちゅうな けいまるくんの ぴかぴかかーど。",
+    addedOn: "2026-05-04",
+    gachaId: "life",
+  },
+  {
+    id: "keimarukun-bath-card",
+    name: "けいまるくん おふろかーど",
+    image: keimarukunBathCardImage,
+    description: "あわいっぱいの おふろで あたたまる けいまるくん。",
+    addedOn: "2026-05-04",
+    gachaId: "life",
+  },
+  {
+    id: "keimarukun-study-card",
+    name: "けいまるくん べんきょうかーど",
+    image: keimarukunStudyCardImage,
+    description: "ほんをひらいて べんきょうする けいまるくん。",
+    addedOn: "2026-05-04",
+    gachaId: "life",
   },
 ];
 

@@ -262,7 +262,7 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
         ) : null}
 
         {!isSpinning ? (
-          <div className="absolute left-[20%] top-[74%] grid w-[min(20rem,32vw)] gap-2">
+          <div className="absolute left-[20%] top-[67%] grid w-[min(20rem,32vw)] gap-2">
             <button
               className={`rounded-full border-4 px-5 py-4 text-xl font-black shadow-[0_10px_0_rgba(120,53,15,0.45)] transition active:translate-y-1 active:shadow-[0_6px_0_rgba(120,53,15,0.45)] ${
                 canDraw
@@ -281,7 +281,7 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
             <div className="rounded-full border-2 border-amber-200 bg-white/90 px-3 py-1.5 text-center text-sm font-black text-amber-900 shadow-lg backdrop-blur-sm">
               {selectedGacha.description}
             </div>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-5 gap-1.5">
               {CARD_GACHA_DEFINITIONS.map((gacha) => {
                 const active = gacha.id === selectedGachaId;
                 return (
