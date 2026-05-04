@@ -6,6 +6,7 @@ import {
   getAvailableGrades,
 } from "@/domain/specs/kenteiSpec";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
+import { getActiveRegisterCampaign } from "@/features/soroban/registerCampaigns";
 import { Select } from "@/ui/components/Select";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
@@ -104,6 +105,7 @@ export function RegisterStagePage({
     selection.grade,
     selection.subject,
   );
+  const activeCampaign = getActiveRegisterCampaign(selection.subject);
 
   const gradeOptions = useMemo(
     () =>
@@ -271,6 +273,14 @@ export function RegisterStagePage({
             <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
           </span>
         </div>
+        {activeCampaign ? (
+          <div className="absolute right-4 top-20 z-30 max-w-[17rem] rounded-2xl border-2 border-rose-200 bg-white/95 px-4 py-3 text-right text-sm font-black text-rose-700 shadow-lg backdrop-blur-sm">
+            <div className="leading-tight">{activeCampaign.title}</div>
+            <div className="mt-1 text-xs leading-tight text-amber-700">
+              {activeCampaign.description}
+            </div>
+          </div>
+        ) : null}
 
         <div className="pointer-events-none absolute left-1/2 top-[9.2%] z-10 flex w-[56%] -translate-x-1/2 items-center justify-center gap-7 text-center">
           <div

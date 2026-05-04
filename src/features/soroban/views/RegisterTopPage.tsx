@@ -2,6 +2,7 @@ import React from "react";
 import registerGameTop from "@/assets/register-game-top.png";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
+import { getActiveRegisterCampaigns } from "@/features/soroban/registerCampaigns";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import * as sorobanState from "@/features/soroban/state";
 
@@ -48,6 +49,7 @@ export function RegisterTopPage({
       shopLastOpenedOn != null &&
       item.addedOn > shopLastOpenedOn,
   );
+  const activeCampaign = getActiveRegisterCampaigns()[0] ?? null;
 
   return (
     <SceneFrame
@@ -80,6 +82,22 @@ export function RegisterTopPage({
         </div>
 
         <div className="absolute inset-x-0 bottom-2 px-3">
+          {activeCampaign ? (
+            <div className="mb-3 flex justify-center">
+              <div className="relative rounded-2xl border-2 border-rose-200 bg-white/95 px-5 py-3 text-center text-base font-black text-rose-700 shadow-lg backdrop-blur-sm">
+                <div className="text-lg leading-tight">
+                  {activeCampaign.title}
+                </div>
+                <div className="mt-1 text-sm leading-tight text-amber-700">
+                  {activeCampaign.description}
+                </div>
+                <span
+                  className="absolute left-1/2 top-full h-4 w-4 -translate-x-1/2 -translate-y-2 rotate-45 border-b-2 border-r-2 border-rose-200 bg-white/95"
+                  aria-hidden
+                />
+              </div>
+            </div>
+          ) : null}
           <div className="mb-2 flex justify-center">
             <button
               className="rounded-2xl bg-sky-600 px-8 py-4 text-lg font-bold text-white transition hover:bg-sky-700"

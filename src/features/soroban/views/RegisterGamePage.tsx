@@ -33,6 +33,10 @@ import {
   toBestGameBadgeIds,
   type RegisterBadgeRank,
 } from "@/features/soroban/registerBadges";
+import {
+  getActiveRegisterCampaign,
+  getRegisterRewardMultiplier,
+} from "@/features/soroban/registerCampaigns";
 import { resolveAdminMode } from "@/features/soroban/adminMode";
 
 type Props = {
@@ -235,7 +239,7 @@ function isMentalSubject(subject: RegisterSubject): boolean {
 function rewardFor(subject: RegisterSubject, grade: Grade): number {
   const base = isMitoriSubject(subject) ? 4 : 2;
   const gradeBonus = Math.max(0, Math.ceil((9 - grade) / 2));
-  return base + gradeBonus;
+  return (base + gradeBonus) * getRegisterRewardMultiplier(subject);
 }
 
 const STAGE_CLEAR_REWARD: Record<RegisterStage, number> = {
@@ -247,8 +251,11 @@ const STAGE_CLEAR_REWARD: Record<RegisterStage, number> = {
   6: 120,
 };
 
-function stageClearReward(stage: RegisterStage): number {
-  return STAGE_CLEAR_REWARD[stage];
+function stageClearReward(
+  stage: RegisterStage,
+  subject: RegisterSubject,
+): number {
+  return STAGE_CLEAR_REWARD[stage] * getRegisterRewardMultiplier(subject);
 }
 
 function registerStageLabel(stage: RegisterStage): string {
@@ -648,7 +655,9 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           );
         const canGetReviewClearBonus =
           hasSolvedAllReviewTargets && !hasAwardedReviewClearBonusRef.current;
-        const reviewClearBonus = Math.floor(stageClearReward(playStage) / 2);
+        const reviewClearBonus = Math.floor(
+          stageClearReward(playStage, playSubject) / 2,
+        );
 
         if (canGetReviewClearBonus && reviewClearBonus > 0) {
           hasAwardedReviewClearBonusRef.current = true;
@@ -743,7 +752,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       if (isLastQuestion && stagePassed) {
         next = saveRegisterProgress({
           ...next,
-          coins: next.coins + stageClearReward(playStage),
+          coins: next.coins + stageClearReward(playStage, playSubject),
         });
         const stageMarked = markStageCleared(
           next,
@@ -1001,6 +1010,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     reviewTargetSourceIndexesRef.current ??
     new Set([...mistakeIndexes, ...skippedIndexes]);
   const currentLine = bubbleStep > 0 ? mitoriLines[bubbleStep - 1] : null;
+  const activeCampaign = getActiveRegisterCampaign(playSubject);
   const activeInput = isDivMode ? quotient : answer;
   const registerDisplayValue = activeInput.length > 0 ? activeInput : "0";
   const helpStepsCount =
@@ -1563,6 +1573,11 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           <div className="text-sm font-semibold text-emerald-700">
             かくとくしたコイン: +{progress.coins - roundStartCoinsRef.current}
           </div>
+          {activeCampaign ? (
+            <div className="mt-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-700">
+              {activeCampaign.resultLabel}
+            </div>
+          ) : null}
           {badgeMessage ? (
             <div className="mt-1 text-xs font-bold text-indigo-700">{badgeMessage}</div>
           ) : null}
