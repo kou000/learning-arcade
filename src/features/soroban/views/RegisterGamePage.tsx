@@ -401,7 +401,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [bubbleStep, setBubbleStep] = useState(0);
   const [answer, setAnswer] = useState("");
   const [quotient, setQuotient] = useState("");
-  const [isReadingPaused, setIsReadingPaused] = useState(false);
+  const [isGamePaused, setIsGamePaused] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState<number>(playConfig.readingSpeed);
   const [isRoundFinished, setIsRoundFinished] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(
@@ -497,23 +497,25 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (secondsLeft == null) return;
     if (secondsLeft <= 0) return;
     if (isRoundFinished) return;
+    if (isGamePaused) return;
     if (shouldPauseCountdownForDialogue) return;
 
     const timer = window.setTimeout(() => {
       setSecondsLeft((prev) => (prev == null ? null : Math.max(0, prev - 1)));
     }, 1000);
     return () => window.clearTimeout(timer);
-  }, [secondsLeft, isRoundFinished, shouldPauseCountdownForDialogue]);
+  }, [secondsLeft, isRoundFinished, isGamePaused, shouldPauseCountdownForDialogue]);
 
   useEffect(() => {
     if (secondsLeft == null) return;
     if (secondsLeft > 0) return;
     if (isRoundFinished) return;
+    if (isGamePaused) return;
     onTimeoutFail();
-  }, [secondsLeft, isRoundFinished, index, wrongQuestionsCount]);
+  }, [secondsLeft, isRoundFinished, isGamePaused, index, wrongQuestionsCount]);
 
   useEffect(() => {
-    if (isReadingPaused) return;
+    if (isGamePaused) return;
 
     const shouldAutoStep =
       isMitoriSubject(playSubject)
@@ -535,7 +537,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     playSubject,
     bubbleStep,
     mitoriLines.length,
-    isReadingPaused,
+    isGamePaused,
     readingSpeed,
   ]);
 
@@ -573,7 +575,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const resetInputs = () => {
     setBubbleStep(0);
-    setIsReadingPaused(false);
+    setIsGamePaused(false);
     setAnswer("");
     setQuotient("");
     setHasMistakeOnCurrentQuestion(false);
@@ -592,6 +594,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const onTimeoutFail = () => {
+    if (isGamePaused) return;
     clearFeedbackTimers();
     const remainingIndexes = Array.from(
       { length: Math.max(0, problems.length - index) },
@@ -614,6 +617,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const onWrongAnswer = () => {
+    if (isGamePaused) return;
     clearFeedbackTimers();
     if (!hasMistakeOnCurrentQuestion) {
       setHasMistakeOnCurrentQuestion(true);
@@ -633,6 +637,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const onCorrect = () => {
+    if (isGamePaused) return;
     setStatus("correct");
     if (isReviewMode) {
       if (!rewardedReviewSourceIndexesRef.current.has(currentSourceIndex)) {
@@ -818,6 +823,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const onSkipQuestion = () => {
+    if (isGamePaused) return;
     if (!hasMistakeOnCurrentQuestion) return;
     if (isRoundFinished) return;
     clearFeedbackTimers();
@@ -857,6 +863,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   };
 
   const startReview = () => {
+    if (isGamePaused) return;
     if (reviewSelection.length === 0) return;
     if (reviewTargetSourceIndexesRef.current == null) {
       reviewTargetSourceIndexesRef.current = new Set([
@@ -899,6 +906,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const onTellAmount = () => {
     if (!current) return;
+    if (isGamePaused) return;
     if (status === "correct") return;
     if (isRoundFinished) return;
     setShowCorrectFlash(false);
@@ -940,6 +948,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const onAdminFillAnswer = () => {
     if (!current) return;
+    if (isGamePaused) return;
     clearAnswerFeedback();
     if (isDivMode) {
       setQuotient(current.answer);
@@ -1023,8 +1032,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     receiptReady &&
     helpStepsCount > 0 &&
     (isReviewMode || hasMistakeOnCurrentQuestion);
+  const canPauseGame =
+    !isRoundFinished &&
+    !isFeedbackDialogue &&
+    !isReviewSelectorOpen &&
+    !isBadgeModalOpen;
 
   const setActiveInput = (value: string) => {
+    if (isGamePaused) return;
     clearAnswerFeedback();
     if (isDivMode) {
       setQuotient(value);
@@ -1146,18 +1161,13 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
               ← ゲームモードTOP
             </button>
             <button
-              className="h-12 w-24 rounded-xl border border-white/60 bg-white/55 px-2 text-center text-sm font-semibold leading-tight text-slate-800 shadow-sm backdrop-blur-sm hover:bg-white/70"
-              onClick={() => setIsReadingPaused((prev) => !prev)}
+              className="h-12 w-32 rounded-xl border border-amber-200 bg-amber-300/90 px-3 text-center text-sm font-black leading-tight text-amber-950 shadow-[0_3px_0_rgba(146,64,14,0.35),0_8px_14px_rgba(146,64,14,0.2)] backdrop-blur-sm hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setIsGamePaused(true)}
+              disabled={!canPauseGame}
             >
-              {isReadingPaused ? (
-                <span className="inline-block whitespace-pre-line">
-                  読み上げ 再開
-                </span>
-              ) : (
-                <span className="inline-block whitespace-pre-line">
-                  読み上げ 一時停止
-                </span>
-              )}
+              <span className="inline-block whitespace-pre-line">
+                いったん とめる
+              </span>
             </button>
             <label className="flex h-12 items-center gap-1.5 rounded-xl border border-white/60 bg-white/55 px-3 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
               <span>よみあげ速度</span>
@@ -1387,6 +1397,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                       value={quotient}
                       onChange={(e) => setActiveInput(e.target.value)}
                       placeholder="しょう"
+                      disabled={isGamePaused}
                     />
                   </label>
                 ) : (
@@ -1397,6 +1408,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                       value={answer}
                       onChange={(e) => setActiveInput(e.target.value)}
                       placeholder="数字を入力"
+                      disabled={isGamePaused}
                     />
                   </label>
                 )}
@@ -1409,7 +1421,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   <button
                     className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
                     onClick={onTellAmount}
-                    disabled={!receiptReady || isRoundFinished}
+                    disabled={!receiptReady || isRoundFinished || isGamePaused}
                   >
                     {isDivMode ? "ひとりぶんをつたえる" : "きんがくをつたえる"}
                   </button>
@@ -1417,7 +1429,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     <button
                       className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                       onClick={onTimeoutFail}
-                      disabled={isRoundFinished}
+                      disabled={isRoundFinished || isGamePaused}
                     >
                       じかんぎれにする
                     </button>
@@ -1427,6 +1439,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   <button
                     className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-100"
                     onClick={onAdminFillAnswer}
+                    disabled={isGamePaused}
                   >
                     こたえをにゅうりょく
                   </button>
@@ -1435,6 +1448,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   <button
                     className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm hover:bg-amber-100"
                     onClick={onSkipQuestion}
+                    disabled={isGamePaused}
                   >
                     このもんだいをスキップ
                   </button>
@@ -1443,6 +1457,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   <button
                     className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-100"
                     onClick={() => setIsHelpOpen((prev) => !prev)}
+                    disabled={isGamePaused}
                   >
                     {isHelpOpen ? "おたすけをとじる" : "おたすけをみる"}
                   </button>
@@ -1480,6 +1495,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     key={d}
                     className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-xl font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                     onClick={() => appendDigit(d)}
+                    disabled={isGamePaused}
                   >
                     {d}
                   </button>
@@ -1487,18 +1503,21 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 <button
                   className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                   onClick={clearInput}
+                  disabled={isGamePaused}
                 >
                   クリア
                 </button>
                 <button
                   className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-xl font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                   onClick={() => appendDigit("0")}
+                  disabled={isGamePaused}
                 >
                   0
                 </button>
                 <button
                   className="rounded-xl border border-[#15212c] bg-gradient-to-b from-[#f8fbff] to-[#dce7f3] px-4 py-3 text-base font-black text-[#172533] shadow-[0_2px_0_#8ba2ba,0_5px_10px_rgba(5,20,36,0.35)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#8ba2ba,0_2px_6px_rgba(5,20,36,0.35)] hover:brightness-105"
                   onClick={backspace}
+                  disabled={isGamePaused}
                 >
                   ←
                 </button>
@@ -1507,7 +1526,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
               <button
                 className="mt-2 w-full rounded-xl border border-[#3f1300] bg-gradient-to-b from-[#ff9a52] to-[#d64f16] px-4 py-4 text-lg font-black text-[#fff8ef] shadow-[0_3px_0_#7d2b07,0_8px_14px_rgba(70,18,0,0.45)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#7d2b07,0_3px_8px_rgba(70,18,0,0.4)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={onTellAmount}
-                disabled={!receiptReady || isRoundFinished}
+                disabled={!receiptReady || isRoundFinished || isGamePaused}
               >
                 {isDivMode ? "ひとりぶんをつたえる" : "かいとうする"}
               </button>
@@ -1534,6 +1553,35 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 せいかい
               </span>
             </div>
+          </div>
+        </div>
+      ) : null}
+      {isGamePaused ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-white/70 bg-white/95 p-6 text-center shadow-[0_24px_60px_rgba(15,23,42,0.45)]">
+            <div className="text-3xl font-black text-slate-800">
+              いちじていし
+            </div>
+            <div className="mt-3 text-sm font-bold leading-relaxed text-slate-600">
+              じかんを とめています。
+              <br />
+              さいかいすると つづきから はじまります。
+            </div>
+            {secondsLeft != null ? (
+              <div className="mx-auto mt-5 inline-flex min-w-40 items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-lg font-black tabular-nums text-sky-800">
+                のこり {secondsLeft}s
+              </div>
+            ) : (
+              <div className="mx-auto mt-5 inline-flex min-w-40 items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-black text-sky-800">
+                じかんせいげんなし
+              </div>
+            )}
+            <button
+              className="mt-6 w-full rounded-2xl bg-gradient-to-b from-emerald-500 to-teal-600 px-5 py-4 text-xl font-black text-white shadow-[0_6px_0_#0f766e,0_14px_28px_rgba(15,118,110,0.28)] transition hover:brightness-105 active:translate-y-[1px] active:shadow-[0_3px_0_#0f766e,0_8px_18px_rgba(15,118,110,0.28)]"
+              onClick={() => setIsGamePaused(false)}
+            >
+              さいかい
+            </button>
           </div>
         </div>
       ) : null}
