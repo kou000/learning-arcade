@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import sealBookBg from "@/assets/seal-book-bg.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
@@ -46,13 +46,11 @@ type PendingPaletteDrag = {
   x: number;
   y: number;
   target: HTMLElement;
-  timeoutId: number;
 };
 
 const STICKER_SIZE_PX = 136;
 const STICKER_ROTATION_STEP = 15;
 const DRAG_MOVE_THRESHOLD_PX = 6;
-const TOUCH_DRAG_HOLD_MS = 160;
 
 function clampStickerRotation(rotation: number): number {
   return Math.max(-180, Math.min(180, Math.round(rotation)));
@@ -84,13 +82,8 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
   const pendingPaletteDragRef = useRef<PendingPaletteDrag | null>(null);
 
   const clearPendingPaletteDrag = () => {
-    const pendingDrag = pendingPaletteDragRef.current;
-    if (!pendingDrag) return;
-    window.clearTimeout(pendingDrag.timeoutId);
     pendingPaletteDragRef.current = null;
   };
-
-  useEffect(() => clearPendingPaletteDrag, []);
 
   const placedCountBySticker = useMemo(
     () => countPlacementsBySticker(progress.stickerPlacements),
@@ -260,41 +253,38 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
     const pointerId = e.pointerId;
     const startX = e.clientX;
     const startY = e.clientY;
-    const timeoutId = window.setTimeout(() => {
-      const pendingDrag = pendingPaletteDragRef.current;
-      if (!pendingDrag || pendingDrag.pointerId !== pointerId) return;
-      if (!target.hasPointerCapture(pointerId)) {
-        target.setPointerCapture(pointerId);
-      }
-      setSelectedInstanceId(null);
-      setDragState({
-        source: "palette",
-        stickerId,
-        pointerId,
-        x: pendingDrag.x,
-        y: pendingDrag.y,
-      });
-      pendingPaletteDragRef.current = null;
-    }, TOUCH_DRAG_HOLD_MS);
     pendingPaletteDragRef.current = {
       stickerId,
       pointerId,
       x: startX,
       y: startY,
       target,
-      timeoutId,
     };
   };
 
   const moveDrag = (e: React.PointerEvent<HTMLElement>) => {
     const pendingDrag = pendingPaletteDragRef.current;
     if (pendingDrag?.pointerId === e.pointerId) {
-      const movedDistance = Math.hypot(
-        e.clientX - pendingDrag.x,
-        e.clientY - pendingDrag.y,
-      );
-      if (movedDistance > DRAG_MOVE_THRESHOLD_PX) {
+      const dx = e.clientX - pendingDrag.x;
+      const dy = e.clientY - pendingDrag.y;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDy > DRAG_MOVE_THRESHOLD_PX && absDy > absDx) {
         clearPendingPaletteDrag();
+      } else if (absDx > DRAG_MOVE_THRESHOLD_PX && absDx >= absDy) {
+        e.preventDefault();
+        if (!pendingDrag.target.hasPointerCapture(e.pointerId)) {
+          pendingDrag.target.setPointerCapture(e.pointerId);
+        }
+        setSelectedInstanceId(null);
+        setDragState({
+          source: "palette",
+          stickerId: pendingDrag.stickerId,
+          pointerId: e.pointerId,
+          x: e.clientX,
+          y: e.clientY,
+        });
+        pendingPaletteDragRef.current = null;
       }
     }
     if (!dragState || dragState.pointerId !== e.pointerId) return;
@@ -536,6 +526,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                       onPointerMove={moveDrag}
                       onPointerUp={finishDrag}
                       onPointerCancel={cancelDrag}
+                      onContextMenu={(e) => e.preventDefault()}
                     >
                       <span
                         className="sticker-on-page grid h-full w-full place-items-center"
@@ -652,6 +643,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                       disabled={!canPlace}
                       title={sticker.description}
                       style={{ touchAction: "pan-y" }}
+                      onContextMenu={(e) => e.preventDefault()}
                       onPointerDown={(e) => {
                         if (!canPlace) return;
                         startPaletteInteraction(e, sticker.id);
