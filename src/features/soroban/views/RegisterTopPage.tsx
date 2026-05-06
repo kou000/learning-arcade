@@ -1,10 +1,12 @@
 import React from "react";
 import registerGameTop from "@/assets/register-game-top.png";
+import { KEIMARUKUN_CARDS } from "@/features/soroban/cardCatalog";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { getActiveRegisterCampaigns } from "@/features/soroban/registerCampaigns";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import * as sorobanState from "@/features/soroban/state";
+import { STICKERS } from "@/features/soroban/stickerCatalog";
 
 type Props = {
   onGoPractice: () => void;
@@ -45,12 +47,25 @@ export function RegisterTopPage({
     }
     return null;
   })();
+  const gachaLastOpenedOn = (() => {
+    const maybeLoader = (sorobanState as Record<string, unknown>)
+      .loadGachaLastOpenedOn;
+    if (typeof maybeLoader === "function") {
+      return (maybeLoader as () => string | null)();
+    }
+    return null;
+  })();
   const hasNewShopItems = SHOP_ITEMS.some(
     (item) =>
       item.addedOn != null &&
       shopLastOpenedOn != null &&
       item.addedOn > shopLastOpenedOn,
   );
+  const hasNewGachaItems =
+    gachaLastOpenedOn != null &&
+    [...KEIMARUKUN_CARDS, ...STICKERS].some(
+      (item) => item.addedOn > gachaLastOpenedOn,
+    );
   const activeCampaign = getActiveRegisterCampaigns()[0] ?? null;
 
   return (
@@ -79,11 +94,11 @@ export function RegisterTopPage({
           </div>
         </div>
 
-        <div className="absolute bottom-28 right-3 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
+        <div className="absolute bottom-72 right-3 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
           hash {buildLabel}
         </div>
 
-        <div className="absolute inset-x-0 bottom-2 px-3">
+        <div className="absolute inset-x-0 bottom-8 px-3">
           {activeCampaign ? (
             <div className="mb-3 flex justify-center">
               <div className="relative rounded-2xl border-2 border-rose-200 bg-white/95 px-5 py-3 text-center text-base font-black text-rose-700 shadow-lg backdrop-blur-sm">
@@ -108,7 +123,7 @@ export function RegisterTopPage({
               レジゲームスタート
             </button>
           </div>
-          <div className="grid gap-2 rounded-2xl bg-transparent p-3 shadow-sm sm:grid-cols-4 lg:grid-cols-7">
+          <div className="mx-auto mt-2 grid max-w-3xl grid-cols-3 gap-2 rounded-2xl bg-transparent px-3 shadow-sm">
             <button
               className="relative rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
               onClick={onGoShop}
@@ -121,16 +136,29 @@ export function RegisterTopPage({
               ) : null}
             </button>
             <button
+              className="relative rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoGacha}
+            >
+              ガチャガチャ
+              {hasNewGachaItems ? (
+                <span className="absolute -right-2 -top-2 inline-flex items-center rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black tracking-wide text-white">
+                  NEW
+                </span>
+              ) : null}
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoSnack}
+            >
+              あんざんゲーム
+            </button>
+          </div>
+          <div className="mt-2 grid gap-2 rounded-2xl bg-transparent px-3 shadow-sm sm:grid-cols-4">
+            <button
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
               onClick={onGoShelf}
             >
               たな
-            </button>
-            <button
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
-              onClick={onGoGacha}
-            >
-              ガチャガチャ
             </button>
             <button
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -143,12 +171,6 @@ export function RegisterTopPage({
               onClick={onGoStickers}
             >
               シールちょう
-            </button>
-            <button
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
-              onClick={onGoSnack}
-            >
-              あんざんゲーム
             </button>
             <button
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"

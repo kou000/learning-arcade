@@ -18,6 +18,8 @@ import { LongPressPreviewImage } from "@/features/soroban/components/LongPressPr
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
   loadRegisterProgress,
+  loadGachaLastOpenedOn,
+  saveGachaLastOpenedOn,
   saveRegisterProgress,
 } from "@/features/soroban/state";
 import {
@@ -60,6 +62,17 @@ type Props = {
 
 type GachaMode = "cards" | "stickers";
 
+function formatLocalDateOnly(now: Date): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${date}`;
+}
+
+function hasNewItem(items: Array<{ addedOn: string }>, lastOpenedOn: string) {
+  return items.some((item) => item.addedOn > lastOpenedOn);
+}
+
 function drawCard(cards: CardItem[]): CardItem {
   const index = Math.floor(Math.random() * cards.length);
   return cards[Math.max(0, Math.min(cards.length - 1, index))];
@@ -72,6 +85,7 @@ function drawSticker(stickers: StickerItem[]): StickerItem {
 
 export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
+  const [gachaLastOpenedOn] = useState(() => loadGachaLastOpenedOn());
   const [gachaMode, setGachaMode] = useState<GachaMode>("cards");
   const [selectedGachaId, setSelectedGachaId] =
     useState<CardGachaId>("classic");
@@ -127,6 +141,10 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
     GACHA_SPIN_FRAMES[0];
   const spinFrameImage =
     GACHA_SPIN_FRAMES[spinFrameIndex] ?? GACHA_SPIN_FRAMES[0];
+
+  useEffect(() => {
+    saveGachaLastOpenedOn(formatLocalDateOnly(new Date()));
+  }, []);
 
   useEffect(() => {
     if (!isSpinning) return undefined;
@@ -345,6 +363,11 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
               onClick={() => onSelectMode("cards")}
             >
               カード
+              {hasNewItem(KEIMARUKUN_CARDS, gachaLastOpenedOn) ? (
+                <span className="ml-1 rounded-full bg-amber-300 px-1.5 py-0.5 text-[10px] font-black text-rose-800">
+                  NEW
+                </span>
+              ) : null}
             </button>
             <button
               className={`flex-1 rounded-full px-3 py-2 text-sm font-black ${
@@ -355,6 +378,11 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
               onClick={() => onSelectMode("stickers")}
             >
               シール
+              {hasNewItem(STICKERS, gachaLastOpenedOn) ? (
+                <span className="ml-1 rounded-full bg-amber-300 px-1.5 py-0.5 text-[10px] font-black text-rose-800">
+                  NEW
+                </span>
+              ) : null}
             </button>
           </div>
         ) : null}
@@ -440,10 +468,14 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
               <div className="grid grid-cols-5 gap-1.5">
                 {CARD_GACHA_DEFINITIONS.map((gacha) => {
                   const active = gacha.id === selectedGachaId;
+                  const newGacha = hasNewItem(
+                    getCardsByGachaId(gacha.id),
+                    gachaLastOpenedOn,
+                  );
                   return (
                     <button
                       key={gacha.id}
-                      className={`rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                      className={`relative rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
                         active
                           ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
                           : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
@@ -451,6 +483,11 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
                       onClick={() => onSelectGacha(gacha.id)}
                     >
                       {gacha.shortName}
+                      {newGacha ? (
+                        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-black text-white">
+                          NEW
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}
@@ -459,10 +496,14 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
               <div className="grid grid-cols-4 gap-1.5">
                 {STICKER_GACHA_DEFINITIONS.map((gacha) => {
                   const active = gacha.id === selectedStickerGachaId;
+                  const newGacha = hasNewItem(
+                    getStickersByGachaId(gacha.id),
+                    gachaLastOpenedOn,
+                  );
                   return (
                     <button
                       key={gacha.id}
-                      className={`rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                      className={`relative rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
                         active
                           ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
                           : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
@@ -470,6 +511,11 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
                       onClick={() => onSelectStickerGacha(gacha.id)}
                     >
                       {gacha.shortName}
+                      {newGacha ? (
+                        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-black text-white">
+                          NEW
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}

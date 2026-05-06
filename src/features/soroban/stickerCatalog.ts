@@ -37,6 +37,7 @@ export type StickerItem = {
   name: string;
   image: string;
   description: string;
+  addedOn: string;
   gachaId: StickerGachaId;
 };
 
@@ -93,6 +94,12 @@ export const STICKER_GACHA_DEFINITIONS: StickerGachaDefinition[] = [
     shortName: "6ばん",
     description: "同じシールがでることもあるがちゃ。",
   },
+  {
+    id: "sticker-set-7",
+    name: "シール 7ばん",
+    shortName: "7ばん",
+    description: "同じシールがでることもあるがちゃ。",
+  },
 ];
 
 export const STICKERS: StickerItem[] = [
@@ -101,6 +108,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん オーバーオールシール",
     image: keimaruOverallsStickerImage,
     description: "くるまもようのシャツとオーバーオールの けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-1",
   },
   {
@@ -108,6 +116,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん ラーメンシール",
     image: keimaruRamenStickerImage,
     description: "あつあつラーメンを ちゅるっとたべる けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-1",
   },
   {
@@ -115,6 +124,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん キャンディシール",
     image: keimaruCandyWrapperStickerImage,
     description: "キャンディのつつみに すっぽり入った けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-1",
   },
   {
@@ -122,6 +132,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん にじぐもシール",
     image: keimaruRainbowCloudStickerImage,
     description: "にじとくもの上で ちょこんとすわる けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-1",
   },
   {
@@ -129,6 +140,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん ギターシール",
     image: keimaruRockGuitarStickerImage,
     description: "ギターをかかえて かっこよくきめる けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-1",
   },
   {
@@ -136,6 +148,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん まほうのステッキシール",
     image: keimaruPrinceWandStickerImage,
     description: "おうかんと星のステッキで きらきらする けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-2",
   },
   {
@@ -143,6 +156,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん えほんシール",
     image: keimaruPictureBookStickerImage,
     description: "えほんをひらいて おはなしをたのしむ けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-2",
   },
   {
@@ -150,6 +164,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん ひよこシール",
     image: keimaruDuckHugStickerImage,
     description: "きいろいひよこを ぎゅっとだく けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-2",
   },
   {
@@ -157,6 +172,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん おつきさまシール",
     image: keimaruMoonNapStickerImage,
     description: "おつきさまの上で すやすやねむる けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-2",
   },
   {
@@ -164,6 +180,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん どうぶつずかんシール",
     image: keimaruAnimalBookStickerImage,
     description: "どうぶつの本を じっくりよむ けいまるくん。",
+    addedOn: "2026-04-24",
     gachaId: "sticker-set-2",
   },
   {
@@ -171,6 +188,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん アイスシール",
     image: keimaruIceCreamStickerImage,
     description: "三だんアイスを うれしそうにかかえる けいまるくん。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-3",
   },
   {
@@ -178,6 +196,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん おやすみシール",
     image: keimaruMoonPillowStickerImage,
     description: "ちいさなおつきさまを まくらにする けいまるくん。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-3",
   },
   {
@@ -185,6 +204,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん バナナシール",
     image: keimaruBananaHugStickerImage,
     description: "にこにこバナナを たいせつにかかえる けいまるくん。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-3",
   },
   {
@@ -192,6 +212,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん そろばんシール",
     image: keimaruSorobanStickerImage,
     description: "そろばんを手にもって がんばる けいまるくん。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-3",
   },
   {
@@ -199,6 +220,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん トロフィーシール",
     image: keimaruTrophyStickerImage,
     description: "ぴかぴかのトロフィーを かかげる けいまるくん。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-3",
   },
   {
@@ -206,6 +228,7 @@ export const STICKERS: StickerItem[] = [
     name: "けいまるくん おかしバスケットシール",
     image: keimaruSnackBasketStickerImage,
     description: "おかしをいっぱい入れたかごをもつ けいまるくん。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-4",
   },
   {
@@ -213,6 +236,7 @@ export const STICKERS: StickerItem[] = [
     name: "しばいぬ てふりシール",
     image: shibaWaveStickerImage,
     description: "赤いシャツで にこにこ手をふる しばいぬ。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-4",
   },
   {
@@ -220,6 +244,7 @@ export const STICKERS: StickerItem[] = [
     name: "ポコロン しましまシール",
     image: pocoronStripedShirtStickerImage,
     description: "しましまの服で うれしそうにすわる ポコロン。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-4",
   },
   {
@@ -227,6 +252,7 @@ export const STICKERS: StickerItem[] = [
     name: "しばいぬ いちごシール",
     image: shibaStrawberryStickerImage,
     description: "いちごを持って にっこり手をふる しばいぬ。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-4",
   },
   {
@@ -234,6 +260,7 @@ export const STICKERS: StickerItem[] = [
     name: "ちゅちゅぴ ハートギフトシール",
     image: chuchupiHeartGiftStickerImage,
     description: "大きなハートとプレゼントをだく ピンクのちゅちゅぴ。",
+    addedOn: "2026-04-25",
     gachaId: "sticker-set-4",
   },
   {
@@ -241,6 +268,7 @@ export const STICKERS: StickerItem[] = [
     name: "ポコロン 星ステッキシール",
     image: pocoronStarWandStickerImage,
     description: "星のステッキを持って まほうをかける ポコロン。",
+    addedOn: "2026-04-30",
     gachaId: "sticker-set-5",
   },
   {
@@ -248,6 +276,7 @@ export const STICKERS: StickerItem[] = [
     name: "そろばんフレンズシール",
     image: sorobanFriendsStickerImage,
     description: "そろばんを持つアークと しばいぬがならぶシール。",
+    addedOn: "2026-04-30",
     gachaId: "sticker-set-5",
   },
   {
@@ -255,6 +284,7 @@ export const STICKERS: StickerItem[] = [
     name: "しばいぬ ゲームシール",
     image: shibaGamepadStickerImage,
     description: "ピンクのゲームコントローラーで あそぶ しばいぬ。",
+    addedOn: "2026-04-30",
     gachaId: "sticker-set-5",
   },
   {
@@ -262,6 +292,7 @@ export const STICKERS: StickerItem[] = [
     name: "ポコロン にじシール",
     image: pocoronRainbowStickerImage,
     description: "にじとくものそばで わくわくする ポコロン。",
+    addedOn: "2026-04-30",
     gachaId: "sticker-set-5",
   },
   {
@@ -269,6 +300,7 @@ export const STICKERS: StickerItem[] = [
     name: "ポコロン キャンディステッキシール",
     image: pocoronCandyWandStickerImage,
     description: "キャンディと星のステッキを持つ あまいポコロン。",
+    addedOn: "2026-04-30",
     gachaId: "sticker-set-5",
   },
   {
@@ -276,6 +308,7 @@ export const STICKERS: StickerItem[] = [
     name: "しばいぬ ヘッドホンシール",
     image: shibaHeadphonesStickerImage,
     description: "ヘッドホンで音楽をきく ごきげんな しばいぬ。",
+    addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
   {
@@ -283,6 +316,7 @@ export const STICKERS: StickerItem[] = [
     name: "ちゅちゅぴ プレゼントシール",
     image: chuchupiPresentStickerImage,
     description: "ピンクのプレゼントをたいせつに持つ ちゅちゅぴ。",
+    addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
   {
@@ -290,6 +324,7 @@ export const STICKERS: StickerItem[] = [
     name: "アーク そろばんべんきょうシール",
     image: arcSorobanBookStickerImage,
     description: "そろばんと本で べんきょうする アーク。",
+    addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
   {
@@ -297,6 +332,7 @@ export const STICKERS: StickerItem[] = [
     name: "しばいぬ ドーナツシール",
     image: shibaDonutStickerImage,
     description: "ピンクのドーナツを持って 手をふる しばいぬ。",
+    addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
   {
@@ -304,6 +340,7 @@ export const STICKERS: StickerItem[] = [
     name: "しばいぬ おやつバスケットシール",
     image: shibaSweetsBasketStickerImage,
     description: "クッキーやおやつをかごいっぱいに集めた しばいぬ。",
+    addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
   {
@@ -311,6 +348,7 @@ export const STICKERS: StickerItem[] = [
     name: "アーク メダルそろばんシール",
     image: arcMedalSorobanStickerImage,
     description: "メダルをつけて そろばんを持つ アーク。",
+    addedOn: "2026-05-04",
     gachaId: "sticker-set-7",
   },
 ];

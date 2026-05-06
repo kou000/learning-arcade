@@ -16,6 +16,7 @@ import {
 
 export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
 const SHOP_LAST_OPENED_ON_FALLBACK = "2026-02-27";
+const GACHA_LAST_OPENED_ON_FALLBACK = "2026-05-06";
 const REGISTER_EXAM_BODY: ExamBody = "zenshugakuren";
 const REGISTER_GRADE_ORDER: Grade[] = [
   ...getAvailableGrades(REGISTER_EXAM_BODY),
@@ -81,6 +82,7 @@ type SorobanSaveData = {
   registerProgress: RegisterProgress;
   registerPlayConfig: RegisterPlayConfig;
   shopLastOpenedOn: string | null;
+  gachaLastOpenedOn: string | null;
 };
 
 export const DEFAULT_PRACTICE_CONFIG: PracticeConfig = {
@@ -410,6 +412,7 @@ function readAll(): SorobanSaveData {
       registerProgress: DEFAULT_REGISTER_PROGRESS,
       registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
       shopLastOpenedOn: null,
+      gachaLastOpenedOn: null,
     };
   }
 
@@ -421,6 +424,7 @@ function readAll(): SorobanSaveData {
         registerProgress: DEFAULT_REGISTER_PROGRESS,
         registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
         shopLastOpenedOn: null,
+        gachaLastOpenedOn: null,
       };
     }
     const parsed = JSON.parse(raw) as Partial<SorobanSaveData> & {
@@ -435,6 +439,7 @@ function readAll(): SorobanSaveData {
       shopLastOpenedOn: normalizeDateOnly(
         parsed.shopLastOpenedOn ?? parsed.shopFirstOpenedOn,
       ),
+      gachaLastOpenedOn: normalizeDateOnly(parsed.gachaLastOpenedOn),
     };
   } catch {
     return {
@@ -442,6 +447,7 @@ function readAll(): SorobanSaveData {
       registerProgress: DEFAULT_REGISTER_PROGRESS,
       registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
       shopLastOpenedOn: null,
+      gachaLastOpenedOn: null,
     };
   }
 }
@@ -505,6 +511,18 @@ export function saveShopLastOpenedOn(dateOn: string): string | null {
   const normalized = normalizeDateOnly(dateOn);
   if (!normalized) return current.shopLastOpenedOn;
   writeAll({ ...current, shopLastOpenedOn: normalized });
+  return normalized;
+}
+
+export function loadGachaLastOpenedOn(): string {
+  return readAll().gachaLastOpenedOn ?? GACHA_LAST_OPENED_ON_FALLBACK;
+}
+
+export function saveGachaLastOpenedOn(dateOn: string): string | null {
+  const current = readAll();
+  const normalized = normalizeDateOnly(dateOn);
+  if (!normalized) return current.gachaLastOpenedOn;
+  writeAll({ ...current, gachaLastOpenedOn: normalized });
   return normalized;
 }
 
