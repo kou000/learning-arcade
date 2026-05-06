@@ -40,17 +40,10 @@ type DragState =
       rotation: number;
     };
 
-type PendingPaletteDrag = {
-  stickerId: string;
-  pointerId: number;
-  x: number;
-  y: number;
-  target: HTMLElement;
-};
-
 const STICKER_SIZE_PX = 136;
 const STICKER_ROTATION_STEP = 15;
 const DRAG_MOVE_THRESHOLD_PX = 6;
+const PALETTE_PAGE_SIZE = 8;
 
 function clampStickerRotation(rotation: number): number {
   return Math.max(-180, Math.min(180, Math.round(rotation)));
@@ -78,12 +71,8 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
     null,
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [palettePageIndex, setPalettePageIndex] = useState(0);
   const pageRef = useRef<HTMLDivElement | null>(null);
-  const pendingPaletteDragRef = useRef<PendingPaletteDrag | null>(null);
-
-  const clearPendingPaletteDrag = () => {
-    pendingPaletteDragRef.current = null;
-  };
 
   const placedCountBySticker = useMemo(
     () => countPlacementsBySticker(progress.stickerPlacements),
@@ -99,6 +88,21 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
   const ownedKindCount = STICKERS.filter(
     (sticker) => (progress.ownedStickerCounts[sticker.id] ?? 0) > 0,
   ).length;
+  const ownedStickers = STICKERS.filter(
+    (sticker) => (progress.ownedStickerCounts[sticker.id] ?? 0) > 0,
+  );
+  const palettePageCount = Math.max(
+    1,
+    Math.ceil(ownedStickers.length / PALETTE_PAGE_SIZE),
+  );
+  const safePalettePageIndex = Math.min(
+    palettePageIndex,
+    palettePageCount - 1,
+  );
+  const visiblePaletteStickers = ownedStickers.slice(
+    safePalettePageIndex * PALETTE_PAGE_SIZE,
+    safePalettePageIndex * PALETTE_PAGE_SIZE + PALETTE_PAGE_SIZE,
+  );
   const ownedTotalCount = Object.values(progress.ownedStickerCounts).reduce(
     (sum, count) => sum + count,
     0,
@@ -240,59 +244,12 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
     });
   };
 
-  const startPaletteInteraction = (
-    e: React.PointerEvent<HTMLElement>,
-    stickerId: string,
-  ) => {
-    if (e.pointerType === "mouse") {
-      startDrag(e, { source: "palette", stickerId });
-      return;
-    }
-    clearPendingPaletteDrag();
-    const target = e.currentTarget;
-    const pointerId = e.pointerId;
-    const startX = e.clientX;
-    const startY = e.clientY;
-    pendingPaletteDragRef.current = {
-      stickerId,
-      pointerId,
-      x: startX,
-      y: startY,
-      target,
-    };
-  };
-
   const moveDrag = (e: React.PointerEvent<HTMLElement>) => {
-    const pendingDrag = pendingPaletteDragRef.current;
-    if (pendingDrag?.pointerId === e.pointerId) {
-      const dx = e.clientX - pendingDrag.x;
-      const dy = e.clientY - pendingDrag.y;
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-      if (absDy > DRAG_MOVE_THRESHOLD_PX && absDy > absDx) {
-        clearPendingPaletteDrag();
-      } else if (absDx > DRAG_MOVE_THRESHOLD_PX && absDx >= absDy) {
-        e.preventDefault();
-        if (!pendingDrag.target.hasPointerCapture(e.pointerId)) {
-          pendingDrag.target.setPointerCapture(e.pointerId);
-        }
-        setSelectedInstanceId(null);
-        setDragState({
-          source: "palette",
-          stickerId: pendingDrag.stickerId,
-          pointerId: e.pointerId,
-          x: e.clientX,
-          y: e.clientY,
-        });
-        pendingPaletteDragRef.current = null;
-      }
-    }
     if (!dragState || dragState.pointerId !== e.pointerId) return;
     setDragState({ ...dragState, x: e.clientX, y: e.clientY });
   };
 
   const finishDrag = (e: React.PointerEvent<HTMLElement>) => {
-    clearPendingPaletteDrag();
     if (!dragState || dragState.pointerId !== e.pointerId) return;
     const pagePosition = pointToPagePosition(e.clientX, e.clientY);
     if (pagePosition) {
@@ -363,7 +320,6 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
   };
 
   const cancelDrag = (e: React.PointerEvent<HTMLElement>) => {
-    clearPendingPaletteDrag();
     if (dragState?.pointerId !== e.pointerId) return;
     setDragState(null);
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -616,16 +572,13 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
             </footer>
           </section>
 
-          <aside className="grid min-h-0 grid-rows-[auto_1fr] rounded-[1.4rem] border border-pink-200/70 bg-[#fffdf8]/94 p-3 shadow-[0_18px_42px_rgba(157,83,109,0.18)] backdrop-blur-sm">
+          <aside className="grid min-h-0 grid-rows-[auto_1fr_auto] rounded-[1.4rem] border border-pink-200/70 bg-[#fffdf8]/94 p-3 shadow-[0_18px_42px_rgba(157,83,109,0.18)] backdrop-blur-sm">
             <header className="rounded-xl bg-[#dff8f3] px-3 py-2 text-center text-sm font-black text-teal-900 shadow-inner ring-1 ring-teal-200">
               もっているシール
             </header>
-            <div className="mt-3 min-h-0 overflow-y-auto pr-1">
+            <div className="mt-3 min-h-0">
               <div className="grid grid-cols-2 gap-2">
-                {STICKERS.filter(
-                  (sticker) =>
-                    (progress.ownedStickerCounts[sticker.id] ?? 0) > 0,
-                ).map((sticker) => {
+                {visiblePaletteStickers.map((sticker) => {
                   const owned = progress.ownedStickerCounts[sticker.id] ?? 0;
                   const placed = placedCountBySticker[sticker.id] ?? 0;
                   const remaining = Math.max(0, owned - placed);
@@ -642,11 +595,14 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                       }`}
                       disabled={!canPlace}
                       title={sticker.description}
-                      style={{ touchAction: "pan-y" }}
+                      style={{ touchAction: "none" }}
                       onContextMenu={(e) => e.preventDefault()}
                       onPointerDown={(e) => {
                         if (!canPlace) return;
-                        startPaletteInteraction(e, sticker.id);
+                        startDrag(e, {
+                          source: "palette",
+                          stickerId: sticker.id,
+                        });
                       }}
                       onPointerMove={moveDrag}
                       onPointerUp={finishDrag}
@@ -668,6 +624,37 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                   );
                 })}
               </div>
+            </div>
+            <div className="mt-3 grid grid-cols-[3rem_1fr_3rem] items-center gap-2">
+              <button
+                type="button"
+                className="h-11 rounded-full bg-white text-xl font-black text-rose-700 shadow ring-1 ring-pink-200 disabled:opacity-35"
+                disabled={safePalettePageIndex <= 0}
+                onClick={() =>
+                  setPalettePageIndex((current) => Math.max(0, current - 1))
+                }
+                aria-label="まえのシール"
+              >
+                ‹
+              </button>
+              <div className="rounded-full bg-rose-50 px-3 py-2 text-center text-xs font-black text-rose-800 ring-1 ring-pink-100">
+                {ownedStickers.length === 0
+                  ? "0 / 0"
+                  : `${safePalettePageIndex + 1} / ${palettePageCount}`}
+              </div>
+              <button
+                type="button"
+                className="h-11 rounded-full bg-white text-xl font-black text-rose-700 shadow ring-1 ring-pink-200 disabled:opacity-35"
+                disabled={safePalettePageIndex >= palettePageCount - 1}
+                onClick={() =>
+                  setPalettePageIndex((current) =>
+                    Math.min(palettePageCount - 1, current + 1),
+                  )
+                }
+                aria-label="つぎのシール"
+              >
+                ›
+              </button>
             </div>
           </aside>
         </div>
