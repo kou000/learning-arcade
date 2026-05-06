@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import sealBookBg from "@/assets/seal-book-bg.png";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
@@ -40,9 +40,19 @@ type DragState =
       rotation: number;
     };
 
+type PendingPaletteDrag = {
+  stickerId: string;
+  pointerId: number;
+  x: number;
+  y: number;
+  target: HTMLElement;
+  timeoutId: number;
+};
+
 const STICKER_SIZE_PX = 136;
 const STICKER_ROTATION_STEP = 15;
 const DRAG_MOVE_THRESHOLD_PX = 6;
+const TOUCH_DRAG_HOLD_MS = 160;
 
 function clampStickerRotation(rotation: number): number {
   return Math.max(-180, Math.min(180, Math.round(rotation)));
@@ -71,6 +81,16 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
   const pageRef = useRef<HTMLDivElement | null>(null);
+  const pendingPaletteDragRef = useRef<PendingPaletteDrag | null>(null);
+
+  const clearPendingPaletteDrag = () => {
+    const pendingDrag = pendingPaletteDragRef.current;
+    if (!pendingDrag) return;
+    window.clearTimeout(pendingDrag.timeoutId);
+    pendingPaletteDragRef.current = null;
+  };
+
+  useEffect(() => clearPendingPaletteDrag, []);
 
   const placedCountBySticker = useMemo(
     () => countPlacementsBySticker(progress.stickerPlacements),
@@ -227,12 +247,62 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
     });
   };
 
+  const startPaletteInteraction = (
+    e: React.PointerEvent<HTMLElement>,
+    stickerId: string,
+  ) => {
+    if (e.pointerType === "mouse") {
+      startDrag(e, { source: "palette", stickerId });
+      return;
+    }
+    clearPendingPaletteDrag();
+    const target = e.currentTarget;
+    const pointerId = e.pointerId;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const timeoutId = window.setTimeout(() => {
+      const pendingDrag = pendingPaletteDragRef.current;
+      if (!pendingDrag || pendingDrag.pointerId !== pointerId) return;
+      if (!target.hasPointerCapture(pointerId)) {
+        target.setPointerCapture(pointerId);
+      }
+      setSelectedInstanceId(null);
+      setDragState({
+        source: "palette",
+        stickerId,
+        pointerId,
+        x: pendingDrag.x,
+        y: pendingDrag.y,
+      });
+      pendingPaletteDragRef.current = null;
+    }, TOUCH_DRAG_HOLD_MS);
+    pendingPaletteDragRef.current = {
+      stickerId,
+      pointerId,
+      x: startX,
+      y: startY,
+      target,
+      timeoutId,
+    };
+  };
+
   const moveDrag = (e: React.PointerEvent<HTMLElement>) => {
+    const pendingDrag = pendingPaletteDragRef.current;
+    if (pendingDrag?.pointerId === e.pointerId) {
+      const movedDistance = Math.hypot(
+        e.clientX - pendingDrag.x,
+        e.clientY - pendingDrag.y,
+      );
+      if (movedDistance > DRAG_MOVE_THRESHOLD_PX) {
+        clearPendingPaletteDrag();
+      }
+    }
     if (!dragState || dragState.pointerId !== e.pointerId) return;
     setDragState({ ...dragState, x: e.clientX, y: e.clientY });
   };
 
   const finishDrag = (e: React.PointerEvent<HTMLElement>) => {
+    clearPendingPaletteDrag();
     if (!dragState || dragState.pointerId !== e.pointerId) return;
     const pagePosition = pointToPagePosition(e.clientX, e.clientY);
     if (pagePosition) {
@@ -303,6 +373,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
   };
 
   const cancelDrag = (e: React.PointerEvent<HTMLElement>) => {
+    clearPendingPaletteDrag();
     if (dragState?.pointerId !== e.pointerId) return;
     setDragState(null);
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -376,13 +447,13 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
         <div className="grid h-full grid-cols-[1fr_18rem] gap-4">
-          <section className="grid min-h-0 grid-rows-[auto_1fr_auto] rounded-2xl border border-white/50 bg-white/88 p-4 shadow-xl backdrop-blur-sm">
+          <section className="grid min-h-0 grid-rows-[auto_1fr_auto] rounded-[1.4rem] border border-pink-200/70 bg-[#fff1f5]/94 p-4 shadow-[0_22px_55px_rgba(157,83,109,0.22)] backdrop-blur-sm">
             <header className="flex items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-black text-slate-800">
+                <h1 className="text-2xl font-black text-rose-900">
                   シールちょう
                 </h1>
-                <div className="mt-1 text-sm font-bold text-slate-600">
+                <div className="mt-1 text-sm font-bold text-rose-800/70">
                   {ownedKindCount} / {STICKERS.length}しゅるい ・{" "}
                   {ownedTotalCount}まい
                 </div>
@@ -393,8 +464,8 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                     key={index}
                     className={`h-11 w-11 rounded-full text-sm font-black shadow ${
                       activePageIndex === index
-                        ? "bg-rose-600 text-white"
-                        : "bg-white text-slate-700 hover:bg-slate-50"
+                        ? "bg-rose-500 text-white"
+                        : "bg-[#fffdf8] text-rose-800 hover:bg-white"
                     }`}
                     onClick={() => {
                       setActivePageIndex(index);
@@ -410,14 +481,24 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
             <div className="grid min-h-0 place-items-center py-3">
               <div
                 ref={pageRef}
-                className="relative h-[520px] w-[720px] overflow-visible rounded-[1.75rem] border-[10px] border-amber-200 bg-[linear-gradient(90deg,rgba(251,191,36,0.18)_1px,transparent_1px),linear-gradient(rgba(251,191,36,0.18)_1px,transparent_1px),linear-gradient(135deg,#fff7ed,#fff,#fef3c7)] bg-[length:48px_48px] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.85),0_18px_40px_rgba(120,53,15,0.28)]"
+                className="sticker-book-spread relative h-[520px] w-[720px] overflow-visible rounded-[1.15rem]"
                 onPointerDown={(e) => {
                   if (e.target !== e.currentTarget) return;
                   setSelectedInstanceId(null);
                 }}
               >
-                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 bg-amber-200/60" />
-                <div className="pointer-events-none absolute left-5 top-4 rounded-full bg-white/75 px-3 py-1 text-xs font-black text-amber-900">
+                <div className="pointer-events-none absolute inset-0 rounded-[1.15rem] bg-[linear-gradient(90deg,rgba(251,113,133,0.11)_1px,transparent_1px),linear-gradient(rgba(45,212,191,0.1)_1px,transparent_1px)] bg-[length:48px_48px]" />
+                <div className="sticker-book-left-page pointer-events-none absolute inset-y-[18px] left-[18px] right-1/2 rounded-l-[0.85rem]" />
+                <div className="sticker-book-right-page pointer-events-none absolute inset-y-[18px] left-1/2 right-[18px] rounded-r-[0.85rem]" />
+                <div className="sticker-book-spine pointer-events-none absolute inset-y-[14px] left-1/2 w-9 -translate-x-1/2" />
+                {Array.from({ length: 5 }, (_, index) => (
+                  <span
+                    key={index}
+                    className="sticker-book-ring pointer-events-none absolute left-1/2 h-9 w-9 -translate-x-1/2 rounded-full"
+                    style={{ top: 74 + index * 88 }}
+                  />
+                ))}
+                <div className="pointer-events-none absolute left-8 top-7 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-rose-800 shadow-sm ring-1 ring-pink-200">
                   {activePageIndex + 1}ぺーじ
                 </div>
                 {pagePlacements.map((placement) => {
@@ -457,7 +538,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                       onPointerCancel={cancelDrag}
                     >
                       <span
-                        className="grid h-full w-full place-items-center"
+                        className="sticker-on-page grid h-full w-full place-items-center"
                         style={{
                           transform: `rotate(${placement.rotation}deg)`,
                         }}
@@ -466,7 +547,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                           src={sticker.image}
                           alt={sticker.name}
                           draggable={false}
-                          className="h-full w-full select-none rounded-full object-contain drop-shadow-[0_8px_10px_rgba(15,23,42,0.28)]"
+                          className="sticker-real-image h-full w-full select-none object-contain"
                         />
                       </span>
                     </button>
@@ -533,7 +614,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
               </div>
             </div>
 
-            <footer className="flex min-h-[3rem] items-center gap-3 rounded-xl bg-amber-50 px-4 py-2 text-sm font-bold text-amber-950">
+            <footer className="flex min-h-[3rem] items-center gap-3 rounded-xl bg-[#fffdf8] px-4 py-2 text-sm font-bold text-rose-900 shadow-inner ring-1 ring-pink-200/70">
               {selectedSticker ? (
                 <span className="min-w-0 flex-1 truncate">
                   {selectedSticker.name} ・ {selectedSticker.description}
@@ -544,8 +625,8 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
             </footer>
           </section>
 
-          <aside className="grid min-h-0 grid-rows-[auto_1fr] rounded-2xl border border-white/50 bg-white/90 p-3 shadow-xl backdrop-blur-sm">
-            <header className="rounded-xl bg-sky-50 px-3 py-2 text-center text-sm font-black text-sky-800">
+          <aside className="grid min-h-0 grid-rows-[auto_1fr] rounded-[1.4rem] border border-pink-200/70 bg-[#fffdf8]/94 p-3 shadow-[0_18px_42px_rgba(157,83,109,0.18)] backdrop-blur-sm">
+            <header className="rounded-xl bg-[#dff8f3] px-3 py-2 text-center text-sm font-black text-teal-900 shadow-inner ring-1 ring-teal-200">
               もっているシール
             </header>
             <div className="mt-3 min-h-0 overflow-y-auto pr-1">
@@ -561,22 +642,19 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                   return (
                     <button
                       key={sticker.id}
-                      className={`relative grid place-items-center rounded-xl border p-2 text-center transition ${
+                      className={`relative grid place-items-center rounded-xl border p-2 text-center shadow-sm transition ${
                         canPlace
-                          ? "border-amber-200 bg-amber-50 hover:bg-amber-100"
+                          ? "border-pink-200 bg-white hover:bg-rose-50"
                           : owned > 0
-                            ? "border-slate-200 bg-slate-100 opacity-75"
-                            : "border-slate-200 bg-slate-100"
+                            ? "border-stone-200 bg-stone-100 opacity-75"
+                            : "border-stone-200 bg-stone-100"
                       }`}
                       disabled={!canPlace}
                       title={sticker.description}
-                      style={{ touchAction: "none" }}
+                      style={{ touchAction: "pan-y" }}
                       onPointerDown={(e) => {
                         if (!canPlace) return;
-                        startDrag(e, {
-                          source: "palette",
-                          stickerId: sticker.id,
-                        });
+                        startPaletteInteraction(e, sticker.id);
                       }}
                       onPointerMove={moveDrag}
                       onPointerUp={finishDrag}
@@ -586,7 +664,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
                         src={sticker.image}
                         alt={sticker.name}
                         draggable={false}
-                        className="h-20 w-20 select-none rounded-full object-contain drop-shadow"
+                        className="sticker-real-image h-20 w-20 select-none object-contain"
                       />
                       <span className="mt-1 text-xs font-black leading-tight text-slate-700">
                         {sticker.name}
@@ -614,7 +692,7 @@ export function StickerBookPage({ onGoRegister, onGoGacha }: Props) {
             <img
               src={dragSticker.image}
               alt=""
-              className="rounded-full object-contain drop-shadow-2xl"
+              className="sticker-real-image object-contain drop-shadow-2xl"
               width={STICKER_SIZE_PX}
               height={STICKER_SIZE_PX}
               style={{
