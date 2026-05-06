@@ -290,12 +290,14 @@
 - シール帳は4ページ構成
 - 保存先:
   - `ownedStickerCounts: Record<string, number>`
-  - `stickerPlacements: { instanceId, stickerId, pageIndex, x, y }[]`
+  - `stickerPlacements: { instanceId, stickerId, pageIndex, x, y, rotation }[]`
 - `x` / `y` はページ面に対する割合（0〜100）として保存する
+- `rotation` は角度（degree）として保存し、既存データは `0`、不正値は `-180`〜`180` に正規化する
 - 同じシールは所持枚数の範囲内で複数枚貼れる
 - 配置済みシールはドラッグで移動できる
 - 配置済みシールを選択すると「はがす」で配置だけ削除でき、所持枚数は減らない
-- シールドラッグ中は帳面ページ面だけ `scale(1.08)` で拡大し、`pointerup` / `pointercancel` で通常サイズへ戻す
+- 配置済みシールを選択すると、シール画像からの絶対位置で左右に回転矢印、下に「はがす」ボタンを前面表示する
+- シールドラッグ中も帳面ページ面は拡大せず、配置位置とプレビュー位置がずれないようにする
 - 画像欠損時に落ちないよう、未所持枠は伏せ表示、配置はカタログに存在するIDのみ正規化で保持する
 
 ## 5.6 RegisterAdminPage（管理者画面）

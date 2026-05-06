@@ -48,6 +48,7 @@ export type StickerPlacement = {
   pageIndex: number;
   x: number;
   y: number;
+  rotation: number;
 };
 
 export type RegisterProgress = {
@@ -309,6 +310,12 @@ function normalizeStickerCounts(value: unknown): Record<string, number> {
   return counts;
 }
 
+function normalizeStickerRotation(value: unknown): number {
+  const rotation = Number(value);
+  if (!Number.isFinite(rotation)) return 0;
+  return Math.max(-180, Math.min(180, Math.round(rotation)));
+}
+
 function normalizeStickerPlacements(
   value: unknown,
   ownedStickerCounts: Record<string, number>,
@@ -351,6 +358,7 @@ function normalizeStickerPlacements(
       pageIndex,
       x: Math.max(0, Math.min(100, x)),
       y: Math.max(0, Math.min(100, y)),
+      rotation: normalizeStickerRotation(placement.rotation),
     });
   });
 
