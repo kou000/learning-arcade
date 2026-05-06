@@ -15,6 +15,7 @@
 - `#/soroban/shelf` : 棚（`ShelfPage`）
 - `#/soroban/gacha` : ガチャガチャ（`GachaPage`）
 - `#/soroban/cards` : カードずかん（`CardBookPage`）
+- `#/soroban/stickers` : シール帳（`StickerBookPage`）
 - `#/soroban/badges` : バッジ図鑑（`SnackBadgeBookPage`）
 - `#/soroban/snack/top` : 300円おやつゲームTOP（`SnackBudgetTopPage`）
 - `#/soroban/snack` : 300円おやつゲーム（`SnackBudgetGamePage`）
@@ -53,6 +54,8 @@
 - `coins`
 - `purchasedItemIds`
 - `badgeIds`（ゲーム内バッジ。難易度ごとに最高ランク1つのみ保持）
+- `ownedStickerCounts`（シールIDごとの所持枚数）
+- `stickerPlacements`（シール帳の貼付インスタンス、ページと座標）
 - `activeShelfId`（現在開いている棚ID）
 - `shelfLayouts`（棚IDごとの配置スロット）
 - `shelfRows`, `shelfCols`, `shelfSlots`
@@ -250,12 +253,14 @@
 - 画像欠損時プレースホルダー表示
 - 旧セーブデータ（`shelfSlots` のみ保持）読み込み時は、既存配置を `shelf-default` に移行して後方互換を維持する
 
-## 5.5 GachaPage / CardBookPage
+## 5.5 GachaPage / CardBookPage / StickerBookPage
 
 ファイル:
 - `src/features/soroban/views/GachaPage.tsx`
 - `src/features/soroban/views/CardBookPage.tsx`
+- `src/features/soroban/views/StickerBookPage.tsx`
 - `src/features/soroban/cardCatalog.ts`
+- `src/features/soroban/stickerCatalog.ts`
 
 - けいまるカードはショップ商品とは別に `cardCatalog.ts` で管理する
 - ガチャ対象は `cardCatalog.ts` のけいまるカード全種
@@ -268,6 +273,30 @@
 - カードはショップ一覧に表示しない
 - カードは棚の配置候補に表示しない
 - カードずかんでは全カード枠を表示し、未所持カードは伏せカードとして表示する
+
+### シールガチャ
+
+- `GachaPage` 内でカード/シールのタブを切り替える
+- シール素材は `src/assets/seal/*.png` を使い、`stickerCatalog.ts` でシールごとのID・名前・説明・シリーズを管理する
+- 1回50コイン
+- シールは5枚ずつのシリーズに分け、選択中シリーズから均等抽選する
+- 最後のシリーズは残り枚数だけを持つ
+- 未所持確定や天井は行わない
+- 重複時は `registerProgress.ownedStickerCounts[stickerId]` を加算する
+- シールガチャ結果から `#/soroban/stickers` へ遷移できる
+
+### シール帳
+
+- シール帳は4ページ構成
+- 保存先:
+  - `ownedStickerCounts: Record<string, number>`
+  - `stickerPlacements: { instanceId, stickerId, pageIndex, x, y }[]`
+- `x` / `y` はページ面に対する割合（0〜100）として保存する
+- 同じシールは所持枚数の範囲内で複数枚貼れる
+- 配置済みシールはドラッグで移動できる
+- 配置済みシールを選択すると「はがす」で配置だけ削除でき、所持枚数は減らない
+- シールドラッグ中は帳面ページ面だけ `scale(1.08)` で拡大し、`pointerup` / `pointercancel` で通常サイズへ戻す
+- 画像欠損時に落ちないよう、未所持枠は伏せ表示、配置はカタログに存在するIDのみ正規化で保持する
 
 ## 5.6 RegisterAdminPage（管理者画面）
 

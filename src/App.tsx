@@ -14,6 +14,7 @@ import { SnackBudgetTopPage } from "@/features/soroban/views/SnackBudgetTopPage"
 import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage";
 import { GachaPage } from "@/features/soroban/views/GachaPage";
 import { CardBookPage } from "@/features/soroban/views/CardBookPage";
+import { StickerBookPage } from "@/features/soroban/views/StickerBookPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
 import { PianoPracticePage } from "@/features/piano/views/PianoPracticePage";
 
@@ -28,6 +29,7 @@ type Route =
   | "soroban-shelf"
   | "soroban-gacha"
   | "soroban-cards"
+  | "soroban-stickers"
   | "soroban-snack-top"
   | "soroban-snack"
   | "soroban-badges"
@@ -62,6 +64,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/shelf") return "soroban-shelf";
   if (h === "soroban/gacha") return "soroban-gacha";
   if (h === "soroban/cards") return "soroban-cards";
+  if (h === "soroban/stickers") return "soroban-stickers";
   if (h === "soroban/badges") return "soroban-badges";
   if (h === "soroban/snack/top") return "soroban-snack-top";
   if (h === "soroban/snack") return "soroban-snack";
@@ -204,6 +207,7 @@ export default function App() {
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
   const goGacha = () => { window.location.hash = "/soroban/gacha"; };
   const goCards = () => { window.location.hash = "/soroban/cards"; };
+  const goStickers = () => { window.location.hash = "/soroban/stickers"; };
   const goSnackTop = () => { window.location.hash = "/soroban/snack/top"; };
   const goSnackBadges = () => { window.location.hash = "/soroban/badges"; };
   const goSnack = (difficulty: "easy" | "normal" | "hard" = "easy") => {
@@ -288,6 +292,7 @@ export default function App() {
           onGoShelf={goShelf}
           onGoGacha={goGacha}
           onGoCards={goCards}
+          onGoStickers={goStickers}
           onGoSnack={goSnackTop}
           onGoSnackBadges={goSnackBadges}
         />
@@ -315,10 +320,17 @@ export default function App() {
         <ShelfPage onGoPractice={goSoroban} onGoRegister={goRegister} onGoShop={goShop} onGoShelf={goShelf} />
       ) : null}
       {route === "soroban-gacha" ? (
-        <GachaPage onGoRegister={goRegister} onGoCards={goCards} />
+        <GachaPage
+          onGoRegister={goRegister}
+          onGoCards={goCards}
+          onGoStickers={goStickers}
+        />
       ) : null}
       {route === "soroban-cards" ? (
         <CardBookPage onGoRegister={goRegister} onGoGacha={goGacha} />
+      ) : null}
+      {route === "soroban-stickers" ? (
+        <StickerBookPage onGoRegister={goRegister} onGoGacha={goGacha} />
       ) : null}
       {route === "soroban-snack-top" ? (
         <SnackBudgetTopPage onGoRegister={goRegister} onGoSnackPlay={goSnack} />

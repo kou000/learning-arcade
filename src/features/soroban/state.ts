@@ -8,6 +8,11 @@ import {
   isShelfId,
   type ShelfId,
 } from "@/features/soroban/shelfCatalog";
+import {
+  STICKER_PAGE_COUNT,
+  isStickerId,
+  normalizeStickerId,
+} from "@/features/soroban/stickerCatalog";
 
 export const SOROBAN_STORAGE_KEY = "learning-arcade:soroban-state";
 const SHOP_LAST_OPENED_ON_FALLBACK = "2026-02-27";
@@ -37,10 +42,20 @@ export type PracticeConfig = {
   showAnswers: boolean;
 };
 
+export type StickerPlacement = {
+  instanceId: string;
+  stickerId: string;
+  pageIndex: number;
+  x: number;
+  y: number;
+};
+
 export type RegisterProgress = {
   coins: number;
   purchasedItemIds: string[];
   badgeIds: string[];
+  ownedStickerCounts: Record<string, number>;
+  stickerPlacements: StickerPlacement[];
   activeShelfId: ShelfId;
   shelfLayouts: Partial<Record<ShelfId, Array<string | null>>>;
   shelfRows: number;
@@ -80,6 +95,8 @@ export const DEFAULT_REGISTER_PROGRESS: RegisterProgress = {
   coins: 0,
   purchasedItemIds: [],
   badgeIds: [],
+  ownedStickerCounts: {},
+  stickerPlacements: [],
   activeShelfId: DEFAULT_SHELF_ID,
   shelfLayouts: { [DEFAULT_SHELF_ID]: Array.from({ length: 8 }, () => null) },
   shelfRows: 2,
@@ -236,6 +253,13 @@ function normalizeRegisterProgress(
     shelfLayouts[activeShelfId] ??
     shelfLayouts[DEFAULT_SHELF_ID] ??
     legacySlots;
+  const ownedStickerCounts = normalizeStickerCounts(
+    input?.ownedStickerCounts,
+  );
+  const stickerPlacements = normalizeStickerPlacements(
+    input?.stickerPlacements,
+    ownedStickerCounts,
+  );
 
   return {
     coins: Math.max(
@@ -258,6 +282,8 @@ function normalizeRegisterProgress(
         ),
       ),
     ),
+    ownedStickerCounts,
+    stickerPlacements,
     activeShelfId,
     shelfLayouts,
     shelfRows: rows,
@@ -267,6 +293,68 @@ function normalizeRegisterProgress(
     unlockedStageByGrade,
     stageClearByGradeSubject,
   };
+}
+
+function normalizeStickerCounts(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const counts: Record<string, number> = {};
+  Object.entries(value as Record<string, unknown>).forEach(
+    ([rawStickerId, rawCount]) => {
+      const stickerId = normalizeStickerId(rawStickerId);
+      if (!stickerId) return;
+      const count = Math.max(0, Math.floor(Number(rawCount)));
+      if (count > 0) counts[stickerId] = (counts[stickerId] ?? 0) + count;
+    },
+  );
+  return counts;
+}
+
+function normalizeStickerPlacements(
+  value: unknown,
+  ownedStickerCounts: Record<string, number>,
+): StickerPlacement[] {
+  if (!Array.isArray(value)) return [];
+  const usedInstanceIds = new Set<string>();
+  const placedCountByStickerId: Record<string, number> = {};
+  const placements: StickerPlacement[] = [];
+
+  value.forEach((rawPlacement, index) => {
+    if (!rawPlacement || typeof rawPlacement !== "object") return;
+    const placement = rawPlacement as Partial<StickerPlacement>;
+    const rawStickerId = placement.stickerId;
+    if (typeof rawStickerId !== "string" || !isStickerId(rawStickerId)) return;
+    const stickerId = normalizeStickerId(rawStickerId);
+    if (!stickerId) return;
+    const ownedCount = ownedStickerCounts[stickerId] ?? 0;
+    const placedCount = placedCountByStickerId[stickerId] ?? 0;
+    if (placedCount >= ownedCount) return;
+
+    const pageIndex = Math.floor(Number(placement.pageIndex));
+    if (pageIndex < 0 || pageIndex >= STICKER_PAGE_COUNT) return;
+    const x = Number(placement.x);
+    const y = Number(placement.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+    const rawInstanceId =
+      typeof placement.instanceId === "string" &&
+      placement.instanceId.length > 0
+        ? placement.instanceId
+        : `${stickerId}-${index}`;
+    const instanceId = usedInstanceIds.has(rawInstanceId)
+      ? `${rawInstanceId}-${index}`
+      : rawInstanceId;
+    usedInstanceIds.add(instanceId);
+    placedCountByStickerId[stickerId] = placedCount + 1;
+    placements.push({
+      instanceId,
+      stickerId,
+      pageIndex,
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    });
+  });
+
+  return placements;
 }
 
 function normalizeRegisterPlayConfig(

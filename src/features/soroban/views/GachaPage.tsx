@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import gachaBg from "@/assets/gacha.png";
+import gachaSealBg from "@/assets/gacha-seal.png";
 import gachaSpin01 from "@/assets/gacha/gacha-spin-01.png";
 import gachaSpin02 from "@/assets/gacha/gacha-spin-02.png";
 import gachaSpin03 from "@/assets/gacha/gacha-spin-03.png";
@@ -19,8 +20,17 @@ import {
   loadRegisterProgress,
   saveRegisterProgress,
 } from "@/features/soroban/state";
+import {
+  STICKER_GACHA_DEFINITIONS,
+  STICKERS,
+  getStickerGachaDefinition,
+  getStickersByGachaId,
+  type StickerGachaId,
+  type StickerItem,
+} from "@/features/soroban/stickerCatalog";
 
 const GACHA_COST = 200;
+const STICKER_GACHA_COST = 50;
 const GACHA_SPIN_FRAMES = [
   gachaSpin01,
   gachaSpin02,
@@ -45,21 +55,35 @@ const GACHA_CONFETTI = [
 type Props = {
   onGoRegister: () => void;
   onGoCards: () => void;
+  onGoStickers: () => void;
 };
+
+type GachaMode = "cards" | "stickers";
 
 function drawCard(cards: CardItem[]): CardItem {
   const index = Math.floor(Math.random() * cards.length);
   return cards[Math.max(0, Math.min(cards.length - 1, index))];
 }
 
-export function GachaPage({ onGoRegister, onGoCards }: Props) {
+function drawSticker(stickers: StickerItem[]): StickerItem {
+  const index = Math.floor(Math.random() * stickers.length);
+  return stickers[Math.max(0, Math.min(stickers.length - 1, index))];
+}
+
+export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
+  const [gachaMode, setGachaMode] = useState<GachaMode>("cards");
   const [selectedGachaId, setSelectedGachaId] =
     useState<CardGachaId>("classic");
+  const [selectedStickerGachaId, setSelectedStickerGachaId] =
+    useState<StickerGachaId>("sticker-set-1");
   const [resultCard, setResultCard] = useState<CardItem | null>(null);
+  const [resultSticker, setResultSticker] = useState<StickerItem | null>(null);
   const [queuedResultCard, setQueuedResultCard] = useState<CardItem | null>(
     null,
   );
+  const [queuedResultSticker, setQueuedResultSticker] =
+    useState<StickerItem | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinFrameIndex, setSpinFrameIndex] = useState(0);
   const [message, setMessage] = useState("けいまるくん かーど がちゃ");
@@ -69,9 +93,15 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
     [progress.purchasedItemIds],
   );
   const selectedGacha = getCardGachaDefinition(selectedGachaId);
+  const selectedStickerGacha =
+    getStickerGachaDefinition(selectedStickerGachaId);
   const selectedCards = useMemo(
     () => getCardsByGachaId(selectedGachaId),
     [selectedGachaId],
+  );
+  const selectedStickers = useMemo(
+    () => getStickersByGachaId(selectedStickerGachaId),
+    [selectedStickerGachaId],
   );
   const missingCards = useMemo(
     () => selectedCards.filter((card) => !ownedCardIds.has(card.id)),
@@ -80,9 +110,18 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
   const ownedCount = KEIMARUKUN_CARDS.filter((card) =>
     ownedCardIds.has(card.id),
   ).length;
+  const ownedStickerKindCount = STICKERS.filter(
+    (sticker) => (progress.ownedStickerCounts[sticker.id] ?? 0) > 0,
+  ).length;
+  const ownedStickerTotalCount = Object.values(
+    progress.ownedStickerCounts,
+  ).reduce((sum, count) => sum + count, 0);
   const selectedOwnedCount = selectedCards.length - missingCards.length;
+  const currentCost = gachaMode === "cards" ? GACHA_COST : STICKER_GACHA_COST;
   const canDraw =
-    !isSpinning && progress.coins >= GACHA_COST && missingCards.length > 0;
+    !isSpinning &&
+    progress.coins >= currentCost &&
+    (gachaMode === "stickers" || missingCards.length > 0);
   const previousSpinFrameImage =
     GACHA_SPIN_FRAMES[Math.max(0, spinFrameIndex - 1)] ??
     GACHA_SPIN_FRAMES[0];
@@ -100,8 +139,12 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
       () => {
         setIsSpinning(false);
         setResultCard(queuedResultCard);
+        setResultSticker(queuedResultSticker);
         setQueuedResultCard(null);
-        setMessage("あたらしい かーどを げっと");
+        setQueuedResultSticker(null);
+        setMessage(
+          queuedResultSticker ? "シールを げっと" : "あたらしい かーどを げっと",
+        );
       },
       GACHA_SPIN_FRAMES.length * GACHA_SPIN_FRAME_MS + 120,
     );
@@ -110,11 +153,44 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
       timers.forEach((timer) => window.clearTimeout(timer));
       window.clearTimeout(finishTimer);
     };
-  }, [isSpinning, queuedResultCard]);
+  }, [isSpinning, queuedResultCard, queuedResultSticker]);
 
   const onDraw = () => {
     if (isSpinning) return;
     const latestProgress = loadRegisterProgress();
+    if (gachaMode === "stickers") {
+      if (latestProgress.coins < STICKER_GACHA_COST) {
+        setProgress(latestProgress);
+        setResultCard(null);
+        setResultSticker(null);
+        setMessage("コインが たりないよ");
+        return;
+      }
+
+      const latestSelectedStickers = getStickersByGachaId(
+        selectedStickerGachaId,
+      );
+      const nextSticker = drawSticker(latestSelectedStickers);
+      const nextProgress = saveRegisterProgress({
+        ...latestProgress,
+        coins: latestProgress.coins - STICKER_GACHA_COST,
+        ownedStickerCounts: {
+          ...latestProgress.ownedStickerCounts,
+          [nextSticker.id]:
+            (latestProgress.ownedStickerCounts[nextSticker.id] ?? 0) + 1,
+        },
+      });
+      setProgress(nextProgress);
+      setResultCard(null);
+      setResultSticker(null);
+      setQueuedResultCard(null);
+      setQueuedResultSticker(nextSticker);
+      setSpinFrameIndex(0);
+      setIsSpinning(true);
+      setMessage("ガチャガチャ...");
+      return;
+    }
+
     const latestOwnedIds = new Set(latestProgress.purchasedItemIds);
     const latestSelectedCards = getCardsByGachaId(selectedGachaId);
     const latestMissingCards = latestSelectedCards.filter(
@@ -123,12 +199,14 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
     if (latestMissingCards.length === 0) {
       setProgress(latestProgress);
       setResultCard(null);
+      setResultSticker(null);
       setMessage("ぜんぶ あつまったよ");
       return;
     }
     if (latestProgress.coins < GACHA_COST) {
       setProgress(latestProgress);
       setResultCard(null);
+      setResultSticker(null);
       setMessage("コインが たりないよ");
       return;
     }
@@ -141,28 +219,57 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
     });
     setProgress(nextProgress);
     setResultCard(null);
+    setResultSticker(null);
     setQueuedResultCard(nextCard);
+    setQueuedResultSticker(null);
     setSpinFrameIndex(0);
     setIsSpinning(true);
     setMessage("ガチャガチャ...");
+  };
+
+  const onSelectMode = (mode: GachaMode) => {
+    if (isSpinning) return;
+    setGachaMode(mode);
+    setResultCard(null);
+    setResultSticker(null);
+    setQueuedResultCard(null);
+    setQueuedResultSticker(null);
+    setMessage(
+      mode === "cards" ? "けいまるくん かーど がちゃ" : "シール がちゃ",
+    );
   };
 
   const onSelectGacha = (gachaId: CardGachaId) => {
     if (isSpinning) return;
     setSelectedGachaId(gachaId);
     setResultCard(null);
+    setResultSticker(null);
     setQueuedResultCard(null);
+    setQueuedResultSticker(null);
     setMessage("けいまるくん かーど がちゃ");
+  };
+
+  const onSelectStickerGacha = (gachaId: StickerGachaId) => {
+    if (isSpinning) return;
+    setSelectedStickerGachaId(gachaId);
+    setResultCard(null);
+    setResultSticker(null);
+    setQueuedResultCard(null);
+    setQueuedResultSticker(null);
+    setMessage("シール がちゃ");
   };
 
   const onCloseResult = () => {
     setResultCard(null);
-    setMessage("けいまるくん かーど がちゃ");
+    setResultSticker(null);
+    setMessage(
+      gachaMode === "cards" ? "けいまるくん かーど がちゃ" : "シール がちゃ",
+    );
   };
 
   return (
     <SceneFrame
-      backgroundImage={gachaBg}
+      backgroundImage={gachaMode === "stickers" ? gachaSealBg : gachaBg}
       fullscreenBackground
       outsideTopLeft={
         <div className="flex flex-wrap items-center gap-2 px-2">
@@ -177,6 +284,12 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
             onClick={onGoCards}
           >
             カードずかん
+          </button>
+          <button
+            className="rounded-xl bg-transparent px-4 py-3 text-base font-semibold text-white hover:bg-white/10"
+            onClick={onGoStickers}
+          >
+            シールちょう
           </button>
         </div>
       }
@@ -215,9 +328,36 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
             />
           </span>
           <span className="rounded-full border-2 border-sky-200 bg-white/90 px-4 py-2 text-sm font-black text-sky-800 shadow-lg backdrop-blur-sm">
-            かくとく {ownedCount} / {KEIMARUKUN_CARDS.length}
+            {gachaMode === "cards"
+              ? `かくとく ${ownedCount} / ${KEIMARUKUN_CARDS.length}`
+              : `シール ${ownedStickerKindCount} / ${STICKERS.length} (${ownedStickerTotalCount}まい)`}
           </span>
         </div>
+
+        {!isSpinning ? (
+          <div className="absolute left-[20%] top-[14%] z-10 flex w-[min(20rem,32vw)] gap-2 rounded-full border-2 border-amber-200 bg-white/90 p-1 shadow-lg">
+            <button
+              className={`flex-1 rounded-full px-3 py-2 text-sm font-black ${
+                gachaMode === "cards"
+                  ? "bg-rose-600 text-white"
+                  : "text-amber-900 hover:bg-amber-50"
+              }`}
+              onClick={() => onSelectMode("cards")}
+            >
+              カード
+            </button>
+            <button
+              className={`flex-1 rounded-full px-3 py-2 text-sm font-black ${
+                gachaMode === "stickers"
+                  ? "bg-rose-600 text-white"
+                  : "text-amber-900 hover:bg-amber-50"
+              }`}
+              onClick={() => onSelectMode("stickers")}
+            >
+              シール
+            </button>
+          </div>
+        ) : null}
 
         {!isSpinning ? (
           <div className="absolute left-[54%] top-[15%] z-10 grid w-[27%] place-items-center rounded-[1.75rem] border-4 border-yellow-300 bg-white/95 px-5 py-4 text-center text-amber-950 shadow-[0_8px_0_rgba(120,53,15,0.3),0_14px_28px_rgba(120,53,15,0.28)]">
@@ -225,7 +365,7 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
               1かい
             </div>
             <div className="mt-2 flex items-end justify-center gap-2 text-7xl font-black leading-none text-rose-700 drop-shadow-[0_2px_0_rgba(255,255,255,0.95)]">
-              <span>{GACHA_COST}</span>
+              <span>{currentCost}</span>
               <span className="pb-2 text-3xl text-amber-950">こいん</span>
             </div>
           </div>
@@ -234,30 +374,43 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
         {!isSpinning ? (
           <div className="absolute left-[57%] top-[46.5%] z-10 w-[38%]">
             <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/95 px-3 py-2 text-center text-sm font-black text-amber-950 shadow-md">
-              {selectedGacha.name} ・ {selectedOwnedCount}/
-              {selectedCards.length}
+              {gachaMode === "cards"
+                ? `${selectedGacha.name} ・ ${selectedOwnedCount}/${selectedCards.length}`
+                : `${selectedStickerGacha.name} ・ ${selectedStickers.length}しゅるい`}
             </div>
           </div>
         ) : null}
 
-        {!isSpinning && !resultCard ? (
+        {!isSpinning && !resultCard && !resultSticker ? (
           <div className="absolute left-[55%] top-[50%] z-10 grid w-[42%] grid-cols-5 gap-1 px-1">
-            {selectedCards.slice(0, 5).map((card) => {
-              const owned = ownedCardIds.has(card.id);
-              return (
-                <div key={card.id} className="grid place-items-center">
-                  <LongPressPreviewImage
-                    src={card.image}
-                    alt={card.name}
-                    title={card.name}
-                    imageClassName={`h-[clamp(8.25rem,15.5vw,12rem)] w-full rounded-lg object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)] ${
-                      owned ? "" : "opacity-95"
-                    }`}
-                    missingClassName="grid h-[clamp(8.25rem,15.5vw,12rem)] w-full place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
-                  />
-                </div>
-              );
-            })}
+            {gachaMode === "cards"
+              ? selectedCards.slice(0, 5).map((card) => {
+                  const owned = ownedCardIds.has(card.id);
+                  return (
+                    <div key={card.id} className="grid place-items-center">
+                      <LongPressPreviewImage
+                        src={card.image}
+                        alt={card.name}
+                        title={card.name}
+                        imageClassName={`h-[clamp(8.25rem,15.5vw,12rem)] w-full rounded-lg object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)] ${
+                          owned ? "" : "opacity-95"
+                        }`}
+                        missingClassName="grid h-[clamp(8.25rem,15.5vw,12rem)] w-full place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
+                      />
+                    </div>
+                  );
+                })
+              : selectedStickers.slice(0, 5).map((sticker) => (
+                  <div key={sticker.id} className="grid place-items-center">
+                    <LongPressPreviewImage
+                      src={sticker.image}
+                      alt={sticker.name}
+                      title={sticker.name}
+                      imageClassName="h-[clamp(8.25rem,15.5vw,12rem)] w-full rounded-full object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)]"
+                      missingClassName="grid h-[clamp(8.25rem,15.5vw,12rem)] w-full place-items-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
+                    />
+                  </div>
+                ))}
           </div>
         ) : null}
 
@@ -272,39 +425,62 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
               onClick={onDraw}
               disabled={!canDraw}
             >
-              {missingCards.length === 0
+              {gachaMode === "cards" && missingCards.length === 0
                 ? "コンプリート"
-                : progress.coins < GACHA_COST
+                : progress.coins < currentCost
                   ? "コインがたりない"
                   : "まわす"}
             </button>
             <div className="rounded-full border-2 border-amber-200 bg-white/90 px-3 py-1.5 text-center text-sm font-black text-amber-900 shadow-lg backdrop-blur-sm">
-              {selectedGacha.description}
+              {gachaMode === "cards"
+                ? selectedGacha.description
+                : selectedStickerGacha.description}
             </div>
-            <div className="grid grid-cols-5 gap-1.5">
-              {CARD_GACHA_DEFINITIONS.map((gacha) => {
-                const active = gacha.id === selectedGachaId;
-                return (
-                  <button
-                    key={gacha.id}
-                    className={`rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
-                      active
-                        ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
-                        : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
-                    }`}
-                    onClick={() => onSelectGacha(gacha.id)}
-                  >
-                    {gacha.shortName}
-                  </button>
-                );
-              })}
-            </div>
+            {gachaMode === "cards" ? (
+              <div className="grid grid-cols-5 gap-1.5">
+                {CARD_GACHA_DEFINITIONS.map((gacha) => {
+                  const active = gacha.id === selectedGachaId;
+                  return (
+                    <button
+                      key={gacha.id}
+                      className={`rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                        active
+                          ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
+                          : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
+                      }`}
+                      onClick={() => onSelectGacha(gacha.id)}
+                    >
+                      {gacha.shortName}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-1.5">
+                {STICKER_GACHA_DEFINITIONS.map((gacha) => {
+                  const active = gacha.id === selectedStickerGachaId;
+                  return (
+                    <button
+                      key={gacha.id}
+                      className={`rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                        active
+                          ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
+                          : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
+                      }`}
+                      onClick={() => onSelectStickerGacha(gacha.id)}
+                    >
+                      {gacha.shortName}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : null}
 
-        {resultCard ? (
+        {resultCard || resultSticker ? (
           <div
-            key={resultCard.id}
+            key={resultCard?.id ?? resultSticker?.id}
             className="gacha-result-pop absolute inset-0 z-30 grid place-items-center bg-slate-950/30 px-4 backdrop-blur-[1px]"
           >
             <div className="pointer-events-none absolute inset-x-[8%] top-[4%] h-[42%] overflow-hidden">
@@ -326,11 +502,15 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
                   <div className="gacha-card-glow absolute h-80 w-64 rounded-[2rem]" />
                   <div className="gacha-card-float relative rounded-[1.35rem] bg-white p-2 shadow-[0_18px_38px_rgba(15,23,42,0.34)]">
                     <LongPressPreviewImage
-                      src={resultCard.image}
-                      alt={resultCard.name}
-                      title={resultCard.name}
-                      imageClassName="h-80 w-56 rounded-xl object-contain"
-                      missingClassName="grid h-80 w-56 place-items-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
+                      src={(resultCard ?? resultSticker)?.image ?? ""}
+                      alt={(resultCard ?? resultSticker)?.name ?? ""}
+                      title={(resultCard ?? resultSticker)?.name ?? ""}
+                      imageClassName={`h-80 w-56 object-contain ${
+                        resultSticker ? "rounded-full" : "rounded-xl"
+                      }`}
+                      missingClassName={`grid h-80 w-56 place-items-center border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500 ${
+                        resultSticker ? "rounded-full" : "rounded-xl"
+                      }`}
                     />
                     <div className="gacha-card-shine pointer-events-none absolute inset-2 overflow-hidden rounded-xl">
                       <span className="absolute inset-y-[-20%] left-0 w-1/3 bg-white/65 blur-sm" />
@@ -340,10 +520,19 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
                 <div className="grid gap-4 text-left">
                   <div className="rounded-3xl border-2 border-amber-200 bg-amber-50/95 p-5 shadow-lg">
                     <div className="text-3xl font-black leading-tight text-amber-950">
-                      {resultCard.name}
+                      {(resultCard ?? resultSticker)?.name}
                     </div>
                     <div className="mt-3 rounded-2xl bg-white/90 px-4 py-3 text-lg font-black leading-relaxed text-rose-800">
-                      {resultCard.description}
+                      {resultCard
+                        ? resultCard.description
+                        : resultSticker?.description}
+                      {resultSticker ? (
+                        <div className="mt-2 text-base text-amber-800">
+                          これで{" "}
+                          {progress.ownedStickerCounts[resultSticker.id] ?? 0}
+                          まいめ
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -355,9 +544,9 @@ export function GachaPage({ onGoRegister, onGoCards }: Props) {
                     </button>
                     <button
                       className="rounded-2xl border border-slate-200 bg-white px-6 py-3 text-base font-black text-slate-700 shadow-lg hover:bg-slate-50"
-                      onClick={onGoCards}
+                      onClick={resultCard ? onGoCards : onGoStickers}
                     >
-                      カードずかんへ
+                      {resultCard ? "カードずかんへ" : "シールちょうへ"}
                     </button>
                   </div>
                 </div>
