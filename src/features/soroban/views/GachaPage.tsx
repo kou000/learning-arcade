@@ -33,6 +33,7 @@ import {
 
 const GACHA_COST = 200;
 const STICKER_GACHA_COST = 50;
+const STICKER_COPIES_PER_POOL = 3;
 const GACHA_SPIN_FRAMES = [
   gachaSpin01,
   gachaSpin02,
@@ -78,10 +79,60 @@ function drawCard(cards: CardItem[]): CardItem {
   return cards[Math.max(0, Math.min(cards.length - 1, index))];
 }
 
-function drawSticker(stickers: StickerItem[]): StickerItem {
-  const index = Math.floor(Math.random() * stickers.length);
-  return stickers[Math.max(0, Math.min(stickers.length - 1, index))];
+function drawSticker(
+  stickers: StickerItem[],
+  ownedStickerCounts: Record<string, number>,
+): StickerItem {
+  const completedPoolCount = countCompletedStickerPools(
+    stickers,
+    ownedStickerCounts,
+  );
+  const remainingPool = stickers.flatMap((sticker) => {
+    const ownedInCurrentPool = Math.max(
+      0,
+      (ownedStickerCounts[sticker.id] ?? 0) -
+        completedPoolCount * STICKER_COPIES_PER_POOL,
+    );
+    const remaining = Math.max(0, STICKER_COPIES_PER_POOL - ownedInCurrentPool);
+    return Array.from({ length: remaining }, () => sticker);
+  });
+
+  const pool = remainingPool.length > 0 ? remainingPool : stickers;
+  const index = Math.floor(Math.random() * pool.length);
+  return pool[Math.max(0, Math.min(pool.length - 1, index))];
 }
+
+function countCompletedStickerPools(
+  stickers: StickerItem[],
+  ownedStickerCounts: Record<string, number>,
+): number {
+  const stickersPerPool = stickers.length * STICKER_COPIES_PER_POOL;
+  if (stickersPerPool <= 0) return 0;
+  const ownedInSeries = stickers.reduce(
+    (sum, sticker) => sum + (ownedStickerCounts[sticker.id] ?? 0),
+    0,
+  );
+  return Math.floor(ownedInSeries / stickersPerPool);
+}
+
+function countRemainingStickersInPool(
+  stickers: StickerItem[],
+  ownedStickerCounts: Record<string, number>,
+): number {
+  const completedPoolCount = countCompletedStickerPools(
+    stickers,
+    ownedStickerCounts,
+  );
+  return stickers.reduce((sum, sticker) => {
+    const ownedInCurrentPool = Math.max(
+      0,
+      (ownedStickerCounts[sticker.id] ?? 0) -
+        completedPoolCount * STICKER_COPIES_PER_POOL,
+    );
+    return sum + Math.max(0, STICKER_COPIES_PER_POOL - ownedInCurrentPool);
+  }, 0);
+}
+
 
 export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
@@ -116,6 +167,14 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
   const selectedStickers = useMemo(
     () => getStickersByGachaId(selectedStickerGachaId),
     [selectedStickerGachaId],
+  );
+  const selectedStickerRemainingCount = useMemo(
+    () =>
+      countRemainingStickersInPool(
+        selectedStickers,
+        progress.ownedStickerCounts,
+      ),
+    [progress.ownedStickerCounts, selectedStickers],
   );
   const missingCards = useMemo(
     () => selectedCards.filter((card) => !ownedCardIds.has(card.id)),
@@ -188,7 +247,10 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
       const latestSelectedStickers = getStickersByGachaId(
         selectedStickerGachaId,
       );
-      const nextSticker = drawSticker(latestSelectedStickers);
+      const nextSticker = drawSticker(
+        latestSelectedStickers,
+        latestProgress.ownedStickerCounts,
+      );
       const nextProgress = saveRegisterProgress({
         ...latestProgress,
         coins: latestProgress.coins - STICKER_GACHA_COST,
@@ -404,15 +466,20 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
             <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/95 px-3 py-2 text-center text-sm font-black text-amber-950 shadow-md">
               {gachaMode === "cards"
                 ? `${selectedGacha.name} ・ ${selectedOwnedCount}/${selectedCards.length}`
-                : `${selectedStickerGacha.name} ・ ${selectedStickers.length}しゅるい`}
+                : `${selectedStickerGacha.name} ・ あと${selectedStickerRemainingCount}まい`}
             </div>
           </div>
         ) : null}
 
         {!isSpinning && !resultCard && !resultSticker ? (
-          <div className="absolute left-[55%] top-[50%] z-10 grid w-[42%] grid-cols-5 gap-1 px-1">
-            {gachaMode === "cards"
-              ? selectedCards.slice(0, 5).map((card) => {
+          <div
+            className={`absolute left-[55%] z-10 w-[42%] ${
+              gachaMode === "cards" ? "top-[50%]" : "top-[52%]"
+            }`}
+          >
+            {gachaMode === "cards" ? (
+              <div className="grid grid-cols-5 gap-1 px-1">
+                {selectedCards.slice(0, 5).map((card) => {
                   const owned = ownedCardIds.has(card.id);
                   return (
                     <div key={card.id} className="grid place-items-center">
@@ -427,18 +494,35 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
                       />
                     </div>
                   );
-                })
-              : selectedStickers.slice(0, 5).map((sticker) => (
-                  <div key={sticker.id} className="grid place-items-center">
-                    <LongPressPreviewImage
-                      src={sticker.image}
-                      alt={sticker.name}
-                      title={sticker.name}
-                      imageClassName="h-[clamp(8.25rem,15.5vw,12rem)] w-full rounded-full object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)]"
-                      missingClassName="grid h-[clamp(8.25rem,15.5vw,12rem)] w-full place-items-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
-                    />
-                  </div>
-                ))}
+                })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-5 gap-1 px-1">
+                {selectedStickers.slice(0, 5).map((sticker) => {
+                  const stickerCount =
+                    progress.ownedStickerCounts[sticker.id] ?? 0;
+                  return (
+                    <div key={sticker.id} className="grid place-items-center">
+                      <LongPressPreviewImage
+                        src={sticker.image}
+                        alt={sticker.name}
+                        title={sticker.name}
+                        imageClassName="h-[clamp(5.25rem,8.5vw,7rem)] w-[clamp(5.25rem,8.5vw,7rem)] rounded-full object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)]"
+                        missingClassName="grid h-[clamp(5.25rem,8.5vw,7rem)] w-[clamp(5.25rem,8.5vw,7rem)] place-items-center rounded-full border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
+                      />
+                      <div className="mt-0.5 grid min-w-[4.5rem] place-items-center rounded-xl border-2 border-amber-200 bg-white/95 px-2 py-1 leading-none text-amber-950 shadow-md">
+                        <span className="text-sm font-black">
+                          {stickerCount}まい
+                        </span>
+                        <span className="mt-0.5 text-[10px] font-black">
+                          もってる
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : null}
 

@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host 0.0.0.0",
     "dev:admin": "VITE_REGISTER_ADMIN_MODE=true vite",
     "build": "vite build",
     "preview": "vite preview",
+    "preview:lan": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

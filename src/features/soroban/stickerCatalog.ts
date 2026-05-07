@@ -1,4 +1,5 @@
-import arcMedalSorobanStickerImage from "@/assets/seal/arc-medal-soroban-sticker.png";
+// 7ばんはシリーズ内のシール枚数がそろうまで非公開。
+// import arcMedalSorobanStickerImage from "@/assets/seal/arc-medal-soroban-sticker.png";
 import arcSorobanBookStickerImage from "@/assets/seal/arc-soroban-book-sticker.png";
 import keimaruAnimalBookStickerImage from "@/assets/seal/keimaru-animal-book-sticker.png";
 import keimaruBananaHugStickerImage from "@/assets/seal/keimaru-banana-hug-sticker.png";
@@ -47,8 +48,7 @@ export type StickerGachaId =
   | "sticker-set-3"
   | "sticker-set-4"
   | "sticker-set-5"
-  | "sticker-set-6"
-  | "sticker-set-7";
+  | "sticker-set-6";
 
 export type StickerGachaDefinition = {
   id: StickerGachaId;
@@ -94,12 +94,13 @@ export const STICKER_GACHA_DEFINITIONS: StickerGachaDefinition[] = [
     shortName: "6ばん",
     description: "同じシールがでることもあるがちゃ。",
   },
-  {
-    id: "sticker-set-7",
-    name: "シール 7ばん",
-    shortName: "7ばん",
-    description: "同じシールがでることもあるがちゃ。",
-  },
+  // 7ばんはシリーズ内のシール枚数がそろうまで非公開。
+  // {
+  //   id: "sticker-set-7",
+  //   name: "シール 7ばん",
+  //   shortName: "7ばん",
+  //   description: "同じシールがでることもあるがちゃ。",
+  // },
 ];
 
 export const STICKERS: StickerItem[] = [
@@ -343,14 +344,15 @@ export const STICKERS: StickerItem[] = [
     addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
-  {
-    id: "arc-medal-soroban-sticker",
-    name: "アーク メダルそろばんシール",
-    image: arcMedalSorobanStickerImage,
-    description: "メダルをつけて そろばんを持つ アーク。",
-    addedOn: "2026-05-04",
-    gachaId: "sticker-set-7",
-  },
+  // 7ばんはシリーズ内のシール枚数がそろうまで非公開。
+  // {
+  //   id: "arc-medal-soroban-sticker",
+  //   name: "アーク メダルそろばんシール",
+  //   image: arcMedalSorobanStickerImage,
+  //   description: "メダルをつけて そろばんを持つ アーク。",
+  //   addedOn: "2026-05-04",
+  //   gachaId: "sticker-set-7",
+  // },
 ];
 
 const STICKER_ID_SET = new Set(STICKERS.map((sticker) => sticker.id));
