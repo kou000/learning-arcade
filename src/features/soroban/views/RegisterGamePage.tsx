@@ -18,6 +18,7 @@ import {
   getClearedStage,
   getRegisterUnlockedGrades,
   getRegisterUnlockedSubjects,
+  appendProblemLog,
   loadPracticeConfig,
   loadRegisterPlayConfig,
   markStageCleared,
@@ -415,6 +416,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const [isReviewSelectorOpen, setIsReviewSelectorOpen] = useState(false);
   const [hasMistakeOnCurrentQuestion, setHasMistakeOnCurrentQuestion] =
     useState(false);
+  const [currentWrongAttemptCount, setCurrentWrongAttemptCount] = useState(0);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
   const [clerkEcho, setClerkEcho] = useState<string | null>(null);
@@ -579,6 +581,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     setAnswer("");
     setQuotient("");
     setHasMistakeOnCurrentQuestion(false);
+    setCurrentWrongAttemptCount(0);
     setIsHelpOpen(false);
     clearFeedbackTimers();
     setStatus("idle");
@@ -591,6 +594,20 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const moveNext = () => {
     setIndex((prev) => prev + 1);
     resetInputs();
+  };
+
+  const logCurrentProblem = (
+    result: "correct" | "wrong",
+    wrongAttemptCount = currentWrongAttemptCount,
+  ) => {
+    appendProblemLog({
+      grade: playGrade,
+      subject: playSubject,
+      stage: playStage,
+      isReview: isReviewMode,
+      result,
+      wrongAttemptCount,
+    });
   };
 
   const onTimeoutFail = () => {
@@ -619,6 +636,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
   const onWrongAnswer = () => {
     if (isGamePaused) return;
     clearFeedbackTimers();
+    setCurrentWrongAttemptCount((prev) => prev + 1);
     if (!hasMistakeOnCurrentQuestion) {
       setHasMistakeOnCurrentQuestion(true);
       setWrongQuestionsCount((prev) => prev + 1);
@@ -638,6 +656,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
 
   const onCorrect = () => {
     if (isGamePaused) return;
+    logCurrentProblem("correct");
     setStatus("correct");
     if (isReviewMode) {
       if (!rewardedReviewSourceIndexesRef.current.has(currentSourceIndex)) {
@@ -827,6 +846,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
     if (!hasMistakeOnCurrentQuestion) return;
     if (isRoundFinished) return;
     clearFeedbackTimers();
+    logCurrentProblem("wrong", Math.max(1, currentWrongAttemptCount));
     setSkippedIndexes((prev) =>
       prev.includes(index) ? prev : [...prev, index],
     );

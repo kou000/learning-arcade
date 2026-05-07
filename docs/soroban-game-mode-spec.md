@@ -16,6 +16,7 @@
 - `#/soroban/gacha` : ガチャガチャ（`GachaPage`）
 - `#/soroban/cards` : カードずかん（`CardBookPage`）
 - `#/soroban/stickers` : シール帳（`StickerBookPage`）
+- `#/soroban/log` : がんばりログ（`ProblemLogPage`）
 - `#/soroban/badges` : バッジ図鑑（`SnackBadgeBookPage`）
 - `#/soroban/snack/top` : 300円おやつゲームTOP（`SnackBudgetTopPage`）
 - `#/soroban/snack` : 300円おやつゲーム（`SnackBudgetGamePage`）
@@ -43,6 +44,7 @@
   - `practiceConfig`（練習/ゲーム共通の出題条件）
   - `registerProgress`（コイン、購入済み、棚、解放進行）
   - `registerPlayConfig`（ゲームの級/種目/ステージ/読み上げ速度）
+  - `problemLogs`（レジゲームの問題単位ログ）
 
 ### practiceConfig
 
@@ -63,6 +65,27 @@
 - `unlockedStageByGrade`（`0:みとり`, `1:かけ`, `2:わり`）
 
 カード所持は新規キーを増やさず、カードIDを `purchasedItemIds` に保存する。カード定義は `catalog.ts` ではなく `cardCatalog.ts` で管理する。
+
+### problemLogs
+
+- レジゲームで1問が完了した時に、問題単位でログを保存する。
+- 保存項目:
+  - `id`
+  - `answeredOn`（ローカル日付の `YYYY-MM-DD`）
+  - `grade`
+  - `subject`
+  - `stage`
+  - `isReview`
+  - `result`（`correct` / `wrong`）
+  - `wrongAttemptCount`
+- 正解で問題完了した時は `result: "correct"`。
+- 間違えた後にスキップした時は `result: "wrong"`。
+- 同じ問題で複数回誤答した場合、間違った問題数は1問として扱い、誤答入力回数は `wrongAttemptCount` で別集計する。
+- 集計画面の「間違った問題数」は、`result: "wrong"` の問題、または `wrongAttemptCount > 0` の問題を数える。
+- 集計画面の「正解数」は、`result: "correct"` かつ `wrongAttemptCount === 0` の問題を数える。
+- 時間切れで未回答のまま残った問題は、実際に回答していないためログに残さない。
+- 復習モードの問題は `isReview: true` として保存する。
+- 保持期間は直近180日。`state.ts` の正規化で古いログを破棄する。
 
 ## 4. ゲーム進行の解放仕様
 
@@ -317,7 +340,24 @@
 - TOP画面の「admin」ボタン押下時にパスワード入力を要求する
 - 認証成功時のみ `#/soroban/admin` へ遷移できる
 
-## 5.7 SnackBudgetTopPage（300円おやつゲームTOP）
+## 5.7 ProblemLogPage（がんばりログ）
+
+ファイル: `src/features/soroban/views/ProblemLogPage.tsx`
+
+- 役割:
+  - `problemLogs` を読み込み、レジゲームの取り組み量を集計表示する
+  - 画面上部に選択中の日付の合計問題数、正解数、間違った問題数、誤答入力回数、復習問題数を表示する
+  - 日付入力と前日/翌日/今日ボタンで、表示対象日を切り替えられる
+  - 選択中の日付の正解と間違えた問題を積み上げ縦棒で表示し、各棒を問題の種別ごとに色分けする
+  - 選択中の日付の問題種別ごとの正解数・間違えた問題数を表示する
+  - 選択中の日付が属する月曜始まりの1週間（月曜〜日曜）の日別集計を表示する
+  - 今週の日別パネルをタップすると、その日を選択中の日付に切り替える
+  - 今日より未来の日別パネルは週の枠として表示するが、選択はできない
+  - 日別集計では正解と間違えた問題を別々の積み上げ縦棒で表し、各棒を問題の種別ごとに色分けする
+  - 縦棒の高さスケールは50問単位で、最大値が50を超えたら100、150...と上限を増やす
+  - ログがない場合も選択日カードと今週の0問表示を維持し、空状態メッセージを表示する
+
+## 5.8 SnackBudgetTopPage（300円おやつゲームTOP）
 
 ファイル: `src/features/soroban/views/SnackBudgetTopPage.tsx`
 
@@ -327,7 +367,7 @@
 - 背景画像:
   - `src/assets/snack-game-top.png`
 
-## 5.8 SnackBudgetGamePage（300円おやつゲーム）
+## 5.9 SnackBudgetGamePage（300円おやつゲーム）
 
 ファイル: `src/features/soroban/views/SnackBudgetGamePage.tsx`
 
@@ -345,7 +385,7 @@
     - ふつう: 同じお菓子は1個まで
     - むずかしい: 同じお菓子は1個まで + 価格の一の位が0でない商品が増える
 
-## 5.9 SnackBudgetResultPage（300円おやつ結果）
+## 5.10 SnackBudgetResultPage（300円おやつ結果）
 
 ファイル: `src/features/soroban/views/SnackBudgetResultPage.tsx`
 
@@ -377,7 +417,7 @@
 - 同じ `級 × 種目` では最高ランク1つのみ保持
 - 獲得モーダルはステージ結果表示後に出し、閉じた後でコイン加算パネル表示を開始
 
-## 5.10 SnackBadgeBookPage（バッジ図鑑）
+## 5.11 SnackBadgeBookPage（バッジ図鑑）
 
 ファイル: `src/features/soroban/views/SnackBadgeBookPage.tsx`
 

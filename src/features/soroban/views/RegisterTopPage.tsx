@@ -16,6 +16,7 @@ type Props = {
   onGoGacha: () => void;
   onGoCards: () => void;
   onGoStickers: () => void;
+  onGoProblemLog: () => void;
   onGoSnack: () => void;
   onGoSnackBadges: () => void;
 };
@@ -34,6 +35,7 @@ export function RegisterTopPage({
   onGoGacha,
   onGoCards,
   onGoStickers,
+  onGoProblemLog,
   onGoSnack,
   onGoSnackBadges,
 }: Props) {
@@ -153,7 +155,7 @@ export function RegisterTopPage({
               あんざんゲーム
             </button>
           </div>
-          <div className="mt-2 grid gap-2 rounded-2xl bg-transparent px-3 shadow-sm sm:grid-cols-4">
+          <div className="mt-2 grid gap-2 rounded-2xl bg-transparent px-3 shadow-sm sm:grid-cols-5">
             <button
               className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
               onClick={onGoShelf}
@@ -177,6 +179,12 @@ export function RegisterTopPage({
               onClick={onGoSnackBadges}
             >
               バッジずかん
+            </button>
+            <button
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={onGoProblemLog}
+            >
+              がんばりログ
             </button>
           </div>
         </div>

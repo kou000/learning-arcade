@@ -77,12 +77,26 @@ export type RegisterPlayConfig = {
   readingSpeed: number;
 };
 
+export type ProblemLogResult = "correct" | "wrong";
+
+export type ProblemLogEntry = {
+  id: string;
+  answeredOn: string;
+  grade: Grade;
+  subject: RegisterSubject;
+  stage: RegisterStage;
+  isReview: boolean;
+  result: ProblemLogResult;
+  wrongAttemptCount: number;
+};
+
 type SorobanSaveData = {
   practiceConfig: PracticeConfig;
   registerProgress: RegisterProgress;
   registerPlayConfig: RegisterPlayConfig;
   shopLastOpenedOn: string | null;
   gachaLastOpenedOn: string | null;
+  problemLogs: ProblemLogEntry[];
 };
 
 export const DEFAULT_PRACTICE_CONFIG: PracticeConfig = {
@@ -405,27 +419,114 @@ function normalizeDateOnly(value: unknown): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
+function formatLocalDateOnly(now: Date): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${date}`;
+}
+
+function problemLogCutoffDate(now = new Date()): string {
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - 179);
+  return formatLocalDateOnly(cutoff);
+}
+
+function normalizeRegisterStage(value: unknown): RegisterStage | null {
+  return value === 1 ||
+    value === 2 ||
+    value === 3 ||
+    value === 4 ||
+    value === 5 ||
+    value === 6
+    ? value
+    : null;
+}
+
+function normalizeRegisterSubject(value: unknown): RegisterSubject | null {
+  return value === "mitori" ||
+    value === "mul" ||
+    value === "div" ||
+    value === "mentalMitori" ||
+    value === "mentalMul" ||
+    value === "mentalDiv"
+    ? value
+    : null;
+}
+
+function normalizeProblemLogs(value: unknown): ProblemLogEntry[] {
+  if (!Array.isArray(value)) return [];
+  const cutoff = problemLogCutoffDate();
+  const entries: ProblemLogEntry[] = [];
+  const usedIds = new Set<string>();
+
+  value.forEach((rawEntry, index) => {
+    if (!rawEntry || typeof rawEntry !== "object") return;
+    const entry = rawEntry as Partial<ProblemLogEntry>;
+    const answeredOn = normalizeDateOnly(entry.answeredOn);
+    if (!answeredOn || answeredOn < cutoff) return;
+    const availableGrades = getAvailableGrades(REGISTER_EXAM_BODY);
+    const grade = availableGrades.includes(entry.grade as Grade)
+      ? (entry.grade as Grade)
+      : null;
+    if (grade == null) return;
+    const subject = normalizeRegisterSubject(entry.subject);
+    if (!subject) return;
+    const stage = normalizeRegisterStage(entry.stage);
+    if (!stage) return;
+    const result =
+      entry.result === "correct" || entry.result === "wrong"
+        ? entry.result
+        : null;
+    if (!result) return;
+    const rawId =
+      typeof entry.id === "string" && entry.id.length > 0
+        ? entry.id
+        : `${answeredOn}-${index}`;
+    const id = usedIds.has(rawId) ? `${rawId}-${index}` : rawId;
+    usedIds.add(id);
+    entries.push({
+      id,
+      answeredOn,
+      grade,
+      subject,
+      stage,
+      isReview: Boolean(entry.isReview),
+      result,
+      wrongAttemptCount: Math.max(
+        0,
+        Math.floor(Number(entry.wrongAttemptCount ?? 0)),
+      ),
+    });
+  });
+
+  return entries.sort((a, b) =>
+    a.answeredOn === b.answeredOn
+      ? a.id.localeCompare(b.id)
+      : a.answeredOn.localeCompare(b.answeredOn),
+  );
+}
+
+function defaultSaveData(): SorobanSaveData {
+  return {
+    practiceConfig: DEFAULT_PRACTICE_CONFIG,
+    registerProgress: DEFAULT_REGISTER_PROGRESS,
+    registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
+    shopLastOpenedOn: null,
+    gachaLastOpenedOn: null,
+    problemLogs: [],
+  };
+}
+
 function readAll(): SorobanSaveData {
   if (typeof window === "undefined") {
-    return {
-      practiceConfig: DEFAULT_PRACTICE_CONFIG,
-      registerProgress: DEFAULT_REGISTER_PROGRESS,
-      registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
-      shopLastOpenedOn: null,
-      gachaLastOpenedOn: null,
-    };
+    return defaultSaveData();
   }
 
   try {
     const raw = window.localStorage.getItem(SOROBAN_STORAGE_KEY);
     if (!raw) {
-      return {
-        practiceConfig: DEFAULT_PRACTICE_CONFIG,
-        registerProgress: DEFAULT_REGISTER_PROGRESS,
-        registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
-        shopLastOpenedOn: null,
-        gachaLastOpenedOn: null,
-      };
+      return defaultSaveData();
     }
     const parsed = JSON.parse(raw) as Partial<SorobanSaveData> & {
       shopFirstOpenedOn?: unknown;
@@ -440,15 +541,10 @@ function readAll(): SorobanSaveData {
         parsed.shopLastOpenedOn ?? parsed.shopFirstOpenedOn,
       ),
       gachaLastOpenedOn: normalizeDateOnly(parsed.gachaLastOpenedOn),
+      problemLogs: normalizeProblemLogs(parsed.problemLogs),
     };
   } catch {
-    return {
-      practiceConfig: DEFAULT_PRACTICE_CONFIG,
-      registerProgress: DEFAULT_REGISTER_PROGRESS,
-      registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
-      shopLastOpenedOn: null,
-      gachaLastOpenedOn: null,
-    };
+    return defaultSaveData();
   }
 }
 
@@ -524,6 +620,36 @@ export function saveGachaLastOpenedOn(dateOn: string): string | null {
   if (!normalized) return current.gachaLastOpenedOn;
   writeAll({ ...current, gachaLastOpenedOn: normalized });
   return normalized;
+}
+
+export function loadProblemLogs(): ProblemLogEntry[] {
+  return readAll().problemLogs;
+}
+
+export function appendProblemLog(input: {
+  grade: Grade;
+  subject: RegisterSubject;
+  stage: RegisterStage;
+  isReview: boolean;
+  result: ProblemLogResult;
+  wrongAttemptCount: number;
+}): ProblemLogEntry | null {
+  const current = readAll();
+  const now = new Date();
+  const entry: ProblemLogEntry = {
+    id: `problem-log:${now.getTime()}:${Math.random().toString(36).slice(2, 9)}`,
+    answeredOn: formatLocalDateOnly(now),
+    grade: input.grade,
+    subject: input.subject,
+    stage: input.stage,
+    isReview: input.isReview,
+    result: input.result,
+    wrongAttemptCount: Math.max(0, Math.floor(input.wrongAttemptCount)),
+  };
+  const nextLogs = normalizeProblemLogs([...current.problemLogs, entry]);
+  const saved = nextLogs.find((log) => log.id === entry.id) ?? null;
+  writeAll({ ...current, problemLogs: nextLogs });
+  return saved;
 }
 
 function stageFromSubject(subject: RegisterSubject): number {

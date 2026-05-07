@@ -15,6 +15,7 @@ import { SnackBadgeBookPage } from "@/features/soroban/views/SnackBadgeBookPage"
 import { GachaPage } from "@/features/soroban/views/GachaPage";
 import { CardBookPage } from "@/features/soroban/views/CardBookPage";
 import { StickerBookPage } from "@/features/soroban/views/StickerBookPage";
+import { ProblemLogPage } from "@/features/soroban/views/ProblemLogPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
 import { PianoPracticePage } from "@/features/piano/views/PianoPracticePage";
 
@@ -30,6 +31,7 @@ type Route =
   | "soroban-gacha"
   | "soroban-cards"
   | "soroban-stickers"
+  | "soroban-log"
   | "soroban-snack-top"
   | "soroban-snack"
   | "soroban-badges"
@@ -65,6 +67,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/gacha") return "soroban-gacha";
   if (h === "soroban/cards") return "soroban-cards";
   if (h === "soroban/stickers") return "soroban-stickers";
+  if (h === "soroban/log") return "soroban-log";
   if (h === "soroban/badges") return "soroban-badges";
   if (h === "soroban/snack/top") return "soroban-snack-top";
   if (h === "soroban/snack") return "soroban-snack";
@@ -208,6 +211,7 @@ export default function App() {
   const goGacha = () => { window.location.hash = "/soroban/gacha"; };
   const goCards = () => { window.location.hash = "/soroban/cards"; };
   const goStickers = () => { window.location.hash = "/soroban/stickers"; };
+  const goProblemLog = () => { window.location.hash = "/soroban/log"; };
   const goSnackTop = () => { window.location.hash = "/soroban/snack/top"; };
   const goSnackBadges = () => { window.location.hash = "/soroban/badges"; };
   const goSnack = (difficulty: "easy" | "normal" | "hard" = "easy") => {
@@ -293,6 +297,7 @@ export default function App() {
           onGoGacha={goGacha}
           onGoCards={goCards}
           onGoStickers={goStickers}
+          onGoProblemLog={goProblemLog}
           onGoSnack={goSnackTop}
           onGoSnackBadges={goSnackBadges}
         />
@@ -331,6 +336,9 @@ export default function App() {
       ) : null}
       {route === "soroban-stickers" ? (
         <StickerBookPage onGoRegister={goRegister} onGoGacha={goGacha} />
+      ) : null}
+      {route === "soroban-log" ? (
+        <ProblemLogPage onGoRegister={goRegister} />
       ) : null}
       {route === "soroban-snack-top" ? (
         <SnackBudgetTopPage onGoRegister={goRegister} onGoSnackPlay={goSnack} />
