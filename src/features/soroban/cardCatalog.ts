@@ -1,4 +1,7 @@
 import keimarukunBeachCardImage from "@/assets/cards/keimarukun-beach-card.png";
+import keimarukunAnimatedRamenCardImage from "@/assets/cards/keimarukun-animated-ramen-card.gif";
+import keimarukunAnimatedSteakCardImage from "@/assets/cards/keimarukun-animated-steak-card.gif";
+import keimarukunAnimatedStudyCardImage from "@/assets/cards/keimarukun-animated-study-card.gif";
 import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
 import keimarukunBathCardImage from "@/assets/cards/keimarukun-bath-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
@@ -33,7 +36,13 @@ export type CardItem = {
   gachaId: CardGachaId;
 };
 
-export type CardGachaId = "classic" | "dream" | "outing" | "food" | "life";
+export type CardGachaId =
+  | "classic"
+  | "dream"
+  | "outing"
+  | "food"
+  | "life"
+  | "moving";
 
 export type CardGachaDefinition = {
   id: CardGachaId;
@@ -72,6 +81,12 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     name: "わくわく ライフ",
     shortName: "ライフ",
     description: "まいにちの がんばりと あそびが あつまった がちゃ。",
+  },
+  {
+    id: "moving",
+    name: "うごくカード",
+    shortName: "うごく",
+    description: "うごく けいまるくんカードが あつまった がちゃ。",
   },
 ];
 
@@ -275,6 +290,30 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     description: "ほんをひらいて べんきょうする けいまるくん。",
     addedOn: "2026-05-04",
     gachaId: "life",
+  },
+  {
+    id: "keimarukun-animated-steak-card",
+    name: "けいまるくん うごく にくかーど",
+    image: keimarukunAnimatedSteakCardImage,
+    description: "あつあつステーキに ちょっとこまる うごくけいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "moving",
+  },
+  {
+    id: "keimarukun-animated-ramen-card",
+    name: "けいまるくん うごく らーめんかーど",
+    image: keimarukunAnimatedRamenCardImage,
+    description: "らーめんをじっくりあじわう うごくけいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "moving",
+  },
+  {
+    id: "keimarukun-animated-study-card",
+    name: "けいまるくん うごく べんきょうかーど",
+    image: keimarukunAnimatedStudyCardImage,
+    description: "つくえにむかって べんきょうする うごくけいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "moving",
   },
 ];
 
