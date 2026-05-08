@@ -1,24 +1,31 @@
-// 7ばんはシリーズ内のシール枚数がそろうまで非公開。
 // import arcMedalSorobanStickerImage from "@/assets/seal/arc-medal-soroban-sticker.png";
 import arcSorobanBookStickerImage from "@/assets/seal/arc-soroban-book-sticker.png";
+import colorfulRamuneStickerImage from "@/assets/seal/colorful-ramune-sticker.png";
+import kansaiDashiPotatoStickerImage from "@/assets/seal/kansai-dashi-potato-sticker.png";
 import keimaruAnimalBookStickerImage from "@/assets/seal/keimaru-animal-book-sticker.png";
 import keimaruBananaHugStickerImage from "@/assets/seal/keimaru-banana-hug-sticker.png";
+import keimaruBathStickerImage from "@/assets/seal/keimaru-bath-sticker.png";
 import keimaruCandyWrapperStickerImage from "@/assets/seal/keimaru-candy-wrapper-sticker.png";
 import keimaruDuckHugStickerImage from "@/assets/seal/keimaru-duck-hug-sticker.png";
 import keimaruIceCreamStickerImage from "@/assets/seal/keimaru-ice-cream-sticker.png";
 import keimaruMoonNapStickerImage from "@/assets/seal/keimaru-moon-nap-sticker.png";
 import keimaruMoonPillowStickerImage from "@/assets/seal/keimaru-moon-pillow-sticker.png";
+import keimaruOkStickerImage from "@/assets/seal/keimaru-ok-sticker.png";
 import keimaruOverallsStickerImage from "@/assets/seal/keimaru-overalls-sticker.png";
 import keimaruPictureBookStickerImage from "@/assets/seal/keimaru-picture-book-sticker.png";
 import keimaruPrinceWandStickerImage from "@/assets/seal/keimaru-prince-wand-sticker.png";
 import keimaruRainbowCloudStickerImage from "@/assets/seal/keimaru-rainbow-cloud-sticker.png";
 import keimaruRamenStickerImage from "@/assets/seal/keimaru-ramen-sticker.png";
 import keimaruRockGuitarStickerImage from "@/assets/seal/keimaru-rock-guitar-sticker.png";
+import keimaruSleepyPillowStickerImage from "@/assets/seal/keimaru-sleepy-pillow-sticker.png";
 import keimaruSnackBasketStickerImage from "@/assets/seal/keimaru-snack-basket-sticker.png";
 import keimaruSorobanStickerImage from "@/assets/seal/keimaru-soroban-sticker.png";
+import keimaruThankYouStickerImage from "@/assets/seal/keimaru-thank-you-sticker.png";
 import keimaruTrophyStickerImage from "@/assets/seal/keimaru-trophy-sticker.png";
+import keimaruWindyCoasterStickerImage from "@/assets/seal/keimaru-windy-coaster-sticker.png";
 import chuchupiHeartGiftStickerImage from "@/assets/seal/chuchupi-heart-gift-sticker.png";
 import chuchupiPresentStickerImage from "@/assets/seal/chuchupi-present-sticker.png";
+import nicoChewStrawberryStickerImage from "@/assets/seal/nico-chew-strawberry-sticker.png";
 import shibaDonutStickerImage from "@/assets/seal/shiba-donut-sticker.png";
 import shibaGamepadStickerImage from "@/assets/seal/shiba-gamepad-sticker.png";
 import shibaHeadphonesStickerImage from "@/assets/seal/shiba-headphones-sticker.png";
@@ -29,7 +36,9 @@ import pocoronStripedShirtStickerImage from "@/assets/seal/pocoron-striped-shirt
 import shibaStrawberryStickerImage from "@/assets/seal/shiba-strawberry-sticker.png";
 import shibaSweetsBasketStickerImage from "@/assets/seal/shiba-sweets-basket-sticker.png";
 import shibaWaveStickerImage from "@/assets/seal/shiba-wave-sticker.png";
+import sourCreamPotatoStickerImage from "@/assets/seal/sour-cream-potato-sticker.png";
 import sorobanFriendsStickerImage from "@/assets/seal/soroban-friends-sticker.png";
+import umePotatoChipsStickerImage from "@/assets/seal/ume-potato-chips-sticker.png";
 
 export const STICKER_PAGE_COUNT = 4;
 
@@ -48,7 +57,9 @@ export type StickerGachaId =
   | "sticker-set-3"
   | "sticker-set-4"
   | "sticker-set-5"
-  | "sticker-set-6";
+  | "sticker-set-6"
+  | "sticker-set-7"
+  | "sticker-set-8";
 
 export type StickerGachaDefinition = {
   id: StickerGachaId;
@@ -94,13 +105,18 @@ export const STICKER_GACHA_DEFINITIONS: StickerGachaDefinition[] = [
     shortName: "6ばん",
     description: "同じシールがでることもあるがちゃ。",
   },
-  // 7ばんはシリーズ内のシール枚数がそろうまで非公開。
-  // {
-  //   id: "sticker-set-7",
-  //   name: "シール 7ばん",
-  //   shortName: "7ばん",
-  //   description: "同じシールがでることもあるがちゃ。",
-  // },
+  {
+    id: "sticker-set-7",
+    name: "シール 7ばん",
+    shortName: "7ばん",
+    description: "同じシールがでることもあるがちゃ。",
+  },
+  {
+    id: "sticker-set-8",
+    name: "シール 8ばん",
+    shortName: "8ばん",
+    description: "同じシールがでることもあるがちゃ。",
+  },
 ];
 
 export const STICKERS: StickerItem[] = [
@@ -344,15 +360,86 @@ export const STICKERS: StickerItem[] = [
     addedOn: "2026-05-04",
     gachaId: "sticker-set-6",
   },
-  // 7ばんはシリーズ内のシール枚数がそろうまで非公開。
-  // {
-  //   id: "arc-medal-soroban-sticker",
-  //   name: "アーク メダルそろばんシール",
-  //   image: arcMedalSorobanStickerImage,
-  //   description: "メダルをつけて そろばんを持つ アーク。",
-  //   addedOn: "2026-05-04",
-  //   gachaId: "sticker-set-7",
-  // },
+  {
+    id: "keimaru-windy-coaster-sticker",
+    name: "けいまるくん かぜがつよいシール",
+    image: keimaruWindyCoasterStickerImage,
+    description: "ジェットコースターで 風をうける けいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-7",
+  },
+  {
+    id: "keimaru-bath-sticker",
+    name: "けいまるくん おふろシール",
+    image: keimaruBathStickerImage,
+    description: "おふろで ほっとひといきつく けいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-7",
+  },
+  {
+    id: "keimaru-ok-sticker",
+    name: "けいまるくん OKシール",
+    image: keimaruOkStickerImage,
+    description: "親指を立てて OKをつたえる けいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-7",
+  },
+  {
+    id: "keimaru-sleepy-pillow-sticker",
+    name: "けいまるくん ねむいシール",
+    image: keimaruSleepyPillowStickerImage,
+    description: "星のまくらをぎゅっとだく ねむそうな けいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-7",
+  },
+  {
+    id: "keimaru-thank-you-sticker",
+    name: "けいまるくん ありがとうシール",
+    image: keimaruThankYouStickerImage,
+    description: "ハートにかこまれて ありがとうを伝える けいまるくん。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-7",
+  },
+  {
+    id: "ume-potato-chips-sticker",
+    name: "すっぱポテトチップスシール",
+    image: umePotatoChipsStickerImage,
+    description: "さっぱり梅味のポテトチップスと にこにこマスコット。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-8",
+  },
+  {
+    id: "colorful-ramune-sticker",
+    name: "カラポコラムネシール",
+    image: colorfulRamuneStickerImage,
+    description: "いろんな味がつまった カラフルなラムネ。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-8",
+  },
+  {
+    id: "kansai-dashi-potato-sticker",
+    name: "関西だしポコしょうゆシール",
+    image: kansaiDashiPotatoStickerImage,
+    description: "だしのうまみがきいた 関西風ポテトチップス。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-8",
+  },
+  {
+    id: "sour-cream-potato-sticker",
+    name: "サワークリームポテトシール",
+    image: sourCreamPotatoStickerImage,
+    description: "さわやかなサワークリーム味のポテトチップス。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-8",
+  },
+  {
+    id: "nico-chew-strawberry-sticker",
+    name: "ニコチュウ いちごシール",
+    image: nicoChewStrawberryStickerImage,
+    description: "いちご味のもちもちおやつ ニコチュウ。",
+    addedOn: "2026-05-08",
+    gachaId: "sticker-set-8",
+  },
 ];
 
 const STICKER_ID_SET = new Set(STICKERS.map((sticker) => sticker.id));

@@ -56,6 +56,7 @@ const GACHA_CONFETTI = [
 ] as const;
 
 type Props = {
+  initialMode?: GachaMode;
   onGoRegister: () => void;
   onGoCards: () => void;
   onGoStickers: () => void;
@@ -134,10 +135,15 @@ function countRemainingStickersInPool(
 }
 
 
-export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
+export function GachaPage({
+  initialMode = "cards",
+  onGoRegister,
+  onGoCards,
+  onGoStickers,
+}: Props) {
   const [progress, setProgress] = useState(() => loadRegisterProgress());
   const [gachaLastOpenedOn] = useState(() => loadGachaLastOpenedOn());
-  const [gachaMode, setGachaMode] = useState<GachaMode>("cards");
+  const [gachaMode, setGachaMode] = useState<GachaMode>(initialMode);
   const [selectedGachaId, setSelectedGachaId] =
     useState<CardGachaId>("classic");
   const [selectedStickerGachaId, setSelectedStickerGachaId] =
@@ -151,7 +157,9 @@ export function GachaPage({ onGoRegister, onGoCards, onGoStickers }: Props) {
     useState<StickerItem | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinFrameIndex, setSpinFrameIndex] = useState(0);
-  const [message, setMessage] = useState("けいまるくん かーど がちゃ");
+  const [message, setMessage] = useState(() =>
+    initialMode === "cards" ? "けいまるくん かーど がちゃ" : "シール がちゃ",
+  );
 
   const ownedCardIds = useMemo(
     () => new Set(progress.purchasedItemIds),

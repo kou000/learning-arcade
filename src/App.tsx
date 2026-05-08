@@ -90,6 +90,13 @@ function getShopPaymentItemIdFromHash(): string | null {
   }
 }
 
+function getGachaInitialModeFromHash(): "cards" | "stickers" {
+  const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
+  const [path, query = ""] = hash.split("?");
+  if (path !== "soroban/gacha") return "cards";
+  const params = new URLSearchParams(query);
+  return params.get("mode") === "stickers" ? "stickers" : "cards";
+}
 
 function getSnackDifficultyFromHash(): "easy" | "normal" | "hard" {
   const hash = window.location.hash.replace("#", "").replace(/^\/+/, "");
@@ -208,7 +215,11 @@ export default function App() {
     window.location.hash = `/soroban/shop/payment/${encodeURIComponent(itemId)}`;
   };
   const goShelf = () => { window.location.hash = "/soroban/shelf"; };
-  const goGacha = () => { window.location.hash = "/soroban/gacha"; };
+  const goGacha = (mode: "cards" | "stickers" = "cards") => {
+    window.location.hash =
+      mode === "stickers" ? "/soroban/gacha?mode=stickers" : "/soroban/gacha";
+  };
+  const goStickerGacha = () => goGacha("stickers");
   const goCards = () => { window.location.hash = "/soroban/cards"; };
   const goStickers = () => { window.location.hash = "/soroban/stickers"; };
   const goProblemLog = () => { window.location.hash = "/soroban/log"; };
@@ -236,6 +247,7 @@ export default function App() {
   const snackResultTotal = getSnackResultTotalFromHash();
   const snackResultItems = getSnackResultItemsFromHash();
   const snackResultDifficulty = getSnackResultDifficultyFromHash();
+  const gachaInitialMode = getGachaInitialModeFromHash();
 
   const refreshCacheAndReload = async () => {
     if (isRefreshingCache) return;
@@ -326,6 +338,7 @@ export default function App() {
       ) : null}
       {route === "soroban-gacha" ? (
         <GachaPage
+          initialMode={gachaInitialMode}
           onGoRegister={goRegister}
           onGoCards={goCards}
           onGoStickers={goStickers}
@@ -335,7 +348,7 @@ export default function App() {
         <CardBookPage onGoRegister={goRegister} onGoGacha={goGacha} />
       ) : null}
       {route === "soroban-stickers" ? (
-        <StickerBookPage onGoRegister={goRegister} onGoGacha={goGacha} />
+        <StickerBookPage onGoRegister={goRegister} onGoGacha={goStickerGacha} />
       ) : null}
       {route === "soroban-log" ? (
         <ProblemLogPage onGoRegister={goRegister} />
