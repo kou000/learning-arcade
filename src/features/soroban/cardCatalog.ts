@@ -2,6 +2,7 @@ import keimarukunBeachCardImage from "@/assets/cards/keimarukun-beach-card.png";
 import keimarukunAnimatedRamenCardImage from "@/assets/cards/keimarukun-animated-ramen-card.gif";
 import keimarukunAnimatedSteakCardImage from "@/assets/cards/keimarukun-animated-steak-card.gif";
 import keimarukunAnimatedStudyCardImage from "@/assets/cards/keimarukun-animated-study-card.gif";
+import keimarukunAnimatedWorkingCardImage from "@/assets/cards/keimarukun-animated-working-card.gif";
 import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
 import keimarukunBathCardImage from "@/assets/cards/keimarukun-bath-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
@@ -313,6 +314,14 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     image: keimarukunAnimatedStudyCardImage,
     description: "つくえにむかって べんきょうする うごくけいまるくん。",
     addedOn: "2026-05-08",
+    gachaId: "moving",
+  },
+  {
+    id: "keimarukun-animated-working-card",
+    name: "けいまるくん うごく しごとかーど",
+    image: keimarukunAnimatedWorkingCardImage,
+    description: "ぱそこんでしごとをしながら こーひーのにがさにびっくりする うごくけいまるくん。",
+    addedOn: "2026-05-09",
     gachaId: "moving",
   },
 ];
