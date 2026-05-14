@@ -6,9 +6,10 @@ import fennecMascot from "@/assets/piano/fennec-mascot.png";
 type Props = {
   onStartSoroban: () => void;
   onStartPiano: () => void;
+  onStartEnglish: () => void;
 };
 
-export function ArcadeHome({ onStartSoroban, onStartPiano }: Props) {
+export function ArcadeHome({ onStartSoroban, onStartPiano, onStartEnglish }: Props) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#e7f6ff_0%,_#f4fbff_45%,_#fff6e6_100%)] px-4 pb-20 pt-12">
       <div className="mx-auto max-w-5xl">
@@ -65,6 +66,40 @@ export function ArcadeHome({ onStartSoroban, onStartPiano }: Props) {
                   className="w-full rounded-2xl bg-gradient-to-b from-sky-400 to-sky-600 px-6 py-6 text-3xl font-black text-white shadow-[0_12px_0_rgba(14,116,144,0.25)] transition active:translate-y-0.5 active:shadow-[0_7px_0_rgba(14,116,144,0.25)]"
                 >
                   はじめる
+                </button>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-amber-100 bg-gradient-to-r from-amber-50 to-emerald-50 p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-14 w-14 select-none items-center justify-center rounded-2xl bg-white text-2xl font-black text-emerald-700 shadow-sm">
+                      ABC
+                    </div>
+                    <h2 className="text-4xl font-black text-slate-800">えいごれんしゅう</h2>
+                  </div>
+                  <p className="mt-2 text-lg text-slate-600">
+                    AからZまで なぞって おぼえよう！
+                  </p>
+                </div>
+                <div className="hidden h-36 w-44 items-center justify-center rounded-2xl bg-white/90 shadow-sm sm:flex">
+                  <div className="grid grid-cols-2 gap-2 text-center font-[var(--pop-font)] text-4xl font-black text-emerald-700">
+                    <span className="rounded-xl bg-amber-100 px-3 py-2">A</span>
+                    <span className="rounded-xl bg-sky-100 px-3 py-2">B</span>
+                    <span className="rounded-xl bg-pink-100 px-3 py-2">C</span>
+                    <span className="rounded-xl bg-emerald-100 px-3 py-2">Z</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={onStartEnglish}
+                  className="w-full rounded-2xl bg-gradient-to-b from-emerald-300 to-teal-500 px-6 py-6 text-3xl font-black text-white shadow-[0_12px_0_rgba(13,148,136,0.2)] transition active:translate-y-0.5 active:shadow-[0_7px_0_rgba(13,148,136,0.2)]"
+                >
+                  えいごを れんしゅうする
                 </button>
               </div>
             </section>

@@ -18,6 +18,7 @@ import { StickerBookPage } from "@/features/soroban/views/StickerBookPage";
 import { ProblemLogPage } from "@/features/soroban/views/ProblemLogPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
 import { PianoPracticePage } from "@/features/piano/views/PianoPracticePage";
+import { AlphabetPracticePage } from "@/features/english/views/AlphabetPracticePage";
 
 type Route =
   | "home"
@@ -37,7 +38,8 @@ type Route =
   | "soroban-badges"
   | "soroban-snack-result"
   | "soroban-admin"
-  | "piano-practice";
+  | "piano-practice"
+  | "english-alphabet";
 
 const ADMIN_PASSWORD_SHA256 = "a7be8e1fe282a37cd666e0632b17d933fa13f21addf4798fc0455bc166e2488c";
 
@@ -74,6 +76,7 @@ function getRouteFromHash(): Route {
   if (h === "soroban/snack/result") return "soroban-snack-result";
   if (h === "soroban/admin") return "soroban-admin";
   if (h === "piano/practice") return "piano-practice";
+  if (h === "english/alphabet") return "english-alphabet";
   return "home";
 }
 
@@ -179,6 +182,7 @@ export default function App() {
   const goHome = () => { window.location.hash = ""; };
   const goSoroban = () => { window.location.hash = "/soroban"; };
   const goPianoPractice = () => { window.location.hash = "/piano/practice"; };
+  const goEnglishAlphabet = () => { window.location.hash = "/english/alphabet"; };
   const goAdminWithPassword = async () => {
     const password = window.prompt("admin パスワードを入力してください");
     if (password == null) return;
@@ -296,7 +300,13 @@ export default function App() {
           </button>
         </div>
       ) : null}
-      {route === "home" ? <ArcadeHome onStartSoroban={goSoroban} onStartPiano={goPianoPractice} /> : null}
+      {route === "home" ? (
+        <ArcadeHome
+          onStartSoroban={goSoroban}
+          onStartPiano={goPianoPractice}
+          onStartEnglish={goEnglishAlphabet}
+        />
+      ) : null}
       {route === "soroban" ? (
         <PracticePage onBack={goHome} onGoRegister={goRegister} />
       ) : null}
@@ -388,6 +398,7 @@ export default function App() {
         />
       ) : null}
       {route === "piano-practice" ? <PianoPracticePage onBackHome={goHome} /> : null}
+      {route === "english-alphabet" ? <AlphabetPracticePage onBackHome={goHome} /> : null}
     </div>
   );
 }
