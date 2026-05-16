@@ -16,7 +16,7 @@ type AlphabetPracticePageProps = {
 
 const CANVAS_SIZE = 520;
 const FIXED_TRACE_THRESHOLD = 20;
-const SHOW_LETTER_CASE_TOGGLE = false;
+const SHOW_LETTER_CASE_TOGGLE = true;
 
 type StatusKind = "neutral" | JudgeGrade;
 
@@ -292,7 +292,10 @@ export function AlphabetPracticePage({ onBackHome }: AlphabetPracticePageProps) 
 
   const selectLetterCase = (letterCase: LetterCase) => {
     if (letterCase === selectedLetterCase) return;
-    const nextItem = ALPHABET_PRACTICE_GROUPS[letterCase][0];
+    const currentLabel = selectedItem.label.toLowerCase();
+    const nextItem =
+      ALPHABET_PRACTICE_GROUPS[letterCase].find((item) => item.label.toLowerCase() === currentLabel) ??
+      ALPHABET_PRACTICE_GROUPS[letterCase][0];
     setSelectedLetterCase(letterCase);
     setSelectedItemId(nextItem.id);
     resetDrawingState(nextItem);

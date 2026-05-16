@@ -461,33 +461,29 @@ export const LOWERCASE_LETTER_GUIDES = {
   a: {
     id: "lower-a",
     label: "a",
-    note: "aは2画想定です。丸を書いてから右の縦線を書きます。ブロック体寄りの小文字です。",
-    numberPositions: [
-      { x: 315, y: 165, n: "1" },
-      { x: 360, y: 170, n: "2" },
-    ],
+    note: "aは1画想定です。丸から右の縦線まで続けて書きます。ブロック体寄りの小文字です。",
+    numberPositions: [{ x: 315, y: 165, n: "1" }],
     strokes: [
       concatPaths(
         cubicBezier({ x: 315, y: 170 }, { x: 205, y: 105 }, { x: 130, y: 210 }, { x: 155, y: 300 }, 45),
         cubicBezier({ x: 155, y: 300 }, { x: 185, y: 410 }, { x: 315, y: 400 }, { x: 335, y: 300 }, 45),
         cubicBezier({ x: 335, y: 300 }, { x: 355, y: 215 }, { x: 350, y: 185 }, { x: 315, y: 170 }, 28),
+        linePoints({ x: 315, y: 170 }, { x: 360, y: 165 }, 10),
+        linePoints({ x: 360, y: 165 }, { x: 360, y: 395 }, 44),
       ),
-      linePoints({ x: 360, y: 165 }, { x: 360, y: 395 }, 44),
     ],
   },
   b: {
     id: "lower-b",
     label: "b",
-    note: "bは2画想定です。縦線を書いてから右の丸を書きます。",
-    numberPositions: [
-      { x: 165, y: 90, n: "1" },
-      { x: 245, y: 215, n: "2" },
-    ],
+    note: "bは1画想定です。上から下へ書き、少しだけ右を通って上へ戻り、そのまま丸を書きます。",
+    numberPositions: [{ x: 165, y: 90, n: "1" }],
     strokes: [
-      linePoints({ x: 165, y: 90 }, { x: 165, y: 405 }, 62),
       concatPaths(
-        cubicBezier({ x: 165, y: 240 }, { x: 260, y: 155 }, { x: 380, y: 215 }, { x: 360, y: 315 }, 48),
-        cubicBezier({ x: 360, y: 315 }, { x: 340, y: 430 }, { x: 220, y: 420 }, { x: 165, y: 350 }, 46),
+        linePoints({ x: 165, y: 90 }, { x: 165, y: 405 }, 62),
+        cubicBezier({ x: 165, y: 405 }, { x: 176, y: 360 }, { x: 178, y: 290 }, { x: 182, y: 240 }, 28),
+        cubicBezier({ x: 182, y: 240 }, { x: 245, y: 175 }, { x: 345, y: 215 }, { x: 330, y: 305 }, 46),
+        cubicBezier({ x: 330, y: 305 }, { x: 315, y: 400 }, { x: 225, y: 400 }, { x: 165, y: 350 }, 44),
       ),
     ],
   },
@@ -506,17 +502,15 @@ export const LOWERCASE_LETTER_GUIDES = {
   d: {
     id: "lower-d",
     label: "d",
-    note: "dは2画想定です。丸を書いてから右の長い縦線を書きます。",
-    numberPositions: [
-      { x: 290, y: 215, n: "1" },
-      { x: 365, y: 90, n: "2" },
-    ],
+    note: "dは1画想定です。丸を書き、少しだけ左を通って上へ戻り、そのまま長い縦線を書きます。",
+    numberPositions: [{ x: 290, y: 215, n: "1" }],
     strokes: [
       concatPaths(
-        cubicBezier({ x: 315, y: 210 }, { x: 220, y: 145 }, { x: 125, y: 210 }, { x: 145, y: 315 }, 48),
-        cubicBezier({ x: 145, y: 315 }, { x: 170, y: 425 }, { x: 300, y: 420 }, { x: 345, y: 330 }, 48),
+        cubicBezier({ x: 315, y: 250 }, { x: 245, y: 200 }, { x: 180, y: 245 }, { x: 185, y: 325 }, 44),
+        cubicBezier({ x: 185, y: 325 }, { x: 195, y: 410 }, { x: 285, y: 415 }, { x: 325, y: 355 }, 44),
+        cubicBezier({ x: 325, y: 355 }, { x: 344, y: 300 }, { x: 355, y: 185 }, { x: 365, y: 90 }, 36),
+        linePoints({ x: 365, y: 90 }, { x: 365, y: 405 }, 62),
       ),
-      linePoints({ x: 365, y: 90 }, { x: 365, y: 405 }, 62),
     ],
   },
   e: {
@@ -551,17 +545,13 @@ export const LOWERCASE_LETTER_GUIDES = {
   g: {
     id: "lower-g",
     label: "g",
-    note: "gは2画想定です。丸を書いてから右の下へ伸びる線を書きます。ブロック体寄りです。",
-    numberPositions: [
-      { x: 305, y: 200, n: "1" },
-      { x: 360, y: 180, n: "2" },
-    ],
+    note: "gは1画想定です。丸から右の下へ伸びる線まで続けて書きます。ブロック体寄りです。",
+    numberPositions: [{ x: 305, y: 200, n: "1" }],
     strokes: [
       concatPaths(
-        cubicBezier({ x: 315, y: 205 }, { x: 220, y: 140 }, { x: 125, y: 205 }, { x: 145, y: 310 }, 48),
-        cubicBezier({ x: 145, y: 310 }, { x: 170, y: 415 }, { x: 305, y: 405 }, { x: 345, y: 315 }, 48),
-      ),
-      concatPaths(
+        cubicBezier({ x: 295, y: 225 }, { x: 235, y: 180 }, { x: 180, y: 225 }, { x: 185, y: 295 }, 42),
+        cubicBezier({ x: 185, y: 295 }, { x: 195, y: 365 }, { x: 270, y: 370 }, { x: 305, y: 320 }, 42),
+        linePoints({ x: 345, y: 315 }, { x: 360, y: 180 }, 24),
         linePoints({ x: 360, y: 180 }, { x: 360, y: 420 }, 50),
         cubicBezier({ x: 360, y: 420 }, { x: 350, y: 500 }, { x: 210, y: 505 }, { x: 190, y: 430 }, 36),
       ),
@@ -570,14 +560,12 @@ export const LOWERCASE_LETTER_GUIDES = {
   h: {
     id: "lower-h",
     label: "h",
-    note: "hは2画想定です。縦線を書いてから山を作ります。",
-    numberPositions: [
-      { x: 165, y: 90, n: "1" },
-      { x: 170, y: 260, n: "2" },
-    ],
+    note: "hは1画想定です。縦線から山まで続けて書きます。",
+    numberPositions: [{ x: 165, y: 90, n: "1" }],
     strokes: [
-      linePoints({ x: 165, y: 90 }, { x: 165, y: 405 }, 62),
       concatPaths(
+        linePoints({ x: 165, y: 90 }, { x: 165, y: 405 }, 62),
+        linePoints({ x: 165, y: 405 }, { x: 165, y: 260 }, 24),
         cubicBezier({ x: 165, y: 260 }, { x: 235, y: 160 }, { x: 360, y: 190 }, { x: 360, y: 300 }, 48),
         linePoints({ x: 360, y: 300 }, { x: 360, y: 405 }, 24),
       ),
@@ -621,16 +609,17 @@ export const LOWERCASE_LETTER_GUIDES = {
   k: {
     id: "lower-k",
     label: "k",
-    note: "kは3画想定です。縦線、中央への斜め、右下への斜めの順番です。",
+    note: "kは2画想定です。縦線を書いてから、中央への斜めと右下への斜めを続けて書きます。",
     numberPositions: [
       { x: 165, y: 90, n: "1" },
       { x: 340, y: 190, n: "2" },
-      { x: 230, y: 295, n: "3" },
     ],
     strokes: [
       linePoints({ x: 165, y: 90 }, { x: 165, y: 405 }, 62),
-      linePoints({ x: 345, y: 190 }, { x: 165, y: 300 }, 42),
-      linePoints({ x: 165, y: 300 }, { x: 355, y: 405 }, 42),
+      concatPaths(
+        linePoints({ x: 345, y: 190 }, { x: 165, y: 300 }, 42),
+        linePoints({ x: 165, y: 300 }, { x: 355, y: 405 }, 42),
+      ),
     ],
   },
   l: {
@@ -643,19 +632,15 @@ export const LOWERCASE_LETTER_GUIDES = {
   m: {
     id: "lower-m",
     label: "m",
-    note: "mは3画想定です。左縦、1つ目の山、2つ目の山の順番です。",
-    numberPositions: [
-      { x: 125, y: 190, n: "1" },
-      { x: 130, y: 285, n: "2" },
-      { x: 260, y: 285, n: "3" },
-    ],
+    note: "mは1画想定です。左縦から2つの山まで続けて書きます。",
+    numberPositions: [{ x: 125, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 125, y: 190 }, { x: 125, y: 405 }, 42),
       concatPaths(
+        linePoints({ x: 125, y: 190 }, { x: 125, y: 405 }, 42),
+        linePoints({ x: 125, y: 405 }, { x: 125, y: 285 }, 22),
         cubicBezier({ x: 125, y: 285 }, { x: 165, y: 180 }, { x: 250, y: 180 }, { x: 250, y: 300 }, 42),
         linePoints({ x: 250, y: 300 }, { x: 250, y: 405 }, 22),
-      ),
-      concatPaths(
+        linePoints({ x: 250, y: 405 }, { x: 250, y: 285 }, 22),
         cubicBezier({ x: 250, y: 285 }, { x: 295, y: 180 }, { x: 380, y: 180 }, { x: 380, y: 300 }, 42),
         linePoints({ x: 380, y: 300 }, { x: 380, y: 405 }, 22),
       ),
@@ -664,14 +649,12 @@ export const LOWERCASE_LETTER_GUIDES = {
   n: {
     id: "lower-n",
     label: "n",
-    note: "nは2画想定です。左縦、山の順番です。",
-    numberPositions: [
-      { x: 150, y: 190, n: "1" },
-      { x: 155, y: 285, n: "2" },
-    ],
+    note: "nは1画想定です。左縦から山まで続けて書きます。",
+    numberPositions: [{ x: 150, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 150, y: 190 }, { x: 150, y: 405 }, 42),
       concatPaths(
+        linePoints({ x: 150, y: 190 }, { x: 150, y: 405 }, 42),
+        linePoints({ x: 150, y: 405 }, { x: 150, y: 285 }, 22),
         cubicBezier({ x: 150, y: 285 }, { x: 220, y: 170 }, { x: 360, y: 190 }, { x: 360, y: 310 }, 52),
         linePoints({ x: 360, y: 310 }, { x: 360, y: 405 }, 20),
       ),
@@ -692,46 +675,42 @@ export const LOWERCASE_LETTER_GUIDES = {
   p: {
     id: "lower-p",
     label: "p",
-    note: "pは2画想定です。長い縦線を書いてから右の丸を書きます。",
-    numberPositions: [
-      { x: 165, y: 190, n: "1" },
-      { x: 245, y: 215, n: "2" },
-    ],
+    note: "pは1画想定です。上から下へ書き、少しだけ右を通って上へ戻り、そのまま丸を書きます。",
+    numberPositions: [{ x: 165, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 165, y: 190 }, { x: 165, y: 485 }, 62),
       concatPaths(
-        cubicBezier({ x: 165, y: 240 }, { x: 260, y: 155 }, { x: 380, y: 215 }, { x: 360, y: 315 }, 48),
-        cubicBezier({ x: 360, y: 315 }, { x: 340, y: 430 }, { x: 220, y: 420 }, { x: 165, y: 350 }, 46),
+        linePoints({ x: 165, y: 190 }, { x: 165, y: 485 }, 62),
+        cubicBezier({ x: 165, y: 485 }, { x: 176, y: 420 }, { x: 178, y: 315 }, { x: 182, y: 240 }, 34),
+        cubicBezier({ x: 182, y: 240 }, { x: 245, y: 175 }, { x: 345, y: 215 }, { x: 330, y: 305 }, 46),
+        cubicBezier({ x: 330, y: 305 }, { x: 315, y: 400 }, { x: 225, y: 400 }, { x: 165, y: 350 }, 44),
       ),
     ],
   },
   q: {
     id: "lower-q",
     label: "q",
-    note: "qは2画想定です。丸を書いてから右の下へ伸びる線を書きます。",
-    numberPositions: [
-      { x: 300, y: 210, n: "1" },
-      { x: 360, y: 190, n: "2" },
-    ],
+    note: "qは1画想定です。丸を書き、少しだけ左を通って上へ戻り、そのまま下へ伸びる線を書きます。",
+    numberPositions: [{ x: 315, y: 195, n: "1" }],
     strokes: [
       concatPaths(
-        cubicBezier({ x: 315, y: 205 }, { x: 220, y: 140 }, { x: 125, y: 205 }, { x: 145, y: 310 }, 48),
-        cubicBezier({ x: 145, y: 310 }, { x: 170, y: 415 }, { x: 305, y: 405 }, { x: 345, y: 315 }, 48),
+        cubicBezier({ x: 315, y: 205 }, { x: 250, y: 160 }, { x: 190, y: 200 }, { x: 195, y: 265 }, 42),
+        cubicBezier({ x: 195, y: 265 }, { x: 205, y: 335 }, { x: 280, y: 340 }, { x: 315, y: 290 }, 42),
+        cubicBezier({ x: 315, y: 290 }, { x: 333, y: 255 }, { x: 350, y: 210 }, { x: 360, y: 190 }, 24),
+        linePoints({ x: 360, y: 190 }, { x: 360, y: 485 }, 62),
       ),
-      linePoints({ x: 360, y: 190 }, { x: 360, y: 485 }, 62),
     ],
   },
   r: {
     id: "lower-r",
     label: "r",
-    note: "rは2画想定です。左縦を書いてから、小さな肩を書きます。",
-    numberPositions: [
-      { x: 170, y: 190, n: "1" },
-      { x: 175, y: 275, n: "2" },
-    ],
+    note: "rは1画想定です。左縦から小さな肩まで続けて書きます。",
+    numberPositions: [{ x: 170, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 170, y: 190 }, { x: 170, y: 405 }, 42),
-      cubicBezier({ x: 170, y: 275 }, { x: 215, y: 190 }, { x: 300, y: 185 }, { x: 330, y: 225 }, 42),
+      concatPaths(
+        linePoints({ x: 170, y: 190 }, { x: 170, y: 405 }, 42),
+        linePoints({ x: 170, y: 405 }, { x: 170, y: 275 }, 22),
+        cubicBezier({ x: 170, y: 275 }, { x: 205, y: 200 }, { x: 275, y: 195 }, { x: 300, y: 225 }, 40),
+      ),
     ],
   },
   s: {
@@ -763,47 +742,41 @@ export const LOWERCASE_LETTER_GUIDES = {
   u: {
     id: "lower-u",
     label: "u",
-    note: "uは2画想定です。左を下ろして底を回り、右の短い縦線を書きます。",
-    numberPositions: [
-      { x: 165, y: 190, n: "1" },
-      { x: 360, y: 190, n: "2" },
-    ],
+    note: "uは1画想定です。左を下ろして底を回り、右の短い縦線まで続けて書きます。",
+    numberPositions: [{ x: 165, y: 190, n: "1" }],
     strokes: [
       concatPaths(
         linePoints({ x: 165, y: 190 }, { x: 165, y: 315 }, 26),
         cubicBezier({ x: 165, y: 315 }, { x: 165, y: 430 }, { x: 330, y: 430 }, { x: 360, y: 315 }, 52),
+        linePoints({ x: 360, y: 315 }, { x: 360, y: 190 }, 22),
+        linePoints({ x: 360, y: 190 }, { x: 360, y: 405 }, 42),
       ),
-      linePoints({ x: 360, y: 190 }, { x: 360, y: 405 }, 42),
     ],
   },
   v: {
     id: "lower-v",
     label: "v",
-    note: "vは2画想定です。左上から下中央、下中央から右上の順番です。",
-    numberPositions: [
-      { x: 160, y: 190, n: "1" },
-      { x: 260, y: 405, n: "2" },
-    ],
+    note: "vは1画想定です。左上から下中央、右上まで続けて書きます。",
+    numberPositions: [{ x: 160, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 160, y: 190 }, { x: 260, y: 405 }, 42),
-      linePoints({ x: 260, y: 405 }, { x: 360, y: 190 }, 42),
+      concatPaths(
+        linePoints({ x: 160, y: 190 }, { x: 260, y: 405 }, 42),
+        linePoints({ x: 260, y: 405 }, { x: 360, y: 190 }, 42),
+      ),
     ],
   },
   w: {
     id: "lower-w",
     label: "w",
-    note: "wは4画想定です。小文字でも山が2つある形です。",
-    numberPositions: [
-      { x: 110, y: 190, n: "1" },
-      { x: 185, y: 405, n: "2" },
-      { x: 260, y: 250, n: "3" },
-      { x: 335, y: 405, n: "4" },
-    ],
+    note: "wは1画想定です。小文字でも山が2つある形を続けて書きます。",
+    numberPositions: [{ x: 110, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 110, y: 190 }, { x: 185, y: 405 }, 40),
-      linePoints({ x: 185, y: 405 }, { x: 260, y: 250 }, 34),
-      linePoints({ x: 260, y: 250 }, { x: 335, y: 405 }, 34),
-      linePoints({ x: 335, y: 405 }, { x: 410, y: 190 }, 40),
+      concatPaths(
+        linePoints({ x: 110, y: 190 }, { x: 185, y: 405 }, 40),
+        linePoints({ x: 185, y: 405 }, { x: 260, y: 250 }, 34),
+        linePoints({ x: 260, y: 250 }, { x: 335, y: 405 }, 34),
+        linePoints({ x: 335, y: 405 }, { x: 410, y: 190 }, 40),
+      ),
     ],
   },
   x: {
@@ -838,16 +811,14 @@ export const LOWERCASE_LETTER_GUIDES = {
   z: {
     id: "lower-z",
     label: "z",
-    note: "zは3画想定です。上横線、斜め、下横線の順番です。",
-    numberPositions: [
-      { x: 155, y: 190, n: "1" },
-      { x: 350, y: 205, n: "2" },
-      { x: 155, y: 405, n: "3" },
-    ],
+    note: "zは1画想定です。上横線、斜め、下横線を続けて書きます。",
+    numberPositions: [{ x: 155, y: 190, n: "1" }],
     strokes: [
-      linePoints({ x: 150, y: 190 }, { x: 360, y: 190 }, 48),
-      linePoints({ x: 360, y: 190 }, { x: 150, y: 405 }, 58),
-      linePoints({ x: 150, y: 405 }, { x: 360, y: 405 }, 48),
+      concatPaths(
+        linePoints({ x: 150, y: 190 }, { x: 360, y: 190 }, 48),
+        linePoints({ x: 360, y: 190 }, { x: 150, y: 405 }, 58),
+        linePoints({ x: 150, y: 405 }, { x: 360, y: 405 }, 48),
+      ),
     ],
   },
 } satisfies Record<string, LetterGuide>;
