@@ -368,7 +368,7 @@ export function AlphabetPracticePage({ onBackHome }: AlphabetPracticePageProps) 
   const speakSelectedLetter = () => {
     if (!canUseSpeechSynthesis()) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(selectedGuide.label.toUpperCase());
+    const utterance = new SpeechSynthesisUtterance(selectedGuide.label.toLowerCase());
     const voice = findPreferredEnglishVoice(speechVoices.length > 0 ? speechVoices : window.speechSynthesis.getVoices());
     if (voice) {
       utterance.voice = voice;
