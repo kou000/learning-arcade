@@ -535,7 +535,7 @@ export function GachaPage({
         ) : null}
 
         {!isSpinning ? (
-          <div className="absolute left-[20%] top-[67%] grid w-[min(20rem,32vw)] gap-2">
+          <div className="absolute left-[20%] top-[64%] grid w-[min(20rem,32vw)] gap-2">
             <button
               className={`rounded-full border-4 px-5 py-4 text-xl font-black shadow-[0_10px_0_rgba(120,53,15,0.45)] transition active:translate-y-1 active:shadow-[0_6px_0_rgba(120,53,15,0.45)] ${
                 canDraw
