@@ -80,7 +80,7 @@ export function ArcadeHome({ onStartSoroban, onStartPiano, onStartEnglish }: Pro
                     <h2 className="text-4xl font-black text-slate-800">えいごれんしゅう</h2>
                   </div>
                   <p className="mt-2 text-lg text-slate-600">
-                    AからZまで なぞって おぼえよう！
+                    ABCと ことばを なぞって おぼえよう！
                   </p>
                 </div>
                 <div className="hidden h-36 w-44 items-center justify-center rounded-2xl bg-white/90 shadow-sm sm:flex">

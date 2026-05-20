@@ -12,6 +12,7 @@ import type { LetterCase, LetterGuide, Point, StrokeNumberPosition } from "@/fea
 
 type AlphabetPracticePageProps = {
   onBackHome: () => void;
+  onGoWords?: () => void;
 };
 
 const CANVAS_SIZE = 520;
@@ -171,7 +172,7 @@ function drawInput(ctx: CanvasRenderingContext2D, drawnStrokes: Point[][], curre
   ctx.restore();
 }
 
-export function AlphabetPracticePage({ onBackHome }: AlphabetPracticePageProps) {
+export function AlphabetPracticePage({ onBackHome, onGoWords }: AlphabetPracticePageProps) {
   const [selectedLetterCase, setSelectedLetterCase] = useState<LetterCase>("uppercase");
   const [selectedItemId, setSelectedItemId] = useState(ALPHABET_PRACTICE_GROUPS.uppercase[0].id);
   const [drawnStrokes, setDrawnStrokes] = useState<Point[][]>([]);
@@ -391,13 +392,24 @@ export function AlphabetPracticePage({ onBackHome }: AlphabetPracticePageProps) 
               アルファベットを なぞろう
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={onBackHome}
-            className="self-start rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-base font-black text-slate-700 shadow-sm transition active:translate-y-0.5 sm:self-auto"
-          >
-            トップへ
-          </button>
+          <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+            {onGoWords ? (
+              <button
+                type="button"
+                onClick={onGoWords}
+                className="rounded-2xl bg-emerald-400 px-5 py-3 text-base font-black text-white shadow-sm transition active:translate-y-0.5"
+              >
+                ことばへ
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onBackHome}
+              className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-base font-black text-slate-700 shadow-sm transition active:translate-y-0.5"
+            >
+              トップへ
+            </button>
+          </div>
         </header>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(300px,560px)_1fr]">

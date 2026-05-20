@@ -77,6 +77,15 @@ export type RegisterPlayConfig = {
   readingSpeed: number;
 };
 
+export type EnglishWordProgress = {
+  unlockedStage: number;
+  clearedStages: Record<number, boolean>;
+};
+
+export type EnglishWordPlayConfig = {
+  stage: number;
+};
+
 export type ProblemLogResult = "correct" | "wrong";
 
 export type ProblemLogEntry = {
@@ -94,6 +103,8 @@ type SorobanSaveData = {
   practiceConfig: PracticeConfig;
   registerProgress: RegisterProgress;
   registerPlayConfig: RegisterPlayConfig;
+  englishWordProgress: EnglishWordProgress;
+  englishWordPlayConfig: EnglishWordPlayConfig;
   shopLastOpenedOn: string | null;
   gachaLastOpenedOn: string | null;
   problemLogs: ProblemLogEntry[];
@@ -129,6 +140,15 @@ export const DEFAULT_REGISTER_PLAY_CONFIG: RegisterPlayConfig = {
   subject: "mitori",
   stage: 1,
   readingSpeed: 1,
+};
+
+export const DEFAULT_ENGLISH_WORD_PROGRESS: EnglishWordProgress = {
+  unlockedStage: 1,
+  clearedStages: {},
+};
+
+export const DEFAULT_ENGLISH_WORD_PLAY_CONFIG: EnglishWordPlayConfig = {
+  stage: 1,
 };
 
 function normalizeReadingSpeed(value: unknown): number {
@@ -414,6 +434,35 @@ function normalizeRegisterPlayConfig(
   };
 }
 
+function normalizeEnglishWordProgress(
+  input: Partial<EnglishWordProgress> | undefined,
+): EnglishWordProgress {
+  const rawUnlockedStage = Number(input?.unlockedStage ?? DEFAULT_ENGLISH_WORD_PROGRESS.unlockedStage);
+  const unlockedStage = Number.isFinite(rawUnlockedStage)
+    ? Math.max(1, Math.floor(rawUnlockedStage))
+    : DEFAULT_ENGLISH_WORD_PROGRESS.unlockedStage;
+  const clearedStagesInput =
+    input?.clearedStages && typeof input.clearedStages === "object" && !Array.isArray(input.clearedStages)
+      ? input.clearedStages
+      : {};
+  const clearedStages: Record<number, boolean> = {};
+  Object.entries(clearedStagesInput as Record<string, unknown>).forEach(([rawStage, cleared]) => {
+    const rawStageNumber = Number(rawStage);
+    const stage = Number.isFinite(rawStageNumber) ? Math.max(1, Math.floor(rawStageNumber)) : null;
+    if (stage != null && cleared === true) clearedStages[stage] = true;
+  });
+  return { unlockedStage, clearedStages };
+}
+
+function normalizeEnglishWordPlayConfig(
+  input: Partial<EnglishWordPlayConfig> | undefined,
+): EnglishWordPlayConfig {
+  const rawStage = Number(input?.stage ?? DEFAULT_ENGLISH_WORD_PLAY_CONFIG.stage);
+  return {
+    stage: Number.isFinite(rawStage) ? Math.max(1, Math.floor(rawStage)) : DEFAULT_ENGLISH_WORD_PLAY_CONFIG.stage,
+  };
+}
+
 function normalizeDateOnly(value: unknown): string | null {
   if (typeof value !== "string") return null;
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
@@ -512,6 +561,8 @@ function defaultSaveData(): SorobanSaveData {
     practiceConfig: DEFAULT_PRACTICE_CONFIG,
     registerProgress: DEFAULT_REGISTER_PROGRESS,
     registerPlayConfig: DEFAULT_REGISTER_PLAY_CONFIG,
+    englishWordProgress: DEFAULT_ENGLISH_WORD_PROGRESS,
+    englishWordPlayConfig: DEFAULT_ENGLISH_WORD_PLAY_CONFIG,
     shopLastOpenedOn: null,
     gachaLastOpenedOn: null,
     problemLogs: [],
@@ -537,6 +588,8 @@ function readAll(): SorobanSaveData {
       registerPlayConfig: normalizeRegisterPlayConfig(
         parsed.registerPlayConfig,
       ),
+      englishWordProgress: normalizeEnglishWordProgress(parsed.englishWordProgress),
+      englishWordPlayConfig: normalizeEnglishWordPlayConfig(parsed.englishWordPlayConfig),
       shopLastOpenedOn: normalizeDateOnly(
         parsed.shopLastOpenedOn ?? parsed.shopFirstOpenedOn,
       ),
@@ -595,6 +648,38 @@ export function saveRegisterPlayConfig(
     ...input,
   });
   writeAll({ ...current, registerPlayConfig: next });
+  return next;
+}
+
+export function loadEnglishWordProgress(): EnglishWordProgress {
+  return readAll().englishWordProgress;
+}
+
+export function saveEnglishWordProgress(
+  input: Partial<EnglishWordProgress>,
+): EnglishWordProgress {
+  const current = readAll();
+  const next = normalizeEnglishWordProgress({
+    ...current.englishWordProgress,
+    ...input,
+  });
+  writeAll({ ...current, englishWordProgress: next });
+  return next;
+}
+
+export function loadEnglishWordPlayConfig(): EnglishWordPlayConfig {
+  return readAll().englishWordPlayConfig;
+}
+
+export function saveEnglishWordPlayConfig(
+  input: Partial<EnglishWordPlayConfig>,
+): EnglishWordPlayConfig {
+  const current = readAll();
+  const next = normalizeEnglishWordPlayConfig({
+    ...current.englishWordPlayConfig,
+    ...input,
+  });
+  writeAll({ ...current, englishWordPlayConfig: next });
   return next;
 }
 

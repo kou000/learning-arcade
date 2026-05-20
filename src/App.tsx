@@ -19,6 +19,9 @@ import { ProblemLogPage } from "@/features/soroban/views/ProblemLogPage";
 import { resolveAdminMode, setAdminModeOverride } from "@/features/soroban/adminMode";
 import { PianoPracticePage } from "@/features/piano/views/PianoPracticePage";
 import { AlphabetPracticePage } from "@/features/english/views/AlphabetPracticePage";
+import { EnglishHomePage } from "@/features/english/views/EnglishHomePage";
+import { WordGamePage } from "@/features/english/views/WordGamePage";
+import { WordPracticePage } from "@/features/english/views/WordPracticePage";
 
 type Route =
   | "home"
@@ -39,7 +42,10 @@ type Route =
   | "soroban-snack-result"
   | "soroban-admin"
   | "piano-practice"
-  | "english-alphabet";
+  | "english"
+  | "english-alphabet"
+  | "english-words"
+  | "english-word-game";
 
 const ADMIN_PASSWORD_SHA256 = "a7be8e1fe282a37cd666e0632b17d933fa13f21addf4798fc0455bc166e2488c";
 
@@ -76,7 +82,10 @@ function getRouteFromHash(): Route {
   if (h === "soroban/snack/result") return "soroban-snack-result";
   if (h === "soroban/admin") return "soroban-admin";
   if (h === "piano/practice") return "piano-practice";
+  if (h === "english") return "english";
   if (h === "english/alphabet") return "english-alphabet";
+  if (h === "english/words") return "english-words";
+  if (h === "english/word-game") return "english-word-game";
   return "home";
 }
 
@@ -182,7 +191,10 @@ export default function App() {
   const goHome = () => { window.location.hash = ""; };
   const goSoroban = () => { window.location.hash = "/soroban"; };
   const goPianoPractice = () => { window.location.hash = "/piano/practice"; };
+  const goEnglish = () => { window.location.hash = "/english"; };
   const goEnglishAlphabet = () => { window.location.hash = "/english/alphabet"; };
+  const goEnglishWords = () => { window.location.hash = "/english/words"; };
+  const goEnglishWordGame = () => { window.location.hash = "/english/word-game"; };
   const goAdminWithPassword = async () => {
     const password = window.prompt("admin パスワードを入力してください");
     if (password == null) return;
@@ -304,7 +316,7 @@ export default function App() {
         <ArcadeHome
           onStartSoroban={goSoroban}
           onStartPiano={goPianoPractice}
-          onStartEnglish={goEnglishAlphabet}
+          onStartEnglish={goEnglish}
         />
       ) : null}
       {route === "soroban" ? (
@@ -398,7 +410,10 @@ export default function App() {
         />
       ) : null}
       {route === "piano-practice" ? <PianoPracticePage onBackHome={goHome} /> : null}
-      {route === "english-alphabet" ? <AlphabetPracticePage onBackHome={goHome} /> : null}
+      {route === "english" ? <EnglishHomePage onBackHome={goHome} onGoPractice={goEnglishWords} onGoGame={goEnglishWordGame} /> : null}
+      {route === "english-alphabet" ? <AlphabetPracticePage onBackHome={goEnglish} onGoWords={goEnglishWords} /> : null}
+      {route === "english-words" ? <WordPracticePage onBackHome={goEnglish} onGoAlphabet={goEnglishAlphabet} onGoGame={goEnglishWordGame} /> : null}
+      {route === "english-word-game" ? <WordGamePage onGoEnglishHome={goEnglish} onGoPractice={goEnglishWords} /> : null}
     </div>
   );
 }
