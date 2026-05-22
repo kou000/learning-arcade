@@ -1,10 +1,12 @@
 import keimarukunBeachCardImage from "@/assets/cards/keimarukun-beach-card.png";
+import keimarukunAirplaneCardImage from "@/assets/cards/keimarukun-airplane-card.png";
 import keimarukunAnimatedRamenCardImage from "@/assets/cards/keimarukun-animated-ramen-card.gif";
 import keimarukunAnimatedSteakCardImage from "@/assets/cards/keimarukun-animated-steak-card.gif";
 import keimarukunAnimatedStudyCardImage from "@/assets/cards/keimarukun-animated-study-card.gif";
 import keimarukunAnimatedWorkingCardImage from "@/assets/cards/keimarukun-animated-working-card.gif";
 import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
 import keimarukunBathCardImage from "@/assets/cards/keimarukun-bath-card.png";
+import keimarukunBlocksCardImage from "@/assets/cards/keimarukun-blocks-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
 import keimarukunCarCardImage from "@/assets/cards/keimarukun-car-card.png";
 import keimarukunCurryCardImage from "@/assets/cards/keimarukun-curry-card.png";
@@ -18,6 +20,7 @@ import keimarukunOmuriceCardImage from "@/assets/cards/keimarukun-omurice-card.p
 import keimarukunOnigiriCardImage from "@/assets/cards/keimarukun-onigiri-card.png";
 import keimarukunPandaCardImage from "@/assets/cards/keimarukun-panda-card.png";
 import keimarukunPicnicCardImage from "@/assets/cards/keimarukun-picnic-card.png";
+import keimarukunPoutyNapCardImage from "@/assets/cards/keimarukun-pouty-nap-card.png";
 import keimarukunRamenCardImage from "@/assets/cards/keimarukun-ramen-card.png";
 import keimarukunRainyDayCardImage from "@/assets/cards/keimarukun-rainy-day-card.png";
 import keimarukunFailedBananaCardImage from "@/assets/cards/keimarukun-failed-banana-card.png";
@@ -25,9 +28,11 @@ import keimarukunFailedBaseballEatingCardImage from "@/assets/cards/keimarukun-f
 import keimarukunFailedSushiCostumeCardImage from "@/assets/cards/keimarukun-failed-sushi-costume-card.png";
 import keimarukunFailedWindyCardImage from "@/assets/cards/keimarukun-failed-windy-card.png";
 import keimarukunFailedWorkCardImage from "@/assets/cards/keimarukun-failed-work-card.png";
+import keimarukunMischiefCardImage from "@/assets/cards/keimarukun-mischief-card.png";
 import keimarukunRockGuitarCardImage from "@/assets/cards/keimarukun-rock-guitar-card.png";
 import keimarukunRollerCoasterCardImage from "@/assets/cards/keimarukun-roller-coaster-card.png";
 import keimarukunSchoolCardImage from "@/assets/cards/keimarukun-school-card.png";
+import keimarukunSickDayCardImage from "@/assets/cards/keimarukun-sick-day-card.png";
 import keimarukunSpaceCardImage from "@/assets/cards/keimarukun-space-card.png";
 import keimarukunSteakCardImage from "@/assets/cards/keimarukun-steak-card.png";
 import keimarukunStudyCardImage from "@/assets/cards/keimarukun-study-card.png";
@@ -55,6 +60,7 @@ export type CardGachaId =
   | "life"
   | "moving"
   | "fun"
+  | "new-days"
   | "rejected";
 
 export type CardGachaDefinition = {
@@ -106,6 +112,12 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     name: "おたのしみ コレクション",
     shortName: "おたのしみ",
     description: "いろんな たのしいひの けいまるくんが あつまった がちゃ。",
+  },
+  {
+    id: "new-days",
+    name: "にちじょう コレクション",
+    shortName: "にちじょう",
+    description: "いろんな にちじょうの けいまるくんが あつまった がちゃ。",
   },
   {
     id: "rejected",
@@ -433,6 +445,46 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
       "やきゅうを おうえんするはずが、たべることに むちゅうになってしまった しっぱいかーど。",
     addedOn: "2026-05-17",
     gachaId: "rejected",
+  },
+  {
+    id: "keimarukun-airplane-card",
+    name: "けいまるくん ひこうきかーど",
+    image: keimarukunAirplaneCardImage,
+    description: "ひこうきにのって そらへとびたつ けいまるくん。",
+    addedOn: "2026-05-20",
+    gachaId: "new-days",
+  },
+  {
+    id: "keimarukun-blocks-card",
+    name: "けいまるくん つみきかーど",
+    image: keimarukunBlocksCardImage,
+    description: "つみきをくずして たのしくあそぶ けいまるくん。",
+    addedOn: "2026-05-20",
+    gachaId: "new-days",
+  },
+  {
+    id: "keimarukun-pouty-nap-card",
+    name: "けいまるくん ふてねかーど",
+    image: keimarukunPoutyNapCardImage,
+    description: "おふとんで ちょっぴりすねている けいまるくん。",
+    addedOn: "2026-05-20",
+    gachaId: "new-days",
+  },
+  {
+    id: "keimarukun-sick-day-card",
+    name: "けいまるくん たいちょうふりょうかーど",
+    image: keimarukunSickDayCardImage,
+    description: "おねつをはかって はやくよくなりたい けいまるくん。",
+    addedOn: "2026-05-20",
+    gachaId: "new-days",
+  },
+  {
+    id: "keimarukun-mischief-card",
+    name: "けいまるくん いたずらかーど",
+    image: keimarukunMischiefCardImage,
+    description: "ごみばこをのぞいて ごそごそあさる けいまるくん。",
+    addedOn: "2026-05-20",
+    gachaId: "new-days",
   },
 ];
 
