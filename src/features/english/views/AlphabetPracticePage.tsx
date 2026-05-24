@@ -289,6 +289,7 @@ export function AlphabetPracticePage({ onBackHome, onGoWords }: AlphabetPractice
     if (item.id === selectedItemId) return;
     setSelectedItemId(item.id);
     resetDrawingState(item);
+    speakLetter(item.label);
   };
 
   const selectLetterCase = (letterCase: LetterCase) => {
@@ -300,6 +301,13 @@ export function AlphabetPracticePage({ onBackHome, onGoWords }: AlphabetPractice
     setSelectedLetterCase(letterCase);
     setSelectedItemId(nextItem.id);
     resetDrawingState(nextItem);
+    speakLetter(nextItem.label);
+  };
+
+  const selectNextItem = () => {
+    const currentIndex = practiceItems.findIndex((item) => item.id === selectedItem.id);
+    const nextItem = practiceItems[(currentIndex + 1) % practiceItems.length] ?? practiceItems[0];
+    selectItem(nextItem);
   };
 
   const getCanvasPoint = (event: ReactPointerEvent<HTMLCanvasElement>): Point => {
@@ -366,10 +374,10 @@ export function AlphabetPracticePage({ onBackHome, onGoWords }: AlphabetPractice
     if (drawCtx) drawInput(drawCtx, [], []);
   };
 
-  const speakSelectedLetter = () => {
+  const speakLetter = (letter: string) => {
     if (!canUseSpeechSynthesis()) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(selectedGuide.label.toLowerCase());
+    const utterance = new SpeechSynthesisUtterance(letter.toLowerCase());
     const voice = findPreferredEnglishVoice(speechVoices.length > 0 ? speechVoices : window.speechSynthesis.getVoices());
     if (voice) {
       utterance.voice = voice;
@@ -380,6 +388,10 @@ export function AlphabetPracticePage({ onBackHome, onGoWords }: AlphabetPractice
     utterance.rate = 0.68;
     utterance.pitch = 1;
     window.speechSynthesis.speak(utterance);
+  };
+
+  const speakSelectedLetter = () => {
+    speakLetter(selectedGuide.label);
   };
 
   return (
@@ -462,25 +474,31 @@ export function AlphabetPracticePage({ onBackHome, onGoWords }: AlphabetPractice
                 onPointerLeave={finishStroke}
                 aria-label={`${selectedUnit.label}を書くキャンバス`}
               />
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={speakSelectedLetter}
-                disabled={!speechAvailable}
-                className="rounded-full bg-[#ffb84d] px-6 py-3 text-lg font-black text-[#3b2f2f] shadow-[0_5px_0_#d78c28] transition active:translate-y-0.5 active:shadow-[0_2px_0_#d78c28] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
-                aria-label={`${selectedUnit.label}を音声で読む`}
-              >
-                よむ
-              </button>
-              <button
-                type="button"
-                onClick={clearDrawing}
-                className="rounded-full bg-[#b7e4ff] px-6 py-3 text-lg font-black text-[#3b2f2f] shadow-[0_5px_0_#74b7dd] transition active:translate-y-0.5 active:shadow-[0_2px_0_#74b7dd]"
-              >
-                消す
-              </button>
+              <div className="absolute bottom-3 right-3 flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={speakSelectedLetter}
+                  disabled={!speechAvailable}
+                  className="rounded-full bg-[#ffb84d] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#d78c28] transition active:translate-y-0.5 active:shadow-[0_2px_0_#d78c28] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+                  aria-label={`${selectedUnit.label}を音声で読む`}
+                >
+                  よむ
+                </button>
+                <button
+                  type="button"
+                  onClick={clearDrawing}
+                  className="rounded-full bg-[#b7e4ff] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#74b7dd] transition active:translate-y-0.5 active:shadow-[0_2px_0_#74b7dd]"
+                >
+                  消す
+                </button>
+                <button
+                  type="button"
+                  onClick={selectNextItem}
+                  className="rounded-full bg-[#ffb84d] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#d78c28] transition active:translate-y-0.5 active:shadow-[0_2px_0_#d78c28]"
+                >
+                  つぎへ
+                </button>
+              </div>
             </div>
           </section>
 

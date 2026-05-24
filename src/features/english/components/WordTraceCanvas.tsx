@@ -118,10 +118,24 @@ type Props = {
   resetKey?: string | number;
   onJudge?: (result: TraceJudgeResult) => void;
   onSuccess?: (result: TraceJudgeResult) => void;
+  onSpeak?: () => void;
+  speakDisabled?: boolean;
+  speakAriaLabel?: string;
+  onNext?: () => void;
   className?: string;
 };
 
-export function WordTraceCanvas({ guide, resetKey, onJudge, onSuccess, className }: Props) {
+export function WordTraceCanvas({
+  guide,
+  resetKey,
+  onJudge,
+  onSuccess,
+  onSpeak,
+  speakDisabled = false,
+  speakAriaLabel,
+  onNext,
+  className,
+}: Props) {
   const [drawnStrokes, setDrawnStrokes] = useState<Point[][]>([]);
   const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
   const guideCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -256,13 +270,35 @@ export function WordTraceCanvas({ guide, resetKey, onJudge, onSuccess, className
         onPointerLeave={finishStroke}
         aria-label={`${guide.label}を書くキャンバス`}
       />
-      <button
-        type="button"
-        onClick={clearDrawing}
-        className="absolute bottom-3 right-3 rounded-full bg-[#b7e4ff] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#74b7dd] transition active:translate-y-0.5 active:shadow-[0_2px_0_#74b7dd]"
-      >
-        消す
-      </button>
+      <div className="absolute bottom-3 right-3 flex flex-wrap justify-end gap-2">
+        {onSpeak ? (
+          <button
+            type="button"
+            onClick={onSpeak}
+            disabled={speakDisabled}
+            className="rounded-full bg-[#ffb84d] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#d78c28] transition active:translate-y-0.5 active:shadow-[0_2px_0_#d78c28] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+            aria-label={speakAriaLabel}
+          >
+            よむ
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={clearDrawing}
+          className="rounded-full bg-[#b7e4ff] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#74b7dd] transition active:translate-y-0.5 active:shadow-[0_2px_0_#74b7dd]"
+        >
+          消す
+        </button>
+        {onNext ? (
+          <button
+            type="button"
+            onClick={onNext}
+            className="rounded-full bg-[#ffb84d] px-4 py-2 text-sm font-black text-[#3b2f2f] shadow-[0_4px_0_#d78c28] transition active:translate-y-0.5 active:shadow-[0_2px_0_#d78c28]"
+          >
+            つぎへ
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

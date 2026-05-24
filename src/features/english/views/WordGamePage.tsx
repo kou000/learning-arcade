@@ -97,6 +97,11 @@ export function WordGamePage({ onGoEnglishHome, onGoPractice }: Props) {
   }, [currentWord.id]);
 
   useEffect(() => {
+    if (mode !== "answer" || isFinished) return;
+    speakEnglish(currentWord.label);
+  }, [currentWord.id, isFinished, mode]);
+
+  useEffect(() => {
     if (!isFinished) return;
     if (hasStartedCoinAnimRef.current) return;
     hasStartedCoinAnimRef.current = true;

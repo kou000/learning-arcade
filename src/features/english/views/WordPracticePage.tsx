@@ -65,10 +65,10 @@ export function WordPracticePage({ onBackHome, onGoAlphabet, onGoGame }: WordPra
     };
   }, []);
 
-  const speakSelectedWord = () => {
+  const speakWord = (word: string) => {
     if (!canUseSpeechSynthesis()) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(selectedItem.label.toLowerCase());
+    const utterance = new SpeechSynthesisUtterance(word.toLowerCase());
     const voice = findPreferredEnglishVoice(speechVoices.length > 0 ? speechVoices : window.speechSynthesis.getVoices());
     if (voice) {
       utterance.voice = voice;
@@ -81,10 +81,22 @@ export function WordPracticePage({ onBackHome, onGoAlphabet, onGoGame }: WordPra
     window.speechSynthesis.speak(utterance);
   };
 
+  const speakSelectedWord = () => {
+    speakWord(selectedItem.label);
+  };
+
   const selectItem = (item: typeof WORD_PRACTICE_ITEMS[number]) => {
+    if (item.id === selectedItemId) return;
     setSelectedItemId(item.id);
     setJudgeResult(null);
     setStatus({ text: `${item.label}をじゅんばんになぞってね`, kind: "neutral" });
+    speakWord(item.label);
+  };
+
+  const selectNextItem = () => {
+    const currentIndex = WORD_PRACTICE_ITEMS.findIndex((item) => item.id === selectedItem.id);
+    const nextItem = WORD_PRACTICE_ITEMS[(currentIndex + 1) % WORD_PRACTICE_ITEMS.length] ?? WORD_PRACTICE_ITEMS[0];
+    selectItem(nextItem);
   };
 
   const handleJudge = (result: TraceJudgeResult) => {
@@ -127,11 +139,15 @@ export function WordPracticePage({ onBackHome, onGoAlphabet, onGoGame }: WordPra
               ))}
             </div>
 
-            <WordTraceCanvas guide={selectedGuide} resetKey={selectedItem.id} onJudge={handleJudge} />
-
-            <div className="mt-3 flex flex-wrap gap-3">
-              <button type="button" onClick={speakSelectedWord} disabled={!speechAvailable} className="rounded-full bg-[#ffb84d] px-6 py-3 text-lg font-black text-[#3b2f2f] shadow-[0_5px_0_#d78c28] transition active:translate-y-0.5 active:shadow-[0_2px_0_#d78c28] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none" aria-label={`${selectedItem.label}を音声で読む`}>よむ</button>
-            </div>
+            <WordTraceCanvas
+              guide={selectedGuide}
+              resetKey={selectedItem.id}
+              onJudge={handleJudge}
+              onSpeak={speakSelectedWord}
+              speakDisabled={!speechAvailable}
+              speakAriaLabel={`${selectedItem.label}を音声で読む`}
+              onNext={selectNextItem}
+            />
           </section>
 
           <aside className="rounded-[24px] border-[3px] border-[#f1d28a] bg-white p-3 shadow-[0_8px_0_rgba(150,110,40,0.12)]">
