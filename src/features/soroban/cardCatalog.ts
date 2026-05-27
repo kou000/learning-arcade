@@ -32,6 +32,11 @@ import keimarukunMischiefCardImage from "@/assets/cards/keimarukun-mischief-card
 import keimarukunRockGuitarCardImage from "@/assets/cards/keimarukun-rock-guitar-card.png";
 import keimarukunRollerCoasterCardImage from "@/assets/cards/keimarukun-roller-coaster-card.png";
 import keimarukunSchoolCardImage from "@/assets/cards/keimarukun-school-card.png";
+import keimarukunClassDutyCardImage from "@/assets/cards/keimarukun-class-duty-card.png";
+import keimarukunFieldTripCardImage from "@/assets/cards/keimarukun-field-trip-card.png";
+import keimarukunSportsDayCardImage from "@/assets/cards/keimarukun-sports-day-card.png";
+import keimarukunRecessCardImage from "@/assets/cards/keimarukun-recess-card.png";
+import keimarukunLunchDutyCardImage from "@/assets/cards/keimarukun-lunch-duty-card.png";
 import keimarukunSickDayCardImage from "@/assets/cards/keimarukun-sick-day-card.png";
 import keimarukunSpaceCardImage from "@/assets/cards/keimarukun-space-card.png";
 import keimarukunSteakCardImage from "@/assets/cards/keimarukun-steak-card.png";
@@ -61,7 +66,8 @@ export type CardGachaId =
   | "moving"
   | "fun"
   | "new-days"
-  | "rejected";
+  | "rejected"
+  | "school";
 
 export type CardGachaDefinition = {
   id: CardGachaId;
@@ -124,6 +130,12 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     name: "ぼつシリーズ",
     shortName: "ぼつ",
     description: "おかしな けいまるくんカードが あつまった がちゃ。",
+  },
+  {
+    id: "school",
+    name: "がっこう コレクション",
+    shortName: "がっこう",
+    description: "がっこうで すごす けいまるくんが あつまった がちゃ。",
   },
 ];
 
@@ -485,6 +497,48 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     description: "ごみばこをのぞいて ごそごそあさる けいまるくん。",
     addedOn: "2026-05-20",
     gachaId: "new-days",
+  },
+  {
+    id: "keimarukun-class-duty-card",
+    name: "けいまるくん にっちょくかーど",
+    image: keimarukunClassDutyCardImage,
+    description:
+      "にっちょくとして くらすをまとめる しっかりものの けいまるくん。",
+    addedOn: "2026-05-27",
+    gachaId: "school",
+  },
+  {
+    id: "keimarukun-sports-day-card",
+    name: "けいまるくん うんどうかいかーど",
+    image: keimarukunSportsDayCardImage,
+    description: "うんどうかいの たまいれで ほんきをだす けいまるくん。",
+    addedOn: "2026-05-27",
+    gachaId: "school",
+  },
+  {
+    id: "keimarukun-recess-card",
+    name: "けいまるくん やすみじかんかーど",
+    image: keimarukunRecessCardImage,
+    description:
+      "みるくをのみながら えほんをよむ やすみじかんの けいまるくん。",
+    addedOn: "2026-05-27",
+    gachaId: "school",
+  },
+  {
+    id: "keimarukun-lunch-duty-card",
+    name: "けいまるくん きゅうしょくがかりかーど",
+    image: keimarukunLunchDutyCardImage,
+    description: "おいしい かれーを よそう きゅうしょくがかりの けいまるくん。",
+    addedOn: "2026-05-27",
+    gachaId: "school",
+  },
+  {
+    id: "keimarukun-field-trip-card",
+    name: "けいまるくん えんそくかーど",
+    image: keimarukunFieldTripCardImage,
+    description: "まっぷをもって どうぶつえんを たんけんする けいまるくん。",
+    addedOn: "2026-05-27",
+    gachaId: "school",
   },
 ];
 
