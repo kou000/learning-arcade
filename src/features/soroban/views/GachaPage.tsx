@@ -208,6 +208,7 @@ export function GachaPage({
     GACHA_SPIN_FRAMES[0];
   const spinFrameImage =
     GACHA_SPIN_FRAMES[spinFrameIndex] ?? GACHA_SPIN_FRAMES[0];
+  const resultCardIsLandscape = resultCard?.orientation === "landscape";
 
   useEffect(() => {
     saveGachaLastOpenedOn(formatLocalDateOnly(new Date()));
@@ -495,10 +496,18 @@ export function GachaPage({
                         src={card.image}
                         alt={card.name}
                         title={card.name}
-                        imageClassName={`h-[clamp(8.25rem,15.5vw,12rem)] w-full rounded-lg object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)] ${
+                        imageClassName={`${
+                          card.orientation === "landscape"
+                            ? "h-[clamp(5.75rem,10vw,8rem)]"
+                            : "h-[clamp(8.25rem,15.5vw,12rem)]"
+                        } w-full rounded-lg object-contain drop-shadow-[0_10px_12px_rgba(120,53,15,0.35)] ${
                           owned ? "" : "opacity-95"
                         }`}
-                        missingClassName="grid h-[clamp(8.25rem,15.5vw,12rem)] w-full place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
+                        missingClassName={`grid ${
+                          card.orientation === "landscape"
+                            ? "h-[clamp(5.75rem,10vw,8rem)]"
+                            : "h-[clamp(8.25rem,15.5vw,12rem)]"
+                        } w-full place-items-center rounded-lg border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500`}
                       />
                     </div>
                   );
@@ -535,7 +544,7 @@ export function GachaPage({
         ) : null}
 
         {!isSpinning ? (
-          <div className="absolute left-[20%] top-[64%] grid w-[min(20rem,32vw)] gap-2">
+          <div className="absolute left-[18%] top-[64%] grid w-[min(23rem,36vw)] gap-2">
             <button
               className={`rounded-full border-4 px-5 py-4 text-xl font-black shadow-[0_10px_0_rgba(120,53,15,0.45)] transition active:translate-y-1 active:shadow-[0_6px_0_rgba(120,53,15,0.45)] ${
                 canDraw
@@ -557,7 +566,7 @@ export function GachaPage({
                 : selectedStickerGacha.description}
             </div>
             {gachaMode === "cards" ? (
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-6 gap-1.5">
                 {CARD_GACHA_DEFINITIONS.map((gacha) => {
                   const active = gacha.id === selectedGachaId;
                   const newGacha = hasNewItem(
@@ -635,18 +644,38 @@ export function GachaPage({
             </div>
             <section className="relative grid w-[min(54rem,88vw)] gap-4 overflow-hidden rounded-[2rem] border-4 border-amber-200 bg-white/94 p-5 text-center shadow-[0_24px_80px_rgba(120,53,15,0.45)]">
               <div className="gacha-starburst pointer-events-none absolute left-1/2 top-1/2 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70" />
-              <div className="relative z-10 grid items-center gap-5 md:grid-cols-[18rem_1fr]">
+              <div
+                className={`relative z-10 grid items-center gap-5 ${
+                  resultCardIsLandscape
+                    ? "md:grid-cols-[27rem_1fr]"
+                    : "md:grid-cols-[18rem_1fr]"
+                }`}
+              >
                 <div className="relative mx-auto grid place-items-center">
-                  <div className="gacha-card-glow absolute h-80 w-64 rounded-[2rem]" />
+                  <div
+                    className={`gacha-card-glow absolute rounded-[2rem] ${
+                      resultCardIsLandscape
+                        ? "h-64 w-[min(26rem,80vw)]"
+                        : "h-80 w-64"
+                    }`}
+                  />
                   <div className="gacha-card-float relative rounded-[1.35rem] bg-white p-2 shadow-[0_18px_38px_rgba(15,23,42,0.34)]">
                     <LongPressPreviewImage
                       src={(resultCard ?? resultSticker)?.image ?? ""}
                       alt={(resultCard ?? resultSticker)?.name ?? ""}
                       title={(resultCard ?? resultSticker)?.name ?? ""}
-                      imageClassName={`h-80 w-56 object-contain ${
+                      imageClassName={`${
+                        resultCardIsLandscape
+                          ? "h-64 w-[min(25rem,80vw)]"
+                          : "h-80 w-56"
+                      } object-contain ${
                         resultSticker ? "rounded-full" : "rounded-xl"
                       }`}
-                      missingClassName={`grid h-80 w-56 place-items-center border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500 ${
+                      missingClassName={`grid ${
+                        resultCardIsLandscape
+                          ? "h-64 w-[min(25rem,80vw)]"
+                          : "h-80 w-56"
+                      } place-items-center border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500 ${
                         resultSticker ? "rounded-full" : "rounded-xl"
                       }`}
                     />

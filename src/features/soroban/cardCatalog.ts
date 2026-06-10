@@ -47,6 +47,16 @@ import keimarukunVacationCardImage from "@/assets/cards/keimarukun-vacation-card
 import keimarukunWinterCardImage from "@/assets/cards/keimarukun-winter-card.png";
 import keimarukunWorkCardImage from "@/assets/cards/keimarukun-work-card.png";
 import keimarukunBaseballCheeringCardImage from "@/assets/cards/keimarukun-baseball-cheering-card.png";
+import keimarukunBlockAdventureLandscapeCardImage from "@/assets/cards/keimarukun-block-adventure-landscape-card.png";
+import keimarukunDragonTownLandscapeCardImage from "@/assets/cards/keimarukun-dragon-town-landscape-card.png";
+import keimarukunDoctorCardImage from "@/assets/cards/keimarukun-doctor-card.png";
+import keimarukunHairStylistCardImage from "@/assets/cards/keimarukun-hair-stylist-card.png";
+import keimarukunIslandLifeLandscapeCardImage from "@/assets/cards/keimarukun-island-life-landscape-card.png";
+import keimarukunKitchenRushLandscapeCardImage from "@/assets/cards/keimarukun-kitchen-rush-landscape-card.png";
+import keimarukunPhysicsPuzzleLandscapeCardImage from "@/assets/cards/keimarukun-physics-puzzle-landscape-card.png";
+import keimarukunPoliceOfficerCardImage from "@/assets/cards/keimarukun-police-officer-card.png";
+import keimarukunPotatoShopCardImage from "@/assets/cards/keimarukun-potato-shop-card.png";
+import keimarukunStreamerCardImage from "@/assets/cards/keimarukun-streamer-card.png";
 
 export type CardItem = {
   id: string;
@@ -55,6 +65,7 @@ export type CardItem = {
   description: string;
   addedOn: string;
   gachaId: CardGachaId;
+  orientation?: "portrait" | "landscape";
 };
 
 export type CardGachaId =
@@ -67,7 +78,9 @@ export type CardGachaId =
   | "fun"
   | "new-days"
   | "rejected"
-  | "school";
+  | "school"
+  | "game"
+  | "work";
 
 export type CardGachaDefinition = {
   id: CardGachaId;
@@ -136,6 +149,18 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     name: "がっこう コレクション",
     shortName: "がっこう",
     description: "がっこうで すごす けいまるくんが あつまった がちゃ。",
+  },
+  {
+    id: "game",
+    name: "ゲーム コレクション",
+    shortName: "ゲーム",
+    description: "ゲームのせかいで だいかつやくする けいまるくんが あつまった がちゃ。",
+  },
+  {
+    id: "work",
+    name: "しごと コレクション",
+    shortName: "しごと",
+    description: "いろんな おしごとに ちょうせんする けいまるくんが あつまった がちゃ。",
   },
 ];
 
@@ -539,6 +564,91 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     description: "まっぷをもって どうぶつえんを たんけんする けいまるくん。",
     addedOn: "2026-05-27",
     gachaId: "school",
+  },
+  {
+    id: "keimarukun-block-adventure-landscape-card",
+    name: "けいまるくん ぶろっくたんけんかーど",
+    image: keimarukunBlockAdventureLandscapeCardImage,
+    description: "ぶろっくのせかいで どらごんに ちょうせんする けいまるくん。",
+    addedOn: "2026-06-08",
+    gachaId: "game",
+    orientation: "landscape",
+  },
+  {
+    id: "keimarukun-physics-puzzle-landscape-card",
+    name: "けいまるくん ぱずるにちょうせんかーど",
+    image: keimarukunPhysicsPuzzleLandscapeCardImage,
+    description: "ふわふわういたしまのうえで はこをはこぶ けいまるくん。",
+    addedOn: "2026-06-08",
+    gachaId: "game",
+    orientation: "landscape",
+  },
+  {
+    id: "keimarukun-dragon-town-landscape-card",
+    name: "けいまるくん りゅうのまちかーど",
+    image: keimarukunDragonTownLandscapeCardImage,
+    description: "よるのまちで つよくかっこよく きめる けいまるくん。",
+    addedOn: "2026-06-08",
+    gachaId: "game",
+    orientation: "landscape",
+  },
+  {
+    id: "keimarukun-kitchen-rush-landscape-card",
+    name: "けいまるくん きっちんだいさくせんかーど",
+    image: keimarukunKitchenRushLandscapeCardImage,
+    description: "いそがしいきっちんで おりょうりをがんばる けいまるくん。",
+    addedOn: "2026-06-08",
+    gachaId: "game",
+    orientation: "landscape",
+  },
+  {
+    id: "keimarukun-island-life-landscape-card",
+    name: "けいまるくん むしとりたいかいかーど",
+    image: keimarukunIslandLifeLandscapeCardImage,
+    description: "みどりのしまを さんぽしながら むしとりをたのしむ けいまるくん。",
+    addedOn: "2026-06-08",
+    gachaId: "game",
+    orientation: "landscape",
+  },
+  {
+    id: "keimarukun-hair-stylist-card",
+    name: "けいまるくん びようしかーど",
+    image: keimarukunHairStylistCardImage,
+    description: "かわいく かっこよく しあげる びようしのけいまるくん。",
+    addedOn: "2026-06-10",
+    gachaId: "work",
+  },
+  {
+    id: "keimarukun-doctor-card",
+    name: "けいまるくん おいしゃさんかーど",
+    image: keimarukunDoctorCardImage,
+    description: "しんちょうに からだのようすをたしかめる おいしゃさんのけいまるくん。",
+    addedOn: "2026-06-10",
+    gachaId: "work",
+  },
+  {
+    id: "keimarukun-streamer-card",
+    name: "けいまるくん はいしんちゅうかーど",
+    image: keimarukunStreamerCardImage,
+    description: "まいくと かめらのまえで たのしくはいしんする けいまるくん。",
+    addedOn: "2026-06-10",
+    gachaId: "work",
+  },
+  {
+    id: "keimarukun-police-officer-card",
+    name: "けいまるくん けいさつかんかーど",
+    image: keimarukunPoliceOfficerCardImage,
+    description: "こうばんのまえで まちのあんぜんをまもる けいまるくん。",
+    addedOn: "2026-06-10",
+    gachaId: "work",
+  },
+  {
+    id: "keimarukun-potato-shop-card",
+    name: "けいまるくん ぽてとやさんかーど",
+    image: keimarukunPotatoShopCardImage,
+    description: "あつあつぽてとを ていねいにつめる けいまるくん。",
+    addedOn: "2026-06-10",
+    gachaId: "work",
   },
 ];
 

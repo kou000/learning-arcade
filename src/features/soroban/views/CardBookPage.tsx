@@ -63,6 +63,7 @@ export function CardBookPage({ onGoRegister, onGoGacha }: Props) {
           <div className="mt-4 grid min-h-0 flex-1 gap-4 overflow-y-auto lg:grid-cols-2">
             {KEIMARUKUN_CARDS.map((card) => {
               const owned = ownedCardIds.has(card.id);
+              const isLandscape = card.orientation === "landscape";
               return (
                 <section
                   key={card.id}
@@ -78,11 +79,19 @@ export function CardBookPage({ onGoRegister, onGoGacha }: Props) {
                         src={card.image}
                         alt={card.name}
                         title={card.name}
-                        imageClassName="h-72 w-52 rounded-xl object-contain drop-shadow-[0_10px_14px_rgba(15,23,42,0.28)]"
-                        missingClassName="grid h-72 w-52 place-items-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500"
+                        imageClassName={`${
+                          isLandscape ? "h-40 w-full" : "h-72 w-52"
+                        } rounded-xl object-contain drop-shadow-[0_10px_14px_rgba(15,23,42,0.28)]`}
+                        missingClassName={`grid ${
+                          isLandscape ? "h-40 w-full" : "h-72 w-52"
+                        } place-items-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-xs text-slate-500`}
                       />
                     ) : (
-                      <div className="grid h-72 w-52 place-items-center rounded-xl border-4 border-dashed border-slate-300 bg-gradient-to-br from-slate-200 to-slate-100 text-6xl font-black text-slate-400 shadow-inner">
+                      <div
+                        className={`grid ${
+                          isLandscape ? "h-40 w-full" : "h-72 w-52"
+                        } place-items-center rounded-xl border-4 border-dashed border-slate-300 bg-gradient-to-br from-slate-200 to-slate-100 text-6xl font-black text-slate-400 shadow-inner`}
+                      >
                         ?
                       </div>
                     )}

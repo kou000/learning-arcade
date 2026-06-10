@@ -64,7 +64,7 @@
 - `unlockedGrades`
 - `unlockedStageByGrade`（`0:みとり`, `1:かけ`, `2:わり`）
 
-カード所持は新規キーを増やさず、カードIDを `purchasedItemIds` に保存する。カード定義は `catalog.ts` ではなく `cardCatalog.ts` で管理する。
+カード所持は新規キーを増やさず、カードIDを `purchasedItemIds` に保存する。カード定義は `catalog.ts` ではなく `cardCatalog.ts` で管理する。カードは `gachaId` でシリーズ分けし、横向きカードは `orientation: "landscape"` を指定する。図鑑とガチャ結果では横向きカードを横長枠で表示する。
 
 ### problemLogs
 
@@ -235,6 +235,8 @@
 - ガチャを直近で開いた日（`gachaLastOpenedOn`）を `learning-arcade:soroban-state` に保持し、カード/シールの `addedOn > gachaLastOpenedOn` の場合にガチャ導線へ `NEW` ラベルを表示する
 - `gachaLastOpenedOn` が null の場合は判定用に `2026-05-06` を使う
 - シールガチャはシリーズ（例: 1ばん）ごとに「5種 × 各3枚 = 15枚」の固定プールで抽選する
+- カードガチャには `ゲーム コレクション` があり、ゲーム風の横向きカードを扱う
+- カードガチャには `しごと コレクション` があり、職業テーマのカードを扱う
 - 1プール内で各シールが3枚ずつ出切ったら、同シリーズの新しい15枚プールに切り替えて抽選を続ける
 - 7ばんはシリーズ内のシール枚数がそろうまで非公開とし、ガチャ一覧・抽選対象・シール帳には表示しない
 - `ShopPage` は画面遷移直後に犬の吹き出しで「いらっしゃいませ！」を表示してから商品一覧を表示する
