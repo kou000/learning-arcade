@@ -544,7 +544,7 @@ export function GachaPage({
         ) : null}
 
         {!isSpinning ? (
-          <div className="absolute left-[18%] top-[64%] grid w-[min(23rem,36vw)] gap-2">
+          <div className="absolute left-[8%] top-[64%] grid w-[min(30rem,44vw)] gap-2">
             <button
               className={`rounded-full border-4 px-5 py-4 text-xl font-black shadow-[0_10px_0_rgba(120,53,15,0.45)] transition active:translate-y-1 active:shadow-[0_6px_0_rgba(120,53,15,0.45)] ${
                 canDraw
@@ -566,7 +566,7 @@ export function GachaPage({
                 : selectedStickerGacha.description}
             </div>
             {gachaMode === "cards" ? (
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="grid grid-cols-7 gap-1.5">
                 {CARD_GACHA_DEFINITIONS.map((gacha) => {
                   const active = gacha.id === selectedGachaId;
                   const newGacha = hasNewItem(
