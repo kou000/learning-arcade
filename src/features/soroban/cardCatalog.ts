@@ -6,7 +6,9 @@ import keimarukunAnimatedStudyCardImage from "@/assets/cards/keimarukun-animated
 import keimarukunAnimatedWorkingCardImage from "@/assets/cards/keimarukun-animated-working-card.gif";
 import keimarukunBananaCardImage from "@/assets/cards/keimarukun-banana-card.png";
 import keimarukunBathCardImage from "@/assets/cards/keimarukun-bath-card.png";
+import keimarukunBathCleaningCardImage from "@/assets/cards/keimarukun-bath-cleaning-card.png";
 import keimarukunBbqCardImage from "@/assets/cards/keimarukun-bbq-card.png";
+import keimarukunBlanketFoldingCardImage from "@/assets/cards/keimarukun-blanket-folding-card.png";
 import keimarukunBlocksCardImage from "@/assets/cards/keimarukun-blocks-card.png";
 import keimarukunBowlingCardImage from "@/assets/cards/keimarukun-bowling-card.png";
 import keimarukunBreakfastCardImage from "@/assets/cards/keimarukun-breakfast-card.png";
@@ -57,10 +59,13 @@ import keimarukunDoctorCardImage from "@/assets/cards/keimarukun-doctor-card.png
 import keimarukunHairStylistCardImage from "@/assets/cards/keimarukun-hair-stylist-card.png";
 import keimarukunIslandLifeLandscapeCardImage from "@/assets/cards/keimarukun-island-life-landscape-card.png";
 import keimarukunKitchenRushLandscapeCardImage from "@/assets/cards/keimarukun-kitchen-rush-landscape-card.png";
+import keimarukunLaundryCardImage from "@/assets/cards/keimarukun-laundry-card.png";
 import keimarukunPhysicsPuzzleLandscapeCardImage from "@/assets/cards/keimarukun-physics-puzzle-landscape-card.png";
+import keimarukunPlantWateringCardImage from "@/assets/cards/keimarukun-plant-watering-card.png";
 import keimarukunPoliceOfficerCardImage from "@/assets/cards/keimarukun-police-officer-card.png";
 import keimarukunPotatoShopCardImage from "@/assets/cards/keimarukun-potato-shop-card.png";
 import keimarukunPoolCardImage from "@/assets/cards/keimarukun-pool-card.png";
+import keimarukunRiceScoopCardImage from "@/assets/cards/keimarukun-rice-scoop-card.png";
 import keimarukunStreamerCardImage from "@/assets/cards/keimarukun-streamer-card.png";
 
 export type CardItem = {
@@ -86,7 +91,8 @@ export type CardGachaId =
   | "school"
   | "game"
   | "work"
-  | "holiday";
+  | "holiday"
+  | "helper";
 
 export type CardGachaDefinition = {
   id: CardGachaId;
@@ -160,19 +166,28 @@ export const CARD_GACHA_DEFINITIONS: CardGachaDefinition[] = [
     id: "game",
     name: "ゲーム コレクション",
     shortName: "ゲーム",
-    description: "ゲームのせかいで だいかつやくする けいまるくんが あつまった がちゃ。",
+    description:
+      "ゲームのせかいで だいかつやくする けいまるくんが あつまった がちゃ。",
   },
   {
     id: "work",
     name: "しごと コレクション",
     shortName: "しごと",
-    description: "いろんな おしごとに ちょうせんする けいまるくんが あつまった がちゃ。",
+    description:
+      "いろんな おしごとに ちょうせんする けいまるくんが あつまった がちゃ。",
   },
   {
     id: "holiday",
     name: "しゅくじつ シリーズ",
     shortName: "しゅくじつ",
     description: "おやすみのひを たのしむ けいまるくんが あつまった がちゃ。",
+  },
+  {
+    id: "helper",
+    name: "おてつだい コレクション",
+    shortName: "おてつだい",
+    description:
+      "おうちで ちいさなおてつだいを がんばる けいまるくんが あつまった がちゃ。",
   },
 ];
 
@@ -617,7 +632,8 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     id: "keimarukun-island-life-landscape-card",
     name: "けいまるくん むしとりたいかいかーど",
     image: keimarukunIslandLifeLandscapeCardImage,
-    description: "みどりのしまを さんぽしながら むしとりをたのしむ けいまるくん。",
+    description:
+      "みどりのしまを さんぽしながら むしとりをたのしむ けいまるくん。",
     addedOn: "2026-06-08",
     gachaId: "game",
     orientation: "landscape",
@@ -634,7 +650,8 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     id: "keimarukun-doctor-card",
     name: "けいまるくん おいしゃさんかーど",
     image: keimarukunDoctorCardImage,
-    description: "しんちょうに からだのようすをたしかめる おいしゃさんのけいまるくん。",
+    description:
+      "しんちょうに からだのようすをたしかめる おいしゃさんのけいまるくん。",
     addedOn: "2026-06-10",
     gachaId: "work",
   },
@@ -666,7 +683,8 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     id: "keimarukun-crane-game-card",
     name: "けいまるくん くれーんげーむかーど",
     image: keimarukunCraneGameCardImage,
-    description: "あとすこしで とれそうなぬいぐるみに にやりとする けいまるくん",
+    description:
+      "あとすこしで とれそうなぬいぐるみに にやりとする けいまるくん",
     addedOn: "2026-06-29",
     gachaId: "holiday",
   },
@@ -698,9 +716,51 @@ export const KEIMARUKUN_CARDS: CardItem[] = [
     id: "keimarukun-bbq-card",
     name: "けいまるくん ばーべきゅーかーど",
     image: keimarukunBbqCardImage,
-    description: "おにくをことわって やさいとばななをじゅうじゅうやく けいまるくん。",
+    description:
+      "おにくをことわって やさいとばななをじゅうじゅうやく けいまるくん。",
     addedOn: "2026-06-29",
     gachaId: "holiday",
+  },
+  {
+    id: "keimarukun-laundry-card",
+    name: "けいまるくん おせんたくかーど",
+    image: keimarukunLaundryCardImage,
+    description: "たおるをたくさんかかえて ぷるぷるはこぶ けいまるくん。",
+    addedOn: "2026-07-11",
+    gachaId: "helper",
+  },
+  {
+    id: "keimarukun-rice-scoop-card",
+    name: "けいまるくん ごはんよそいかーど",
+    image: keimarukunRiceScoopCardImage,
+    description:
+      "すいはんきから しろごはんをよそって ちょっととくいげな けいまるくん。",
+    addedOn: "2026-07-11",
+    gachaId: "helper",
+  },
+  {
+    id: "keimarukun-bath-cleaning-card",
+    name: "けいまるくん おふろそうじかーど",
+    image: keimarukunBathCleaningCardImage,
+    description: "きいろいすぽんじで おふろをあわあわみがく けいまるくん。",
+    addedOn: "2026-07-11",
+    gachaId: "helper",
+  },
+  {
+    id: "keimarukun-blanket-folding-card",
+    name: "けいまるくん もうふたたみかーど",
+    image: keimarukunBlanketFoldingCardImage,
+    description: "おおきなもうふをたたみながら うとうとしている けいまるくん。",
+    addedOn: "2026-07-11",
+    gachaId: "helper",
+  },
+  {
+    id: "keimarukun-plant-watering-card",
+    name: "けいまるくん みずやりかーど",
+    image: keimarukunPlantWateringCardImage,
+    description: "こぼさないようにしんけんに みずやりをする けいまるくん。",
+    addedOn: "2026-07-11",
+    gachaId: "helper",
   },
 ];
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learning Arcade カードシリーズ"
+  short_description: "そろばんガチャカードシリーズの企画から登録まで"
+  default_prompt: "$learning-arcade-card-series を使って、新しいそろばんガチャカードシリーズを企画・画像生成・登録してください。"

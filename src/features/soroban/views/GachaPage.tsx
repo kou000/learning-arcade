@@ -34,6 +34,7 @@ import {
 const GACHA_COST = 200;
 const STICKER_GACHA_COST = 50;
 const STICKER_COPIES_PER_POOL = 3;
+const CARD_GACHA_PAGE_SIZE = 10;
 const GACHA_SPIN_FRAMES = [
   gachaSpin01,
   gachaSpin02,
@@ -73,6 +74,10 @@ function formatLocalDateOnly(now: Date): string {
 
 function hasNewItem(items: Array<{ addedOn: string }>, lastOpenedOn: string) {
   return items.some((item) => item.addedOn > lastOpenedOn);
+}
+
+function hasNewCardGacha(gachaId: CardGachaId, lastOpenedOn: string) {
+  return hasNewItem(getCardsByGachaId(gachaId), lastOpenedOn);
 }
 
 function drawCard(cards: CardItem[]): CardItem {
@@ -146,6 +151,7 @@ export function GachaPage({
   const [gachaMode, setGachaMode] = useState<GachaMode>(initialMode);
   const [selectedGachaId, setSelectedGachaId] =
     useState<CardGachaId>("classic");
+  const [cardGachaPageIndex, setCardGachaPageIndex] = useState(0);
   const [selectedStickerGachaId, setSelectedStickerGachaId] =
     useState<StickerGachaId>("sticker-set-1");
   const [resultCard, setResultCard] = useState<CardItem | null>(null);
@@ -171,6 +177,32 @@ export function GachaPage({
   const selectedCards = useMemo(
     () => getCardsByGachaId(selectedGachaId),
     [selectedGachaId],
+  );
+  const cardGachaPageCount = Math.max(
+    1,
+    Math.ceil(CARD_GACHA_DEFINITIONS.length / CARD_GACHA_PAGE_SIZE),
+  );
+  const visibleCardGachas = useMemo(() => {
+    const start = cardGachaPageIndex * CARD_GACHA_PAGE_SIZE;
+    return CARD_GACHA_DEFINITIONS.slice(
+      start,
+      start + CARD_GACHA_PAGE_SIZE,
+    );
+  }, [cardGachaPageIndex]);
+  const hasNewCardGachaBeforePage = useMemo(
+    () =>
+      CARD_GACHA_DEFINITIONS.slice(
+        0,
+        cardGachaPageIndex * CARD_GACHA_PAGE_SIZE,
+      ).some((gacha) => hasNewCardGacha(gacha.id, gachaLastOpenedOn)),
+    [cardGachaPageIndex, gachaLastOpenedOn],
+  );
+  const hasNewCardGachaAfterPage = useMemo(
+    () =>
+      CARD_GACHA_DEFINITIONS.slice(
+        (cardGachaPageIndex + 1) * CARD_GACHA_PAGE_SIZE,
+      ).some((gacha) => hasNewCardGacha(gacha.id, gachaLastOpenedOn)),
+    [cardGachaPageIndex, gachaLastOpenedOn],
   );
   const selectedStickers = useMemo(
     () => getStickersByGachaId(selectedStickerGachaId),
@@ -213,6 +245,25 @@ export function GachaPage({
   useEffect(() => {
     saveGachaLastOpenedOn(formatLocalDateOnly(new Date()));
   }, []);
+
+  useEffect(() => {
+    setCardGachaPageIndex((current) =>
+      Math.min(current, cardGachaPageCount - 1),
+    );
+  }, [cardGachaPageCount]);
+
+  useEffect(() => {
+    const selectedIndex = CARD_GACHA_DEFINITIONS.findIndex(
+      (gacha) => gacha.id === selectedGachaId,
+    );
+    if (selectedIndex < 0) return;
+    const selectedPageIndex = Math.floor(
+      selectedIndex / CARD_GACHA_PAGE_SIZE,
+    );
+    setCardGachaPageIndex((current) =>
+      current === selectedPageIndex ? current : selectedPageIndex,
+    );
+  }, [selectedGachaId]);
 
   useEffect(() => {
     if (!isSpinning) return undefined;
@@ -336,6 +387,13 @@ export function GachaPage({
     setQueuedResultCard(null);
     setQueuedResultSticker(null);
     setMessage("けいまるくん かーど がちゃ");
+  };
+
+  const onSelectCardGachaPage = (nextPageIndex: number) => {
+    if (isSpinning) return;
+    setCardGachaPageIndex(
+      Math.max(0, Math.min(cardGachaPageCount - 1, nextPageIndex)),
+    );
   };
 
   const onSelectStickerGacha = (gachaId: StickerGachaId) => {
@@ -566,32 +624,96 @@ export function GachaPage({
                 : selectedStickerGacha.description}
             </div>
             {gachaMode === "cards" ? (
-              <div className="grid grid-cols-7 gap-1.5">
-                {CARD_GACHA_DEFINITIONS.map((gacha) => {
-                  const active = gacha.id === selectedGachaId;
-                  const newGacha = hasNewItem(
-                    getCardsByGachaId(gacha.id),
-                    gachaLastOpenedOn,
-                  );
-                  return (
+              <div className="grid gap-1.5">
+                <div className="flex items-stretch gap-1.5">
+                  {cardGachaPageCount > 1 ? (
                     <button
-                      key={gacha.id}
-                      className={`relative rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
-                        active
-                          ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
-                          : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
+                      className={`relative grid w-9 place-items-center rounded-2xl border-2 text-lg font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                        cardGachaPageIndex > 0
+                          ? "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
+                          : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 shadow-[0_4px_0_rgba(71,85,105,0.2)]"
                       }`}
-                      onClick={() => onSelectGacha(gacha.id)}
+                      onClick={() =>
+                        onSelectCardGachaPage(cardGachaPageIndex - 1)
+                      }
+                      disabled={cardGachaPageIndex <= 0}
+                      aria-label="まえのカードがちゃページ"
                     >
-                      {gacha.shortName}
-                      {newGacha ? (
+                      ←
+                      {hasNewCardGachaBeforePage ? (
                         <span className="absolute -right-1.5 -top-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-black text-white">
                           NEW
                         </span>
                       ) : null}
                     </button>
-                  );
-                })}
+                  ) : null}
+                  <div className="grid flex-1 grid-cols-5 gap-1.5">
+                    {visibleCardGachas.map((gacha) => {
+                      const active = gacha.id === selectedGachaId;
+                      const newGacha = hasNewCardGacha(
+                        gacha.id,
+                        gachaLastOpenedOn,
+                      );
+                      return (
+                        <button
+                          key={gacha.id}
+                          className={`relative min-h-[2.75rem] rounded-2xl border-2 px-1.5 py-2 text-xs font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                            active
+                              ? "border-yellow-200 bg-gradient-to-b from-rose-500 to-red-700 text-white"
+                              : "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
+                          }`}
+                          onClick={() => onSelectGacha(gacha.id)}
+                        >
+                          {gacha.shortName}
+                          {newGacha ? (
+                            <span className="absolute -right-1.5 -top-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-black text-white">
+                              NEW
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {cardGachaPageCount > 1 ? (
+                    <button
+                      className={`relative grid w-9 place-items-center rounded-2xl border-2 text-lg font-black shadow-[0_4px_0_rgba(120,53,15,0.35)] transition active:translate-y-0.5 ${
+                        cardGachaPageIndex < cardGachaPageCount - 1
+                          ? "border-amber-300 bg-gradient-to-b from-amber-100 to-orange-200 text-amber-950 hover:from-amber-50 hover:to-orange-100"
+                          : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 shadow-[0_4px_0_rgba(71,85,105,0.2)]"
+                      }`}
+                      onClick={() =>
+                        onSelectCardGachaPage(cardGachaPageIndex + 1)
+                      }
+                      disabled={cardGachaPageIndex >= cardGachaPageCount - 1}
+                      aria-label="つぎのカードがちゃページ"
+                    >
+                      →
+                      {hasNewCardGachaAfterPage ? (
+                        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-black text-white">
+                          NEW
+                        </span>
+                      ) : null}
+                    </button>
+                  ) : null}
+                </div>
+                {cardGachaPageCount > 1 ? (
+                  <div className="flex items-center justify-center gap-1.5">
+                    {Array.from({ length: cardGachaPageCount }).map(
+                      (_, index) => (
+                        <button
+                          key={index}
+                          className={`h-2.5 rounded-full transition ${
+                            index === cardGachaPageIndex
+                              ? "w-6 bg-rose-600"
+                              : "w-2.5 bg-white/90 ring-1 ring-amber-300"
+                          }`}
+                          onClick={() => onSelectCardGachaPage(index)}
+                          aria-label={`カードがちゃ ${index + 1}ページめ`}
+                        />
+                      ),
+                    )}
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-1.5">
