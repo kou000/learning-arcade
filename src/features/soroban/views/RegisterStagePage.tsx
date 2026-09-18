@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import registerStageSelectBg from "@/assets/register-stage-select.png";
+import registerBadgeBronze from "@/assets/badge/regi-bronze.png";
+import registerBadgeSilver from "@/assets/badge/regi-silver.png";
+import registerBadgeGold from "@/assets/badge/regi-gold.png";
 import type { ExamBody, Grade } from "@/domain/specs/types";
 import {
   EXAM_BODY_LABELS,
@@ -7,6 +10,10 @@ import {
 } from "@/domain/specs/kenteiSpec";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { getActiveRegisterCampaign } from "@/features/soroban/registerCampaigns";
+import {
+  getBestRegisterBadgeByKey,
+  registerBadgeRankLabel,
+} from "@/features/soroban/registerBadges";
 import { Select } from "@/ui/components/Select";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import {
@@ -106,6 +113,24 @@ export function RegisterStagePage({
     selection.subject,
   );
   const activeCampaign = getActiveRegisterCampaign(selection.subject);
+  const bestBadges = getBestRegisterBadgeByKey(progress.badgeIds);
+  const badgeSubjects = selection.subject.startsWith("mental")
+    ? (["mentalMitori", "mentalMul", "mentalDiv"] as const)
+    : (["mitori", "mul", "div"] as const);
+  const gradeBadges = badgeSubjects.map((subject) => {
+    const rank = bestBadges[`${selection.grade}:${subject}`];
+    return { subject, rank };
+  });
+  const badgeImages = {
+    bronze: registerBadgeBronze,
+    silver: registerBadgeSilver,
+    gold: registerBadgeGold,
+  };
+  const badgeRankColors = {
+    bronze: "text-[#914b25]",
+    silver: "text-[#596777]",
+    gold: "text-[#946600]",
+  };
 
   const gradeOptions = useMemo(
     () =>
@@ -273,8 +298,40 @@ export function RegisterStagePage({
             <CoinValue amount={progress.coins} amountClassName="font-bold" unitClassName="font-bold" />
           </span>
         </div>
+          <section
+            aria-label={`${selection.grade}きゅうのバッジ`}
+            className="absolute right-4 top-20 z-30 w-[24%] max-w-64 rounded-2xl border-2 border-[#c99545] bg-gradient-to-br from-[#fff5ce] via-[#f5dfa5] to-[#e9c779] p-2 text-center text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_3px_0_#a77532,0_8px_18px_rgba(83,49,16,0.25)]"
+          >
+            <h2 className="mx-auto w-fit rounded-full border border-amber-800/15 bg-amber-900/10 px-3 py-1 text-xs font-black text-[#795020] shadow-[inset_0_1px_2px_rgba(110,70,20,0.12)]">
+              {selection.grade}きゅうのバッジ
+            </h2>
+            <ul className="mt-2 grid grid-cols-3 gap-x-1 gap-y-2">
+              {gradeBadges.map(({ subject, rank }) => (
+                <li
+                  key={subject}
+                  className="min-w-0 text-[10px] font-bold leading-tight"
+                >
+                  <div className="mx-auto mb-1 h-16 w-16 max-w-full rounded-full border border-amber-800/15 bg-gradient-to-b from-[#dbb674]/60 to-[#fff4ce]/80 shadow-[inset_0_2px_4px_rgba(113,72,22,0.18),0_1px_0_rgba(255,255,255,0.65)]">
+                  {rank ? <img
+                    key={rank}
+                    src={badgeImages[rank]}
+                    alt={registerBadgeRankLabel(rank)}
+                    className="h-full w-full object-contain drop-shadow-[0_2px_2px_rgba(91,57,15,0.25)]"
+                    onError={(event) => { event.currentTarget.style.display = "none"; }}
+                  /> : null}
+                  </div>
+                  <div>{subjectLabel(subject)}</div>
+                  {rank ? (
+                    <div className={`mt-1 text-[10px] font-bold ${badgeRankColors[rank]}`}>
+                      {registerBadgeRankLabel(rank)}
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
         {activeCampaign ? (
-          <div className="absolute right-4 top-20 z-30 max-w-[17rem] rounded-2xl border-2 border-rose-200 bg-white/95 px-4 py-3 text-right text-sm font-black text-rose-700 shadow-lg backdrop-blur-sm">
+          <div className="absolute left-4 top-20 z-30 w-[24%] max-w-[17rem] rounded-2xl border-2 border-rose-200 bg-white/95 px-4 py-3 text-right text-sm font-black text-rose-700 shadow-lg backdrop-blur-sm">
             <div className="leading-tight">{activeCampaign.title}</div>
             <div className="mt-1 text-xs leading-tight text-amber-700">
               {activeCampaign.description}

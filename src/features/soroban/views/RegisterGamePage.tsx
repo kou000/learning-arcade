@@ -5,6 +5,7 @@ import type { Grade } from "@/domain/specs/types";
 import { getGradeSpec } from "@/domain/specs/kenteiSpec";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
+import { RegisterDisplay } from "@/features/soroban/components/RegisterDisplay";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import registerGameBg from "@/assets/register-game-bg.png";
 import arkSuccess from "@/assets/ark_success.png";
@@ -1301,39 +1302,39 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 )}
 
                 {isMitoriSubject(playSubject) && receiptReady ? (
-                  <div className="grid gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
+                  <div className="grid w-fit max-w-full justify-self-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
                     <div className="text-sm font-bold text-slate-700">
                       レシート
                     </div>
-                    {mitoriLines.map((line, i) => (
-                      <div key={i}>
-                        <div className="flex items-center justify-between text-sm font-[var(--sheet-font)]">
+                    <div className="grid w-fit max-w-full grid-cols-[minmax(0,max-content)_max-content] items-center gap-x-6 gap-y-2 text-sm font-[var(--sheet-font)]">
+                      {mitoriLines.map((line, i) => (
+                        <div key={i} className="contents">
                           <span>
                             {line.sign === -1
                               ? `${RECEIPT_NAMES[i % RECEIPT_NAMES.length]} クーポン`
                               : RECEIPT_NAMES[i % RECEIPT_NAMES.length]}
                           </span>
-                          <span>
+                          <span className="whitespace-nowrap text-right text-lg tabular-nums">
                             {line.sign === -1 ? "-" : ""}
                             {line.value}
                           </span>
+                          {canUseHelp && isHelpOpen ? (() => {
+                            const marker = mitoriCheckpointByLineIndex.get(i + 1);
+                            if (marker == null) return null;
+                            const dividerClass =
+                              MITORI_HELP_DIVIDER_CLASSES[
+                                marker.checkpointIndex %
+                                  MITORI_HELP_DIVIDER_CLASSES.length
+                              ];
+                            return (
+                              <div
+                                className={`col-span-2 my-1 h-0.5 rounded-full ${dividerClass}`}
+                              />
+                            );
+                          })() : null}
                         </div>
-                        {canUseHelp && isHelpOpen ? (() => {
-                          const marker = mitoriCheckpointByLineIndex.get(i + 1);
-                          if (marker == null) return null;
-                          const dividerClass =
-                            MITORI_HELP_DIVIDER_CLASSES[
-                              marker.checkpointIndex %
-                                MITORI_HELP_DIVIDER_CLASSES.length
-                            ];
-                          return (
-                            <div
-                              className={`my-1 h-0.5 rounded-full ${dividerClass}`}
-                            />
-                          );
-                        })() : null}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                     {canUseHelp && isHelpOpen ? (
                       <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-slate-800">
                         <div className="text-xs font-bold text-amber-800">
@@ -1487,7 +1488,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
           </div>
 
           {!isDialogMode ? (
-            <div className="self-end rounded-2xl border-2 border-sky-300 bg-sky-100/95 p-4 shadow-[0_8px_20px_rgba(14,116,144,0.25)]">
+            <div className="min-w-0 self-end rounded-2xl border-2 border-sky-300 bg-sky-100/95 p-4 shadow-[0_8px_20px_rgba(14,116,144,0.25)]">
               <div className="text-sm font-bold text-slate-700 text-white">
                 レジ
               </div>
@@ -1505,9 +1506,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 <div className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#d4e985]/80">
                   TOTAL
                 </div>
-                <div className="overflow-hidden text-right text-5xl font-black tabular-nums tracking-[0.08em] text-[#f5ffbd] drop-shadow-[0_0_8px_rgba(215,255,131,0.55)] sm:text-6xl">
-                  {registerDisplayValue}
-                </div>
+                <RegisterDisplay value={registerDisplayValue} />
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
