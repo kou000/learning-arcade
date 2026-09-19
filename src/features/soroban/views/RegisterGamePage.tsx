@@ -1243,14 +1243,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
       }
     >
       <div
-        className="grid h-full grid-rows-[1fr] gap-3 text-lg"
+        className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)] gap-3 text-lg"
         style={{ fontFamily: '"M PLUS Rounded 1c", var(--pop-font)' }}
       >
         <div
-          className={`grid min-h-0 gap-3 ${isDialogMode ? "" : "lg:grid-cols-[1fr_320px]"}`}
+          className={`grid min-h-0 gap-3 ${isDialogMode ? "" : "overflow-y-auto lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden"}`}
         >
           <div
-            className={`rounded-2xl ${isDialogMode ? "w-full bg-transparent p-0 shadow-none border-none" : "w-full border border-slate-200 bg-white/92 p-4 shadow-sm"}`}
+            className={`rounded-2xl ${isDialogMode ? "w-full bg-transparent p-0 shadow-none border-none" : "min-w-0 w-full border border-slate-200 bg-white/92 p-4 shadow-sm lg:flex lg:min-h-0 lg:flex-col lg:overflow-y-auto"}`}
           >
             {isFeedbackDialogue ? (
               <div className="relative min-h-[360px]">
@@ -1280,7 +1280,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
             ) : null}
 
             {!isFeedbackDialogue ? (
-              <div className="grid gap-3">
+              <div className="grid shrink-0 content-start gap-3">
                 {isReadingItems ? (
                   <div className="relative min-h-[360px]">
                     <div className="absolute left-[60%] top-[17%] w-[min(480px,calc(100%-24px))] -translate-x-1/2">
@@ -1302,11 +1302,11 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 )}
 
                 {isMitoriSubject(playSubject) && receiptReady ? (
-                  <div className="grid w-fit max-w-full justify-self-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 p-4">
+                  <div className="grid w-fit max-w-full justify-self-center gap-1 rounded-2xl border border-slate-300 bg-slate-50 p-2">
                     <div className="text-sm font-bold text-slate-700">
                       レシート
                     </div>
-                    <div className="grid w-fit max-w-full grid-cols-[minmax(0,max-content)_max-content] items-center gap-x-6 gap-y-2 text-sm font-[var(--sheet-font)]">
+                    <div className="grid w-fit max-w-full grid-cols-[minmax(0,max-content)_max-content] items-center gap-x-6 gap-y-0.5 text-sm font-[var(--sheet-font)]">
                       {mitoriLines.map((line, i) => (
                         <div key={i} className="contents">
                           <span>
@@ -1314,7 +1314,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                               ? `${RECEIPT_NAMES[i % RECEIPT_NAMES.length]} クーポン`
                               : RECEIPT_NAMES[i % RECEIPT_NAMES.length]}
                           </span>
-                          <span className="whitespace-nowrap text-right text-lg tabular-nums">
+                          <span className="whitespace-nowrap text-right text-lg leading-6 tabular-nums">
                             {line.sign === -1 ? "-" : ""}
                             {line.value}
                           </span>
@@ -1328,36 +1328,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                               ];
                             return (
                               <div
-                                className={`col-span-2 my-1 h-0.5 rounded-full ${dividerClass}`}
+                                className={`col-span-2 h-0.5 rounded-full ${dividerClass}`}
                               />
                             );
                           })() : null}
                         </div>
                       ))}
                     </div>
-                    {canUseHelp && isHelpOpen ? (
-                      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-slate-800">
-                        <div className="text-xs font-bold text-amber-800">
-                          おたすけヒント（とちゅう 2かしょ）
-                        </div>
-                        <div className="mt-1 grid gap-1 text-sm">
-                          {mitoriCheckpoints.map((checkpoint, checkpointIndex) => (
-                            <div key={`${checkpoint.lineIndex}-${checkpointIndex}`}>
-                              {
-                                MITORI_HELP_DIVIDER_LABELS[
-                                  checkpointIndex %
-                                    MITORI_HELP_DIVIDER_LABELS.length
-                                ]
-                              }
-                              {`（${checkpoint.lineIndex}ぎょうめまで） = `}
-                              <span className="font-black tabular-nums">
-                                {checkpoint.cumulative}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
+
                   </div>
                 ) : null}
 
@@ -1367,49 +1345,14 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                     <div className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-[var(--sheet-font)] text-slate-900">
                       {current.question}
                     </div>
-                    {canUseHelp && isHelpOpen ? (
-                      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-slate-800">
-                        <div className="text-xs font-bold text-amber-800">
-                          おたすけヒント（とちゅうのけいさん）
-                        </div>
-                        {isMulSubject(playSubject) && mul ? (
-                          <div className="mt-1 grid gap-1 text-sm">
-                            {mulHelpSteps.map((step) => (
-                              <div key={step.multiplierPart}>
-                                {mul.price} × {step.multiplierPart} ={" "}
-                                <span className="font-black tabular-nums">
-                                  {step.subtotal}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-                        {isDivSubject(playSubject) && div ? (
-                          <div className="mt-1 grid gap-1 text-sm">
-                            {divHelpSteps.map((step) => (
-                              <div key={step.quotientPart}>
-                                {step.quotientPart} をたてる: {div.people} ×{" "}
-                                {step.quotientPart} ={" "}
-                                <span className="font-black tabular-nums">
-                                  {step.product}
-                                </span>
-                                {" / のこり "}
-                                <span className="font-black tabular-nums">
-                                  {step.remainder}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
+
                   </div>
                 ) : null}
               </div>
             ) : null}
 
             {!isDialogMode ? (
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="mt-2 grid shrink-0 gap-3 md:grid-cols-2">
                 {isDivSubject(playSubject) ? (
                   <label className="grid gap-1 text-sm md:col-span-2">
                     <span className="text-slate-700">しょう</span>
@@ -1437,7 +1380,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
             ) : null}
 
             {!isDialogMode ? (
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-2 flex shrink-0 flex-wrap gap-2">
                 <div className="grid gap-2">
                   <button
                     className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
@@ -1485,10 +1428,77 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                 ) : null}
               </div>
             ) : null}
+
+            {!isDialogMode && canUseHelp && isHelpOpen ? (
+              <section
+                aria-label="おたすけヒント"
+                tabIndex={0}
+                className="mt-2 min-h-16 max-h-32 overflow-y-auto overscroll-contain rounded-xl border border-amber-200 bg-amber-50 p-2 text-slate-800 lg:flex-1"
+              >
+                {isMitoriSubject(playSubject) ? (
+                  <>
+                    <div className="text-xs font-bold text-amber-800">
+                      おたすけヒント（とちゅう 2かしょ）
+                    </div>
+                    <div className="mt-1 grid gap-1 text-sm">
+                      {mitoriCheckpoints.map((checkpoint, checkpointIndex) => (
+                        <div key={`${checkpoint.lineIndex}-${checkpointIndex}`}>
+                          {
+                            MITORI_HELP_DIVIDER_LABELS[
+                              checkpointIndex %
+                                MITORI_HELP_DIVIDER_LABELS.length
+                            ]
+                          }
+                          {`（${checkpoint.lineIndex}ぎょうめまで） = `}
+                          <span className="font-black tabular-nums">
+                            {checkpoint.cumulative}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xs font-bold text-amber-800">
+                      おたすけヒント（とちゅうのけいさん）
+                    </div>
+                    {isMulSubject(playSubject) && mul ? (
+                      <div className="mt-1 grid gap-1 text-sm">
+                        {mulHelpSteps.map((step) => (
+                          <div key={step.multiplierPart}>
+                            {mul.price} × {step.multiplierPart} ={" "}
+                            <span className="font-black tabular-nums">
+                              {step.subtotal}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {isDivSubject(playSubject) && div ? (
+                      <div className="mt-1 grid gap-1 text-sm">
+                        {divHelpSteps.map((step) => (
+                          <div key={step.quotientPart}>
+                            {step.quotientPart} をたてる: {div.people} ×{" "}
+                            {step.quotientPart} ={" "}
+                            <span className="font-black tabular-nums">
+                              {step.product}
+                            </span>
+                            {" / のこり "}
+                            <span className="font-black tabular-nums">
+                              {step.remainder}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </section>
+            ) : null}
           </div>
 
           {!isDialogMode ? (
-            <div className="min-w-0 self-end rounded-2xl border-2 border-sky-300 bg-sky-100/95 p-4 shadow-[0_8px_20px_rgba(14,116,144,0.25)]">
+            <div className="min-h-0 min-w-0 self-end rounded-2xl border-2 border-sky-300 bg-sky-100/95 p-4 shadow-[0_8px_20px_rgba(14,116,144,0.25)] lg:max-h-full lg:overflow-y-auto">
               <div className="text-sm font-bold text-slate-700 text-white">
                 レジ
               </div>
@@ -1541,7 +1551,7 @@ export function RegisterGamePage({ onGoRegister, onGoRegisterStage }: Props) {
                   ←
                 </button>
               </div>
-              <div className="mt-2 h-[52px]" aria-hidden="true" />
+              <div className="mt-2 h-2" aria-hidden="true" />
               <button
                 className="mt-2 w-full rounded-xl border border-[#3f1300] bg-gradient-to-b from-[#ff9a52] to-[#d64f16] px-4 py-4 text-lg font-black text-[#fff8ef] shadow-[0_3px_0_#7d2b07,0_8px_14px_rgba(70,18,0,0.45)] transition active:translate-y-[1px] active:shadow-[0_1px_0_#7d2b07,0_3px_8px_rgba(70,18,0,0.4)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={onTellAmount}
