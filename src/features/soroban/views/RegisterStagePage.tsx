@@ -67,7 +67,7 @@ function stageDetail(
   const questionLabel = stage === 6
     ? `けんていとおなじ ${questionCount}もん`
     : `${questionCount}もん`;
-  if (seconds === null) return `${questionLabel}\nじかんせいげんなし\nノーミス`;
+  if (seconds === null) return `${questionLabel}\nじかんせいげんなし`;
 
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -76,7 +76,7 @@ function stageDetail(
     remainingSeconds > 0 ? `${remainingSeconds}びょう` : "",
   ].join("");
   const timeLabel = stage === 2 ? "じかんせいげんゆるめ" : "じかんせいげん";
-  return `${questionLabel}\n${timeLabel}\n${duration}\nノーミス`;
+  return `${questionLabel}\n${timeLabel}\n${duration}`;
 }
 
 function subjectLabel(subject: RegisterSubject): string {
