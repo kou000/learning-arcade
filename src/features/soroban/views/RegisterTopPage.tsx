@@ -3,6 +3,7 @@ import registerGameTop from "@/assets/register-game-top.png";
 import { KEIMARUKUN_CARDS } from "@/features/soroban/cardCatalog";
 import { SHOP_ITEMS } from "@/features/soroban/catalog";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
+import { RegisterCampaignAnimation } from "@/features/soroban/components/RegisterCampaignAnimation";
 import { getActiveRegisterCampaigns } from "@/features/soroban/registerCampaigns";
 import { SceneFrame } from "@/features/soroban/components/SceneFrame";
 import * as sorobanState from "@/features/soroban/state";
@@ -103,18 +104,7 @@ export function RegisterTopPage({
         <div className="absolute inset-x-0 bottom-8 px-3">
           {activeCampaign ? (
             <div className="mb-3 flex justify-center">
-              <div className="relative rounded-2xl border-2 border-rose-200 bg-white/95 px-5 py-3 text-center text-base font-black text-rose-700 shadow-lg backdrop-blur-sm">
-                <div className="text-lg leading-tight">
-                  {activeCampaign.title}
-                </div>
-                <div className="mt-1 text-sm leading-tight text-amber-700">
-                  {activeCampaign.description}
-                </div>
-                <span
-                  className="absolute left-1/2 top-full h-4 w-4 -translate-x-1/2 -translate-y-2 rotate-45 border-b-2 border-r-2 border-rose-200 bg-white/95"
-                  aria-hidden
-                />
-              </div>
+              <RegisterCampaignAnimation key={activeCampaign.id} campaign={activeCampaign} />
             </div>
           ) : null}
           <div className="mb-2 flex justify-center">
