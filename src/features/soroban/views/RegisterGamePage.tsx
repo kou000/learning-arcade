@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { generateProblems, subjectMinutes } from "@/domain/generator";
+import { generateProblems } from "@/domain/generator";
 import type { Problem } from "@/domain/generator/types";
 import type { Grade } from "@/domain/specs/types";
-import { getGradeSpec } from "@/domain/specs/kenteiSpec";
+import { buildTimeLimitSeconds, stageQuestionCount } from "@/features/soroban/registerStageRules";
 import { DogSpeechBubble } from "@/features/soroban/components/DogSpeechBubble";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { RegisterDisplay } from "@/features/soroban/components/RegisterDisplay";
@@ -85,7 +85,6 @@ const READING_SPEED_OPTIONS = [
   { label: "5x", value: 5 },
   { label: "10x", value: 10 },
 ] as const;
-const STAGE_ALPHA_SECONDS = 15;
 const MITORI_HELP_DIVIDER_CLASSES = [
   "bg-sky-500/90",
   "bg-fuchsia-500/90",
@@ -105,21 +104,6 @@ const BADGE_CONFETTI = [
   { left: 86, color: "bg-orange-300", delay: 1920 },
   { left: 94, color: "bg-blue-300", delay: 2140 },
 ];
-
-const BASE_STAGE_QUESTION_COUNT: Record<1 | 2 | 3 | 4 | 5, number> = {
-  1: 3,
-  2: 3,
-  3: 5,
-  4: 7,
-  5: 10,
-};
-const MITORI_STAGE_QUESTION_COUNT: Record<1 | 2 | 3 | 4 | 5, number> = {
-  1: 2,
-  2: 2,
-  3: 3,
-  4: 5,
-  5: 7,
-};
 
 function parseNumber(text: string): number {
   const cleaned = text.replace(/[^0-9-]/g, "");
@@ -262,43 +246,6 @@ function stageClearReward(
 
 function registerStageLabel(stage: RegisterStage): string {
   return `すてーじ ${stage}`;
-}
-
-function questionCountFromSpec(grade: Grade, subject: RegisterSubject): number {
-  const spec = getGradeSpec("zenshugakuren", grade);
-  if (!spec) return 1;
-  if (subject === "mitori") return Math.max(1, spec.mitori.count);
-  if (subject === "mul") return Math.max(1, spec.mul.count);
-  if (subject === "div") return Math.max(1, spec.div.count);
-  if (subject === "mentalMitori") return Math.max(1, spec.mentalMitori?.count ?? 1);
-  if (subject === "mentalMul") return Math.max(1, spec.mentalMul?.count ?? 1);
-  return Math.max(1, spec.mentalDiv?.count ?? 1);
-}
-
-function stageQuestionCount(
-  grade: Grade,
-  subject: RegisterSubject,
-  stage: RegisterStage,
-): number {
-  if (stage !== 6) {
-    if (isMitoriSubject(subject)) return MITORI_STAGE_QUESTION_COUNT[stage];
-    return BASE_STAGE_QUESTION_COUNT[stage];
-  }
-  return questionCountFromSpec(grade, subject);
-}
-
-function buildTimeLimitSeconds(
-  grade: Grade,
-  subject: RegisterSubject,
-  stage: RegisterStage,
-  questionCount: number,
-): number | null {
-  if (stage === 1) return null;
-  const minutes = subjectMinutes(grade, subject, "zenshugakuren");
-  const specCount = questionCountFromSpec(grade, subject);
-  const perQ = Math.max(1, Math.ceil((minutes * 60) / specCount));
-  if (stage === 2) return (perQ + STAGE_ALPHA_SECONDS) * questionCount;
-  return perQ * questionCount;
 }
 
 function subjectLabel(subject: RegisterSubject): string {

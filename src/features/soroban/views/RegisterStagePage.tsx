@@ -8,6 +8,7 @@ import {
   EXAM_BODY_LABELS,
   getAvailableGrades,
 } from "@/domain/specs/kenteiSpec";
+import { buildTimeLimitSeconds, stageQuestionCount } from "@/features/soroban/registerStageRules";
 import { CoinValue } from "@/features/soroban/components/CoinValue";
 import { getActiveRegisterCampaign } from "@/features/soroban/registerCampaigns";
 import {
@@ -56,21 +57,26 @@ function stageLabel(stage: RegisterStage): string {
   return `ステージ ${stage}`;
 }
 
-function stageDetail(stage: RegisterStage, subject: RegisterSubject): string {
-  if (subject === "mitori" || subject === "mentalMitori") {
-    if (stage === 1) return "2もん\nじかんせいげんなし\nノーミス";
-    if (stage === 2) return "2もん\nじかんせいげんゆるめ\nノーミス";
-    if (stage === 3) return "3もん\nじかんせいげん\nノーミス";
-    if (stage === 4) return "5もん\nじかんせいげん\nノーミス";
-    if (stage === 5) return "7もん\nじかんせいげん\nノーミス";
-    return "けんていとおなじ\nもんだいすう\nノーミス";
-  }
-  if (stage === 1) return "3もん\nじかんせいげんなし\nノーミス";
-  if (stage === 2) return "3もん\nじかんせいげんゆるめ\nノーミス";
-  if (stage === 3) return "5もん\nじかんせいげん\nノーミス";
-  if (stage === 4) return "7もん\nじかんせいげん\nノーミス";
-  if (stage === 5) return "10もん\nじかんせいげん\nノーミス";
-  return "けんていとおなじ\nもんだいすう\nノーミス";
+function stageDetail(
+  stage: RegisterStage,
+  grade: Grade,
+  subject: RegisterSubject,
+): string {
+  const questionCount = stageQuestionCount(grade, subject, stage);
+  const seconds = buildTimeLimitSeconds(grade, subject, stage, questionCount);
+  const questionLabel = stage === 6
+    ? `けんていとおなじ ${questionCount}もん`
+    : `${questionCount}もん`;
+  if (seconds === null) return `${questionLabel}\nじかんせいげんなし\nノーミス`;
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  const duration = [
+    minutes > 0 ? `${minutes}ふん` : "",
+    remainingSeconds > 0 ? `${remainingSeconds}びょう` : "",
+  ].join("");
+  const timeLabel = stage === 2 ? "じかんせいげんゆるめ" : "じかんせいげん";
+  return `${questionLabel}\n${timeLabel}\n${duration}\nノーミス`;
 }
 
 function subjectLabel(subject: RegisterSubject): string {
@@ -412,25 +418,23 @@ export function RegisterStagePage({
                   </div>
                 </div>
 
-                {isCleared ? (
-                  <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-                    <span
-                      className="inline-block whitespace-nowrap rounded-full border-2 border-amber-100/90 bg-emerald-600/95 px-5 py-2 text-2xl font-black text-emerald-50 shadow-[0_2px_0_rgba(92,63,24,0.45)]"
-                      style={{ transform: `rotate(${card.titleTilt})` }}
-                    >
-                      ✓ クリア！
-                    </span>
-                  </div>
-                ) : null}
-
                 <div
-                  className="absolute left-[10%] right-[10%] z-10 whitespace-pre-line px-2 text-base font-bold text-slate-800"
+                  className="absolute left-[10%] right-[10%] z-10 px-2 text-base font-bold text-slate-800"
                   style={{
                     top: card.detailTop,
                     transform: `rotate(${card.titleTilt})`,
                   }}
                 >
-                  {stageDetail(card.stage, selection.subject)}
+                  <div className="whitespace-pre-line">
+                    {stageDetail(card.stage, selection.grade, selection.subject)}
+                  </div>
+                  {isCleared ? (
+                    <div className="mt-2 text-center">
+                      <span className="inline-block whitespace-nowrap rounded-full border-2 border-amber-100/90 bg-emerald-600/95 px-5 py-2 text-2xl font-black text-emerald-50 shadow-[0_2px_0_rgba(92,63,24,0.45)]">
+                        ✓ クリア！
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {!canPlay ? (
